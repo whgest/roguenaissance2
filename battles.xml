@@ -1,0 +1,100 @@
+<battles>
+    <battle ident = "1">
+        <intro>battle1</intro>
+        <map>tunnel</map>
+        <music>battle1a</music>
+        <music>battle1b</music>
+        <actor>Freezefrog/30,20</actor>
+        <actor>Rabid duckbunny/30,19</actor>
+        <actor>Origami golem/44,15</actor>
+        <actor>Dire roach/18,17</actor>
+        <actor>Rabid duckbunny/44,15</actor>
+        <actor>Dire roach/18,17</actor>
+        <actor>Evil begonia/31,0</actor>
+        <actor>Evil begonia/32,0</actor>
+        <event ident = "1">
+                <condition>start</condition>
+                <effect>add_mobs,0,1</effect>
+        </event>
+        <event ident = "2">
+                <condition>turn,3</condition>
+                <effect>add_mobs,2,3</effect>
+        </event>
+        <event ident = "3">
+                <condition>playeryLesser,15</condition>
+                <effect>add_mobs,4,5,6,7</effect>
+        </event>
+        <event ident = "4">
+                <condition>playeryIs,24</condition>
+                <effect>victory</effect>
+        </event>
+    </battle>
+    <battle ident = "2">
+        <intro>battle2</intro>
+        <map>water</map>
+        <music>battle2a</music>
+        <music>battle2b</music>
+        <actor>Fungal clubber/41,11</actor>
+        <actor>Fungal clubber/45,11</actor>
+        <actor>Fungal sporemage/43,9</actor>
+        <actor>Fungal blowgunner/42,10</actor>
+        <actor>Fungal clubber/49,8</actor>
+        <actor>Fungal sporemage/49,9</actor>
+        <actor>Fungal blowgunner/49,10</actor>
+        <actor>Fungal clubber/5,24</actor>
+        <actor>Fungal sporemage/6,24</actor>
+        <actor>Fungal blowgunner/7,24</actor>
+        <actor>Piranha school/25,24</actor>
+        <actor>Piranha school/23,24</actor>
+        <actor>Piranha school/24,18</actor>
+        <event ident = "1">
+                <condition>start</condition>
+                <effect>add_mobs,0,1,2,3</effect>
+        </event>
+        <event ident = "2">
+                <condition>playerxLesser,24</condition>
+                <effect>add_mobs,4,5,6,7,8,9</effect>
+        </event>
+        <event ident = "3">
+                <condition>playerxIs,26</condition>
+                <effect>add_mobs,10,11,12</effect>
+        </event>
+        <event ident = "4">
+                <condition>playeryIs,24</condition>
+                <effect>victory</effect>
+        </event>
+        <!--<event ident = "4">-->
+                <!--<condition>playerxLesser,20</condition>-->
+                <!--<effect>victory</effect>-->
+        <!--</event>-->
+
+    </battle>
+    <battle ident = "3">
+        <intro>battle3</intro>
+        <map>lava</map>
+        <music>battle3</music>
+        <actor>Belshazzar/25,5</actor>
+        <event ident = "1">
+                <condition>start</condition>
+                <effect>add_mobs,0</effect>
+        </event>
+        <event ident = "2">
+                <condition>bosskill</condition>
+                <effect>victory</effect>
+        </event>
+    </battle>
+
+    <battle ident = "4">
+        <intro>battle3</intro>
+        <map>lava</map>
+        <music>battle3</music>
+        <event ident = "1">
+                <condition>start</condition>
+                <effect>pass</effect>
+        </event>
+
+    </battle>
+</battles>
+
+
+<!-- possible conditions: turn #, playerx, playery, enemies remaining -->

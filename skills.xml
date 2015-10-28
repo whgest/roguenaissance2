@@ -1,0 +1,1078 @@
+<skills>
+
+    <!-- Astromancer skills -->
+    <skill ident = "White sword">
+        <target>enemy</target>
+        <stat>attack</stat>
+        <narration>slashes at</narration>
+        <range>1</range>
+        <aoe>0</aoe>
+        <damage>1,8</damage>
+        <mp>0</mp>
+        <prompt>Basic attack.</prompt>
+        <animation>basic</animation>
+    </skill>
+
+    <skill ident = "Summon Meteorman">
+        <target>empty</target>
+        <stat>magic</stat>
+        <narration>summons a cosmic construct</narration>
+        <range>5</range>
+        <aoe>0</aoe>
+        <damage>0</damage>
+        <effect>
+            <type>Summon</type>
+            <magnitude>Meteorman</magnitude>
+        </effect>
+        <mp>-1</mp>
+        <prompt>Summon a strong defensive golem made of otherworldly minerals</prompt>
+        <animation>summon</animation>
+    </skill>
+
+    <skill ident = "Summon 4DHypercube">
+        <target>empty</target>
+        <stat>magic</stat>
+        <narration>summons a mind-shredding hypercube</narration>
+        <range>5</range>
+        <aoe>0</aoe>
+        <damage>0</damage>
+        <effect>
+            <type>Summon</type>
+            <magnitude>4D Hypercube</magnitude>
+        </effect>
+        <mp>-1</mp>
+        <prompt>Summon a ravenous beast from a more advanced dimension.</prompt>
+        <animation>summon</animation>
+    </skill>
+
+    <skill ident = "Gravity Surge">
+        <target>tile</target>
+        <stat>magic</stat>
+        <range>5</range>
+        <aoe>1</aoe>
+        <damage>2,4</damage>
+        <effect>
+            <type>Push</type>
+            <magnitude>3</magnitude>
+        </effect>
+        <mp>0</mp>
+        <prompt>Damage enemies and pushes 3 spaces. Range 5, area 1.</prompt>
+        <animation>surge</animation>
+    </skill>
+
+    <skill ident = "Zodiac Curse">
+        <target>enemy</target>
+        <stat>magic</stat>
+        <narration>places an astrological curse on</narration>
+        <range>7</range>
+        <aoe>0</aoe>
+        <damage>1,10</damage>
+        <effect>
+            <type>Dark</type>
+            <magnitude>2</magnitude>
+            <duration>3</duration>
+        </effect>
+        <effect>
+            <type>Slow</type>
+            <magnitude>2</magnitude>
+            <duration>3</duration>
+        </effect>
+        <mp>0</mp>
+        <prompt>Damages enemy and inflicts minor darkness and slow. Range 7.</prompt>
+        <animation>push</animation>
+    </skill>
+
+    <skill ident = "Soothing Starlight">
+        <target>friendly</target>
+        <stat>magic</stat>
+        <narration>sends healing energy to</narration>
+        <range>4</range>
+        <aoe>1</aoe>
+        <damage>1,-3</damage>
+        <effect>
+            <type>Regen</type>
+            <magnitude>5</magnitude>
+            <duration>4</duration>
+        </effect>
+        <mp>2</mp>
+        <prompt>Regenerates lost health. Range 4, area 1.</prompt>
+        <animation>heal</animation>
+    </skill>
+
+    <skill ident = "Time Distortion">
+        <target>tile</target>
+        <stat>magic</stat>
+        <narration>distorts time around</narration>
+        <range>7</range>
+        <aoe>3</aoe>
+        <damage>0</damage>
+        <effect>
+            <type>Haste|Slow</type>
+            <magnitude>3</magnitude>
+            <duration>4</duration>
+        </effect>
+        <mp>2</mp>
+        <prompt>Hastens allies, slows enemies. Range 7, area 3.</prompt>
+        <animation>heal</animation>
+    </skill>
+
+    <skill ident = "Singularity">
+        <target>tile</target>
+        <stat>magic</stat>
+        <narration>creates a singularity on</narration>
+        <range>12</range>
+        <aoe>5</aoe>
+        <damage>1,1</damage>
+        <effect>
+            <type>Root</type>
+            <duration>2</duration>
+        </effect>
+        <effect>
+            <type>Capture</type>
+            <magnitude>5</magnitude>
+        </effect>
+        <mp>3</mp>
+        <prompt>Pulls in and roots all enemies in area. Range 10, area 5.</prompt>
+        <animation>singularity</animation>
+    </skill>
+
+    <skill ident = "Meteor">
+        <target>tile</target>
+        <stat>magic</stat>
+        <narration>summons a meteor on</narration>
+        <range>5</range>
+        <aoe>3</aoe>
+        <damage>2,8</damage>
+        <effect>
+            <type>Burning</type>
+            <magnitude>4</magnitude>
+            <duration>3</duration>
+        </effect>
+        <mp>3</mp>
+        <prompt>Damages all units and inflicts Burn. Range 5, area 3.</prompt>
+        <animation>meteor</animation>
+    </skill>
+
+    <skill ident = "Gamma Ray">
+        <target>tile</target>
+        <stat>magic</stat>
+        <narration>fires a gamma ray at</narration>
+        <range>1</range>
+        <aoe>777</aoe>
+        <damage>2,8</damage>
+        <mp>1</mp>
+        <prompt>Damages and blinds all units. Fires in a line.</prompt>
+        <animation>gamma</animation>
+    </skill>
+
+    <skill ident = "Skycaller">
+        <target>enemy</target>
+        <stat>magic</stat>
+        <narration>shakes loose the heavens on</narration>
+        <range>0</range>
+        <aoe>666</aoe>
+        <damage>3,6</damage>
+        <effect>
+            <type>Dark</type>
+            <magnitude>2</magnitude>
+            <duration>4</duration>
+        </effect>
+        <effect>
+            <type>Burning</type>
+            <magnitude>2</magnitude>
+            <duration>4</duration>
+        </effect>
+        <mp>8</mp>
+        <prompt>A storm of aetheric plasma smites all enemies.</prompt>
+        <animation>skycaller</animation>
+    </skill>
+
+<!-- Pyromancer Skills -->
+     <skill ident = "Focusing staff">
+        <target>enemy</target>
+        <stat>attack</stat>
+        <narration>swings at</narration>
+        <range>2</range>
+        <aoe>0</aoe>
+        <damage>1,6</damage>
+        <mp>0</mp>
+        <prompt>Basic attack.</prompt>
+        <animation>punch</animation>
+    </skill>
+
+    <skill ident = "Flash Freeze">
+        <target>enemy</target>
+        <stat>magic</stat>
+        <narration>flash freezes</narration>
+        <range>7</range>
+        <aoe>0</aoe>
+        <damage>2,8</damage>
+        <effect>
+            <type>Slow</type>
+            <magnitude>2</magnitude>
+            <duration>3</duration>
+        </effect>
+        <mp>0</mp>
+        <prompt>Damages enemy and inflicts slow. Range 7.</prompt>
+        <animation>freeze</animation>
+    </skill>
+
+    <skill ident = "Ice Spear">
+        <target>enemy</target>
+        <stat>magic</stat>
+        <narration>sends an ice spear at</narration>
+        <range>7</range>
+        <aoe>0</aoe>
+        <damage>1,10</damage>
+        <effect>
+            <type>Push</type>
+            <magnitude>3</magnitude>
+        </effect>
+        <mp>1</mp>
+        <prompt>Skewer enemy for damage and push. Range 5.</prompt>
+        <animation>ice toss</animation>
+    </skill>
+
+    <skill ident = "Pyrokinesis">
+        <target>tile</target>
+        <stat>magic</stat>
+        <narration>ignites</narration>
+        <range>6</range>
+        <aoe>2</aoe>
+        <damage>2,5</damage>
+        <effect>
+            <type>Burning</type>
+            <magnitude>2</magnitude>
+            <duration>3</duration>
+        </effect>
+        <mp>1</mp>
+        <prompt>Damages units and inflicts Burning. Range 6, area 2.</prompt>
+        <animation>fire ball</animation>
+    </skill>
+
+    <skill ident = "Life Drain">
+        <target>enemy</target>
+        <stat>magic</stat>
+        <narration>drains the life from</narration>
+        <range>5</range>
+        <aoe>0</aoe>
+        <damage>1,8</damage>
+        <effect>
+            <type>Drain</type>
+        </effect>
+        <mp>1</mp>
+        <prompt>Absorbs HP from an enemy. Range 7.</prompt>
+        <animation>drain</animation>
+    </skill>
+
+    <skill ident = "Frostburn">
+        <target>enemy</target>
+        <stat>magic</stat>
+        <narration>fires a prismatic bolt at</narration>
+        <range>9</range>
+        <aoe>0</aoe>
+        <damage>2,6</damage>
+        <effect>
+            <type>Burning</type>
+            <magnitude>2</magnitude>
+            <duration>4</duration>
+        </effect>
+        <effect>
+            <type>Frostbite</type>
+            <magnitude>2</magnitude>
+            <duration>4</duration>
+        </effect>
+        <mp>1</mp>
+        <prompt>Damages enemy and inflicts Burning and Frostbite. Range 9.</prompt>
+        <animation>frostfire</animation>
+    </skill>
+
+
+    <skill ident = "Icy Prison">
+        <target>enemy</target>
+        <stat>magic</stat>
+        <narration>freezes solid</narration>
+        <range>7</range>
+        <aoe>0</aoe>
+        <damage>2,6</damage>
+        <effect>
+            <type>Root</type>
+            <duration>3</duration>
+        </effect>
+        <mp>1</mp>
+        <prompt>Damages enemy and inflicts Root. Range 7.</prompt>
+        <animation>freeze</animation>
+    </skill>
+
+    <skill ident = "Absolute Zero">
+        <target>tile</target>
+        <stat>magic</stat>
+        <narration>stops the molecules of</narration>
+        <range>6</range>
+        <aoe>4</aoe>
+        <damage>3,6</damage>
+        <effect>
+            <type>Stun</type>
+            <duration>3</duration>
+        </effect>
+        <effect>
+            <type>Frostbite</type>
+            <magnitude>3</magnitude>
+            <duration>4</duration>
+        </effect>
+        <mp>4</mp>
+        <prompt>Damages all units and inflicts Frostbite, Stun. Range 3, area 4.</prompt>
+        <animation>zero</animation>
+    </skill>
+
+    <skill ident = "Fuse Atom">
+        <target>enemy</target>
+        <stat>magic</stat>
+        <narration>fuses the atoms in</narration>
+        <range>0</range>
+        <aoe>666</aoe>
+        <damage>3,8</damage>
+        <effect>
+            <type>Poison</type>
+            <magnitude>3</magnitude>
+            <duration>5</duration>
+        </effect>
+        <effect>
+            <type>Push</type>
+            <magnitude>3</magnitude>
+        </effect>
+        <mp>9</mp>
+        <prompt>Nuclear fire sears all enemies. Causes heavy damage and poison.</prompt>
+        <animation>splitatom</animation>
+    </skill>
+
+    <skill ident = "Smn. Flaming Crows">
+        <target>empty</target>
+        <stat>magic</stat>
+        <narration>summons a flock of burning crows</narration>
+        <range>5</range>
+        <aoe>0</aoe>
+        <damage>0</damage>
+        <effect>
+            <type>Summon</type>
+            <magnitude>Flaming Crows</magnitude>
+        </effect>
+        <mp>-1</mp>
+        <prompt>Summon a flock of crazed flaming crows</prompt>
+        <animation>summon</animation>
+    </skill>
+
+    <skill ident = "Summon Snowball">
+        <target>empty</target>
+        <stat>magic</stat>
+        <narration>summons a rolling snowball</narration>
+        <range>5</range>
+        <aoe>0</aoe>
+        <damage>0</damage>
+        <effect>
+            <type>Summon</type>
+            <magnitude>Snowball</magnitude>
+        </effect>
+        <mp>-1</mp>
+        <prompt>Summon a snowball to protect you.</prompt>
+        <animation>summon</animation>
+    </skill>
+
+<!-- Terramancer Skills -->
+      <skill ident = "Obsidian sword">
+        <target>enemy</target>
+        <stat>attack</stat>
+        <narration>slashes mercilessly at</narration>
+        <range>2</range>
+        <aoe>0</aoe>
+        <damage>1,12</damage>
+        <mp>0</mp>
+        <prompt>Basic attack.</prompt>
+        <animation>basic</animation>
+    </skill>
+
+    <skill ident = "Whirlwind">
+        <target>enemy</target>
+        <stat>attack</stat>
+        <narration>spins like a whirlwind at</narration>
+        <range>0</range>
+        <aoe>2</aoe>
+        <damage>1,10</damage>
+        <mp>0</mp>
+        <prompt>Attack all nearby units with your weapon.</prompt>
+        <animation>basic</animation>
+    </skill>
+
+    <skill ident = "Stone Armor">
+        <target>friendly</target>
+        <stat>attack</stat>
+        <narration>summons stone armor onto</narration>
+        <range>0</range>
+        <aoe>2</aoe>
+        <damage>0</damage>
+        <effect>
+            <type>Armored</type>
+            <magnitude>2</magnitude>
+            <duration>4</duration>
+        </effect>
+        <mp>0</mp>
+        <prompt>You are protected by swirling stones. Raises defense.</prompt>
+        <animation>armor</animation>
+    </skill>
+
+    <skill ident = "Rock Toss">
+        <target>enemy</target>
+        <stat>attack</stat>
+        <narration>tosses a rock at</narration>
+        <range>5</range>
+        <aoe>0</aoe>
+        <damage>1,10</damage>
+        <effect>
+            <type>Push</type>
+            <magnitude>4</magnitude>
+        </effect>
+        <mp>1</mp>
+        <prompt>Telekinetically toss a large rock for damage and push. Range 5.</prompt>
+        <animation>rock toss</animation>
+    </skill>
+
+    <skill ident = "Landslide">
+        <target>enemy</target>
+        <stat>attack</stat>
+        <narration>strikes with the force of a landslide at</narration>
+        <range>1</range>
+        <aoe>1</aoe>
+        <damage>2,8</damage>
+        <effect>
+            <type>Poison</type>
+            <magnitude>3</magnitude>
+            <duration>3</duration>
+        </effect>
+        <effect>
+            <type>Push</type>
+            <magnitude>1</magnitude>
+        </effect>
+        <mp>2</mp>
+        <prompt>An empowered melee strike that poisons. Area 1.</prompt>
+        <animation>punch</animation>
+    </skill>
+
+    <skill ident = "Thunderbolt">
+        <target>enemy</target>
+        <stat>magic</stat>
+        <narration>calls down thunder on</narration>
+        <range>7</range>
+        <aoe>0</aoe>
+        <damage>2,6</damage>
+        <effect>
+            <type>Root</type>
+            <duration>3</duration>
+        </effect>
+        <mp>2</mp>
+        <prompt>Damages enemy and inflicts Root. Range 7.</prompt>
+        <animation>tbolt</animation>
+    </skill>
+
+    <skill ident = "Vine Grasp">
+        <target>enemy</target>
+        <stat>magic</stat>
+        <narration>sprouts vines and grabs</narration>
+        <range>9</range>
+        <aoe>0</aoe>
+        <damage>2,6</damage>
+        <effect>
+            <type>Pull</type>
+            <magnitude>9</magnitude>
+        </effect>
+        <mp>2</mp>
+        <prompt>Damage a pull a distant enemy to you. Range 9.</prompt>
+        <animation>vine</animation>
+    </skill>
+
+    <skill ident = "Tectonic Break">
+        <target>enemy</target>
+        <stat>attack</stat>
+        <narration>sunders the earth under</narration>
+        <range>0</range>
+        <aoe>666</aoe>
+        <damage>4,4</damage>
+        <effect>
+            <type>Slow</type>
+            <magnitude>3</magnitude>
+            <duration>3</duration>
+        </effect>
+        <mp>7</mp>
+        <prompt>Damage and slow all enemies with the power of earth.</prompt>
+        <animation>tectonic</animation>
+    </skill>
+
+    <skill ident = "Ascendance">
+        <target>friendly</target>
+        <stat>attack</stat>
+        <narration>massively empowers</narration>
+        <range>0</range>
+        <aoe>0</aoe>
+        <damage>0</damage>
+        <effect>
+            <type>Ascendant</type>
+            <magnitude>4</magnitude>
+            <modifier>maxhp,2</modifier>
+            <modifier>hp,2</modifier>
+            <modifier>attack,1.25</modifier>
+            <modifier>defense,0.75</modifier>
+            <modifier>resistance,0.75</modifier>
+            <modifier>move,0.25</modifier>
+            <continuous>0</continuous>
+            <duration>3</duration>
+        </effect>
+        <mp>7</mp>
+        <prompt>Massively increase physical attack and defenses for 3 turns.</prompt>
+        <animation>ascend</animation>
+    </skill>
+    <skill ident = "Summon Spring Wind">
+        <target>empty</target>
+        <stat>magic</stat>
+        <narration>summons a swirling spring breeze</narration>
+        <range>5</range>
+        <aoe>0</aoe>
+        <damage>0</damage>
+        <effect>
+            <type>Summon</type>
+            <magnitude>Spring Wind</magnitude>
+        </effect>
+        <mp>-1</mp>
+        <prompt>Summon a healing spirit to heal your injuries.</prompt>
+        <animation>summon</animation>
+    </skill>
+    <skill ident = "Summon Stegosaur">
+        <target>empty</target>
+        <stat>magic</stat>
+        <narration>summons a rampaging stegosaur</narration>
+        <range>5</range>
+        <aoe>0</aoe>
+        <damage>0</damage>
+        <effect>
+            <type>Summon</type>
+            <magnitude>Stegosaur</magnitude>
+        </effect>
+        <mp>-1</mp>
+        <prompt>Summon a stegosaur to crush your foes.</prompt>
+        <animation>summon</animation>
+    </skill>
+
+<!--Summon skills-->
+    <skill ident = "Meteor Punch">
+        <target>enemy</target>
+        <stat>attack</stat>
+        <narration>slams a giant stone fist into</narration>
+        <range>1</range>
+        <aoe>0</aoe>
+        <damage>1,8</damage>
+        <effect>
+            <type>Push</type>
+            <magnitude>4</magnitude>
+        </effect>
+        <mp>0</mp>
+        <prompt>Damage and push an enemy.</prompt>
+        <animation>punch</animation>
+    </skill>
+    <skill ident = "Magnetize">
+        <target>enemy</target>
+        <stat>attack</stat>
+        <narration>emits a strong magnetic field at!</narration>
+        <range>0</range>
+        <aoe>4</aoe>
+        <damage>1,2</damage>
+        <effect>
+            <type>Pull</type>
+            <magnitude>6</magnitude>
+        </effect>
+        <mp>2</mp>
+        <prompt>Attract nearby enemies.</prompt>
+        <animation>surge</animation>
+    </skill>
+    <skill ident = "Starshards">
+        <target>enemy</target>
+        <stat>magic</stat>
+        <narration>fires stardust at</narration>
+        <range>5</range>
+        <aoe>1</aoe>
+        <damage>1,6</damage>
+        <effect>
+            <type>Poison</type>
+            <magnitude>2</magnitude>
+            <duration>4</duration>
+        </effect>
+        <mp>0</mp>
+        <prompt>Basic attack.</prompt>
+        <animation>dark ball</animation>
+    </skill>
+    <skill ident = "Cosmic Barrage">
+        <target>enemy</target>
+        <stat>magic</stat>
+        <narration>unleashes a blast of stardust at</narration>
+        <range>5</range>
+        <aoe>2</aoe>
+        <damage>2,6</damage>
+        <effect>
+            <type>Poison</type>
+            <magnitude>2</magnitude>
+            <duration>4</duration>
+        </effect>
+        <mp>3</mp>
+        <prompt>Highly damaging cosmic projectiles. Range 5, area 2.</prompt>
+        <animation>fire ball</animation>
+    </skill>
+    <skill ident = "Snowball Crush">
+        <target>enemy</target>
+        <stat>attack</stat>
+        <narration>rolls over</narration>
+        <range>1</range>
+        <aoe>0</aoe>
+        <damage>1,8</damage>
+        <effect>
+            <type>Slow</type>
+            <magnitude>2</magnitude>
+            <duration>1</duration>
+        </effect>
+        <mp>0</mp>
+        <prompt>Damage and slow an enemy.</prompt>
+        <animation>punch</animation>
+    </skill>
+    <skill ident = "Snowball Slam">
+        <target>enemy</target>
+        <stat>attack</stat>
+        <narration>rolls over</narration>
+        <range>1</range>
+        <aoe>0</aoe>
+        <damage>2,6</damage>
+        <effect>
+            <type>Push</type>
+            <magnitude>6</magnitude>
+        </effect>
+        <mp>2</mp>
+        <prompt>Damage and push enemy a long way.</prompt>
+        <animation>punch</animation>
+    </skill>
+    <skill ident = "Swarm">
+        <target>enemy</target>
+        <stat>attack</stat>
+        <narration>attacks</narration>
+        <range>1</range>
+        <aoe>0</aoe>
+        <damage>2,6</damage>
+        <effect>
+            <type>Burning</type>
+            <magnitude>2</magnitude>
+            <duration>3</duration>
+        </effect>
+        <mp>0</mp>
+        <prompt>Basic.</prompt>
+        <animation>bite</animation>
+    </skill>
+    <skill ident = "The Birds">
+        <target>enemy</target>
+        <stat>magic</stat>
+        <narration>frenzies at</narration>
+        <range>0</range>
+        <aoe>3</aoe>
+        <damage>2,6</damage>
+        <effect>
+            <type>Burning</type>
+            <magnitude>2</magnitude>
+            <duration>3</duration>
+        </effect>
+        <mp>3</mp>
+        <prompt>Shred nearby enemies in a frenzied swarm.</prompt>
+        <animation>fire ball</animation>
+    </skill>
+    <skill ident = "Tail Swipe">
+        <target>enemy</target>
+        <stat>attack</stat>
+        <narration>tail swipes</narration>
+        <range>0</range>
+        <aoe>1</aoe>
+        <damage>1,4</damage>
+        <effect>
+            <type>Push</type>
+            <magnitude>2</magnitude>
+        </effect>
+        <mp>0</mp>
+        <prompt>Damage and push enemies.</prompt>
+        <animation>punch</animation>
+    </skill>
+    <skill ident = "Megastomp">
+        <target>enemy</target>
+        <stat>attack</stat>
+        <narration>megastomps</narration>
+        <range>0</range>
+        <aoe>2</aoe>
+        <damage>1,10</damage>
+        <effect>
+            <type>Slow</type>
+            <magnitude>2</magnitude>
+            <duration>3</duration>
+        </effect>
+        <mp>3</mp>
+        <prompt>Damage and slow nearby enemies. Area 2.</prompt>
+        <animation>punch</animation>
+    </skill>
+    <skill ident = "Skelestomp">
+        <target>enemy</target>
+        <stat>attack</stat>
+        <narration>megastomps</narration>
+        <range>1</range>
+        <aoe>2</aoe>
+        <damage>1,10</damage>
+        <effect>
+            <type>Slow</type>
+            <magnitude>2</magnitude>
+            <duration>3</duration>
+        </effect>
+        <mp>3</mp>
+        <prompt>Damage and slow nearby enemies. Area 2.</prompt>
+        <animation>punch</animation>
+    </skill>
+
+    <skill ident = "Tail Slam">
+        <target>enemy</target>
+        <stat>attack</stat>
+        <narration>tail slams</narration>
+        <range>0</range>
+        <aoe>1</aoe>
+        <damage>1,6</damage>
+        <mp>0</mp>
+        <prompt>Damage and push enemies.</prompt>
+        <animation>punch</animation>
+    </skill>
+
+    <skill ident = "Breeze Blow">
+        <target>enemy</target>
+        <stat>attack</stat>
+        <narration>blows a stiff breeze at</narration>
+        <range>1</range>
+        <aoe>0</aoe>
+        <damage>1,2</damage>
+        <mp>0</mp>
+        <prompt>Basic.</prompt>
+        <animation>basic</animation>
+    </skill>
+    <skill ident = "Soothing Breeze">
+        <target>friendly</target>
+        <stat>magic</stat>
+        <narration>eases the pain of</narration>
+        <range>2</range>
+        <aoe>0</aoe>
+        <damage>1,-1</damage>
+        <mp>0</mp>
+        <prompt>Damage and push enemies.</prompt>
+        <animation>heal</animation>
+    </skill>
+    <skill ident = "Healstorm">
+        <target>friendly</target>
+        <stat>magic</stat>
+        <narration>creates a healstorm around</narration>
+        <range>0</range>
+        <aoe>2</aoe>
+        <damage>1,-1</damage>
+        <effect>
+            <type>Regen</type>
+            <magnitude>3</magnitude>
+            <duration>4</duration>
+        </effect>
+        <mp>4</mp>
+        <prompt>Heal and regenerate all nearby allies.</prompt>
+        <animation>heal</animation>
+    </skill>
+
+    <skill ident = "Poison Breath">
+        <target>enemy</target>
+        <stat>magic</stat>
+        <narration>blasts poison breath at</narration>
+        <range>5</range>
+        <aoe>1</aoe>
+        <damage>1,10</damage>
+        <effect>
+            <type>Poison</type>
+            <magnitude>2</magnitude>
+            <duration>4</duration>
+        </effect>
+        <mp>0</mp>
+        <prompt>Basic attack.</prompt>
+        <animation>basic ranged</animation>
+    </skill>
+    <skill ident = "Poison Surge">
+        <target>enemy</target>
+        <stat>magic</stat>
+        <narration>unleashes a blast of poison breath at</narration>
+        <range>5</range>
+        <aoe>2</aoe>
+        <damage>2,6</damage>
+        <effect>
+            <type>Poison</type>
+            <magnitude>2</magnitude>
+            <duration>4</duration>
+        </effect>
+        <mp>3</mp>
+        <prompt>Basic attack.</prompt>
+        <animation>poison</animation>
+    </skill>
+
+
+
+<!--Monster skills-->
+    <skill ident = "Bite">
+        <target>enemy</target>
+        <stat>attack</stat>
+        <narration>bites</narration>
+        <range>1</range>
+        <aoe>0</aoe>
+        <damage>1,10</damage>
+        <mp>0</mp>
+        <prompt>Basic attack.</prompt>
+        <animation>bite</animation>
+    </skill>
+    <skill ident = "Spit ice">
+        <target>enemy</target>
+        <stat>magic</stat>
+        <narration>hocks and spits icicles at</narration>
+        <range>5</range>
+        <aoe>0</aoe>
+        <damage>1,10</damage>
+        <effect>
+            <type>Frostbite</type>
+            <magnitude>2</magnitude>
+            <duration>3</duration>
+        </effect>
+        <mp>0</mp>
+        <prompt>Basic attack.</prompt>
+        <animation>basic ranged</animation>
+    </skill>
+    <skill ident = "Spit poison">
+        <target>enemy</target>
+        <stat>magic</stat>
+        <narration>fires poison thorns at</narration>
+        <range>5</range>
+        <aoe>0</aoe>
+        <damage>1,10</damage>
+        <effect>
+            <type>Poison</type>
+            <magnitude>2</magnitude>
+            <duration>3</duration>
+        </effect>
+        <mp>0</mp>
+        <prompt>Basic attack.</prompt>
+        <animation>basic ranged</animation>
+    </skill>
+    <skill ident = "Paper cut">
+        <target>enemy</target>
+        <stat>attack</stat>
+        <narration>slashes with sharp paper arms at</narration>
+        <range>1</range>
+        <aoe>0</aoe>
+        <damage>1,12</damage>
+        <mp>0</mp>
+        <prompt>Basic attack.</prompt>
+        <animation>basic</animation>
+    </skill>
+    <skill ident = "Paper slam">
+        <target>enemy</target>
+        <stat>attack</stat>
+        <narration>flies into a paper whirlwind!</narration>
+        <range>1</range>
+        <aoe>1</aoe>
+        <damage>1,8</damage>
+        <effect>
+            <type>Push</type>
+            <magnitude>2</magnitude>
+        </effect>
+        <mp>0</mp>
+        <prompt>Basic attack.</prompt>
+        <animation>punch</animation>
+    </skill>
+    <skill ident = "Blowgun">
+        <target>enemy</target>
+        <stat>attack</stat>
+        <narration>shoots a blowgun at</narration>
+        <range>4</range>
+        <aoe>0</aoe>
+        <damage>1,8</damage>
+        <effect>
+            <type>Poison</type>
+            <magnitude>2</magnitude>
+            <duration>4</duration>
+        </effect>
+        <mp>0</mp>
+        <prompt>Basic attack.</prompt>
+        <animation>basic ranged</animation>
+    </skill>
+    <skill ident = "Club">
+        <target>enemy</target>
+        <stat>attack</stat>
+        <narration>clubs</narration>
+        <range>1</range>
+        <aoe>0</aoe>
+        <damage>1,8</damage>
+        <effect>
+            <type>Push</type>
+            <magnitude>1</magnitude>
+        </effect>
+        <mp>0</mp>
+        <prompt>Basic attack.</prompt>
+        <animation>basic</animation>
+    </skill>
+    <skill ident = "Spore Cloud">
+        <target>enemy</target>
+        <stat>magic</stat>
+        <narration>conjures a cloud of spores at</narration>
+        <range>6</range>
+        <aoe>0</aoe>
+        <damage>1,8</damage>
+        <effect>
+            <type>Dark</type>
+            <magnitude>1</magnitude>
+            <duration>3</duration>
+        </effect>
+        <mp>0</mp>
+        <prompt>Basic attack.</prompt>
+        <animation>basic</animation>
+    </skill>
+    <skill ident = "Fungeneration">
+        <target>friendly</target>
+        <stat>magic</stat>
+        <narration>casts a fungeneration spell on</narration>
+        <range>4</range>
+        <aoe>0</aoe>
+        <damage>1,-1</damage>
+        <mp>3</mp>
+        <prompt>Basic attack.</prompt>
+        <animation>heal</animation>
+    </skill>
+    <skill ident = "Frenzy">
+        <target>enemy</target>
+        <stat>attack</stat>
+        <narration>frenzies on</narration>
+        <range>1</range>
+        <aoe>0</aoe>
+        <damage>2,8</damage>
+        <mp>0</mp>
+        <prompt>Basic attack.</prompt>
+        <animation>basic</animation>
+    </skill>
+
+<!-- Boss skills -->
+    <skill ident = "Necrodrain">
+        <target>friendly</target>
+        <stat>magic</stat>
+        <narration>feeds on dark energy from</narration>
+        <range>5</range>
+        <aoe>0</aoe>
+        <damage>1,6</damage>
+        <effect>
+            <type>Drain</type>
+        </effect>
+        <mp>2</mp>
+        <prompt>Absorbs HP from an ally. Range 7.</prompt>
+        <animation>drain</animation>
+    </skill>
+    <skill ident = "Cloudkill">
+        <target>enemy</target>
+        <stat>magic</stat>
+        <narration>conjures a toxic cloud on</narration>
+        <range>6</range>
+        <aoe>2</aoe>
+        <damage>1,8</damage>
+        <effect>
+            <type>Poison</type>
+            <magnitude>2</magnitude>
+            <duration>3</duration>
+        </effect>
+        <mp>1</mp>
+        <prompt>Damages units and inflicts Poison. Range 6, area 2.</prompt>
+        <animation>dark ball</animation>
+    </skill>
+
+    <skill ident = "Poisonbolt">
+        <target>enemy</target>
+        <stat>magic</stat>
+        <narration>fires a poisonous bolt at</narration>
+        <range>8</range>
+        <aoe>0</aoe>
+        <damage>2,6</damage>
+        <effect>
+            <type>Poison</type>
+            <magnitude>3</magnitude>
+            <duration>3</duration>
+        </effect>
+        <mp>1</mp>
+        <prompt>Damages enemy and inflicts Poison. Range 8.</prompt>
+        <animation>poisonbolt</animation>
+    </skill>
+
+    <skill ident = "Shadow Curse">
+        <target>enemy</target>
+        <stat>magic</stat>
+        <narration>places a shadow curse on</narration>
+        <range>5</range>
+        <aoe>0</aoe>
+        <damage>2,5</damage>
+        <effect>
+            <type>Slow</type>
+            <magnitude>2</magnitude>
+            <duration>3</duration>
+        </effect>
+        <mp>0</mp>
+        <prompt>Damages enemy and inflicts slow. Range 5.</prompt>
+        <animation>surge</animation>
+    </skill>
+
+    <skill ident = "Annihilate">
+        <target>enemy</target>
+        <stat>magic</stat>
+        <narration>invokes the power of annihilation on</narration>
+        <range>0</range>
+        <aoe>666</aoe>
+        <damage>3,10</damage>
+        <effect>
+            <type>Poison</type>
+            <magnitude>3</magnitude>
+            <duration>3</duration>
+        </effect>
+        <mp>8</mp>
+        <prompt>Damages all enemies and inflicts poison.</prompt>
+        <animation>annihilate</animation>
+    </skill>
+
+    <skill ident = "Summon Skelesaur">
+        <target>empty</target>
+        <stat>magic</stat>
+        <narration>summons an skeletal stegosaur</narration>
+        <range>5</range>
+        <aoe>0</aoe>
+        <damage>0</damage>
+        <effect>
+            <type>Summon</type>
+            <magnitude>Skelesaur</magnitude>
+        </effect>
+        <mp>-1</mp>
+        <prompt>Summon a stegosaur to crush your foes.</prompt>
+        <animation>summon</animation>
+    </skill>
+
+    <skill ident = "Summon Lichdrake">
+        <target>empty</target>
+        <stat>magic</stat>
+        <narration>summons an undead wyrmling</narration>
+        <range>5</range>
+        <aoe>0</aoe>
+        <damage>0</damage>
+        <effect>
+            <type>Summon</type>
+            <magnitude>Lichdrake</magnitude>
+        </effect>
+        <mp>-1</mp>
+        <prompt>Summon a stegosaur to crush your foes.</prompt>
+        <animation>summon</animation>
+    </skill>
+
+</skills>

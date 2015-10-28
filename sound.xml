@@ -1,0 +1,217 @@
+<sounds>
+    <!-- SOUND EFFECTS -->
+
+    <sound>
+        <ident>meteor</ident>
+        <filename>starstorm.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>starstorm</ident>
+        <filename>starstorm.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>bigboom</ident>
+        <filename>bigboom.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>slash</ident>
+        <filename>slash.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>arrow</ident>
+        <filename>arrow.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>heal</ident>
+        <filename>heal.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>slow</ident>
+        <filename>slow.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>gamma</ident>
+        <filename>gamma.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>quake</ident>
+        <filename>quake.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>burn3</ident>
+        <filename>burn3.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>fall</ident>
+        <filename>fall.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>gravity</ident>
+        <filename>gravity.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>beep2</ident>
+        <filename>beep2.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>beep</ident>
+        <filename>beep.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>fire</ident>
+        <filename>fire.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>fireball</ident>
+        <filename>fireball.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>ice</ident>
+        <filename>ice.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>dark</ident>
+        <filename>dark.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>drain</ident>
+        <filename>drain.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>zero</ident>
+        <filename>zero2.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>bighit</ident>
+        <filename>bighit.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>buff</ident>
+        <filename>buff.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>shock</ident>
+        <filename>shock.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>surge</ident>
+        <filename>powersurge.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>worldbreak</ident>
+        <filename>groundbreaking.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>annihilate</ident>
+        <filename>annihilate.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>gg</ident>
+        <filename>gg.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>singularity</ident>
+        <filename>singularity.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>error</ident>
+        <filename>error.wav</filename>
+    </sound>
+
+    <sound>
+        <ident>summon</ident>
+        <filename>summon.wav</filename>
+    </sound>
+
+
+
+ <!--music files -->
+    <music>
+        <ident>silence</ident>
+        <filename>silence.ogg</filename>
+    </music>
+
+    <music>
+        <ident>wind</ident>
+        <filename>wind.ogg</filename>
+    </music>
+
+    <music>
+        <ident>title</ident>
+        <filename>title.ogg</filename>
+    </music>
+
+    <music>
+        <ident>battle3</ident>
+        <filename>battle3.ogg</filename>
+    </music>
+
+    <music>
+        <ident>battle1a</ident>
+        <filename>battle1a.ogg</filename>
+    </music>
+
+    <music>
+        <ident>battle1b</ident>
+        <filename>battle1b.ogg</filename>
+    </music>
+
+    <music>
+        <ident>battle2a</ident>
+        <filename>battle2a.ogg</filename>
+    </music>
+
+    <music>
+        <ident>battle2b</ident>
+        <filename>battle2b.ogg</filename>
+    </music>
+
+    <music>
+        <ident>victory</ident>
+        <filename>victory.ogg</filename>
+    </music>
+
+    <music>
+        <ident>feld3</ident>
+        <filename>feld3.ogg</filename>
+    </music>
+
+    <music>
+        <ident>ending</ident>
+        <filename>ending.ogg</filename>
+    </music>
+
+    <music>
+        <ident>trans</ident>
+        <filename>trans.ogg</filename>
+    </music>
+
+</sounds>

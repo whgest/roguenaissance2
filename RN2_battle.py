@@ -1,0 +1,531 @@
+"""
+
+Project Roguenaissance 2.0
+Battle System Logic
+by William Hardy Gest
+
+October 2013
+
+"""
+
+import RN2_loadmap
+import random
+import time
+import logging
+
+
+class StatusEffectData():
+    def __init__(self, name, effects, continuous=False, impairing=False):
+        self.name = name
+        self.effects = effects
+        self.continuous = continuous
+        self.impairing = impairing
+
+    def __str__(self):
+        return self.name
+
+DEFAULT_STATUS_EFFECTS = {
+    "Poison": StatusEffectData("Poison", [("hp", -1)], continuous=True),
+    "Burning": StatusEffectData("Burning", [("hp", -1)], continuous=True),
+    "Frostbite": StatusEffectData("Frostbite", [("hp", -1)], continuous=True),
+    "Regen": StatusEffectData("Regen", [("hp", 1)], continuous=True),
+    "Dark": StatusEffectData("Dark", [("attack", -1)]),
+    "Slow": StatusEffectData("Slow", [("move", -1)]),
+    "Haste": StatusEffectData("Haste", [("move", 1)]),
+    "Armored": StatusEffectData("Armored", [("defense", 1)]),
+    "Root": StatusEffectData("Root", [("rooted", 1)], impairing=True),
+    "Stun": StatusEffectData("Stun", [("stunned", 1)], impairing=True)
+}
+
+
+class AppliedStatusEffect(StatusEffectData):
+    def __init__(self, name, effects, duration, report, continuous=False, impairing=False, magnitude=1):
+        StatusEffectData.__init__(self, name, effects, continuous, impairing)
+        self.magnitude = int(magnitude)
+        self.duration = duration
+        self.display_color = "good_status" if self.is_beneficial else "bad_status"
+        self.report = report
+
+    @property
+    def is_beneficial(self):
+        positive_count = 0
+        negative_count = 0
+        for stat_change in self.effects:
+            if stat_change[1] > 0:
+                positive_count += 1
+            else:
+                negative_count += 1
+        return True if positive_count > negative_count and not self.impairing else False
+
+    def tick_status(self, actor):
+        if self.continuous:
+            for effect in self.effects:
+                attribute = effect[0]
+                multiplier = effect[1]
+                effect = multiplier * self.magnitude
+                new_value = getattr(actor, attribute) + effect
+                setattr(actor, attribute, new_value)
+                if self.is_beneficial:
+                    self.report.add_entry("regen", actor, cause=self.name, effect=str(effect))
+                else:
+                    self.report.add_entry("status_damage", actor, cause=self.name, effect=str(abs(effect)))
+
+        self.decrement_duration(actor)
+
+    def apply_status(self, actor):
+        if not self.continuous:
+            for effect in self.effects:
+                attribute = effect[0]
+                multiplier = effect[1]
+                actor.attribute_modifiers[attribute].append(multiplier * self.magnitude)
+
+        if self.is_beneficial:
+            self.report.add_entry("good_status", actor, cause=self.name)
+        else:
+            self.report.add_entry("bad_status", actor, cause=self.name)
+
+    def decrement_duration(self, actor):
+        self.duration -= 1
+        if self.duration == 0:
+            self.end_status(actor)
+
+    def end_status(self, actor):
+        for effect in self.effects:
+            if not self.continuous:
+                attribute = effect[0]
+                multiplier = effect[1]
+                actor.attribute_modifiers[attribute].remove(multiplier * self.magnitude)
+
+        for s in actor.status:
+            if s.name == self.name:
+                actor.status.remove(s)
+                break
+
+        if self.is_beneficial:
+            self.report.add_entry("good_status_ends", actor, cause=self.name)
+        else:
+            self.report.add_entry("status_ends", actor, cause=self.name)
+
+
+class TurnTracker():
+    def __init__(self, heroes, enemies):
+        self.heroes = heroes
+        self.enemies = enemies
+        self.initiative_list = []
+        self.turn_count = 0
+
+    def roll_initiative(self):
+        initiative_list = []
+        for h in self.heroes:
+            initiative = (h.agility*2 + random.randint(1, 20))
+            initiative_list.append((initiative, h))
+        for e in self.enemies:
+            initiative = (e.agility*2 + random.randint(1, 20))
+            initiative_list.append((initiative, e))
+        initiative_list.sort()
+        self.initiative_list = [x[1] for x in initiative_list]
+
+    def add_unit(self, unit):
+        self.initiative_list.insert(0, unit)
+
+    def remove_unit(self, unit):
+        self.initiative_list.remove(unit)
+
+    def get_next_unit(self):
+        active_actor = self.initiative_list.pop()
+        self.initiative_list.insert(0, active_actor)
+        if active_actor == self.heroes[0]:
+            self.turn_count += 1
+        return active_actor
+
+
+class Battle():
+    def __init__(self, hero, battle, actors, bmap):
+        self.heroes = [hero]
+        self.actors = actors
+        self.enemies = []
+        self.hero = self.heroes[0]
+        self.turn_tracker = TurnTracker(self.heroes, self.enemies)
+        self.events = battle["events"]
+        self.active = None
+        self.selected_skill = None
+        self.skill_index = 0
+        self.battle_index = 0
+        self.battle_menu_list = []
+        self.v_top = 0
+        self.move_range = None
+        self.report = None
+        self.state_changes = []
+        self.targetable_tiles = None
+        self.target_tile = None
+        self.state = ""
+        self.kills = 0
+        self.bmap, self.startpos = RN2_loadmap.load_map(bmap)
+        self.map_size = (49, 24)
+        self.unit_list = []
+
+    def turn_manager(self):
+        while 1:
+            active_actor = self.turn_tracker.get_next_unit()
+            if active_actor.mp < active_actor.maxmp:
+                 active_actor.mp += 1
+            if active_actor.hp > 0 and not active_actor.stunned:
+                break
+        if active_actor.ai == "player":
+            return True, active_actor
+        else:
+            #self.execute_ai_turn(RN2_AI.enemy_turn(self, active_actor))
+            return False, active_actor
+
+    def get_range(self, origin, arange):
+        targetable_tiles = []
+        if arange == 777: #line attack
+            if origin[0] == self.hero.coords[0] and origin [1] > self.hero.coords[1]: #down
+                for i in range(self.map_size[1] - origin[1]):
+                    if self.bmap[origin[0]][origin[1]+i].terrain.targetable == 0:
+                        break
+                    else:
+                        targetable_tiles.append((origin[0], origin[1]+i))
+            if origin[0] == self.hero.coords[0] and origin [1] < self.hero.coords[1]: #up
+                for i in range(origin[1]+1):
+                    if self.bmap[origin[0]][origin[1]-i].terrain.targetable == 0:
+                        break
+                    else:
+                        targetable_tiles.append((origin[0], origin[1]-i))
+            if origin[1] == self.hero.coords[1] and origin [0] > self.hero.coords[0]: #right
+                for i in range(self.map_size[0]-origin[0]):
+                    if self.bmap[origin[0]+i][origin[1]].terrain.targetable == 0:
+                        break
+                    else:
+                        targetable_tiles.append((origin[0]+i, origin[1]))
+            if origin[1] == self.hero.coords[1] and origin [0] < self.hero.coords[0]: #left
+                for i in range(origin[0]+1):
+                    if self.bmap[origin[0]-i][origin[1]].terrain.targetable == 0:
+                        break
+                    else:
+                        targetable_tiles.append((origin[0]-i, origin[1]))
+            else:
+                targetable_tiles.append((origin[0], origin[1]))
+
+            if len(targetable_tiles) > 12:
+                targetable_tiles = targetable_tiles[:13]
+
+        elif arange == 666: #global attack
+            for x in range(self.map_size[0]+1):
+                for y in range(self.map_size[1]+1):
+                   targetable_tiles.append((x,y))
+
+        else:
+            targetable_tiles = [tuple(origin)]       #list of tuple coordinates of tiles that are in attack range
+            new_tiles = [tuple(origin)]
+            for i in range(arange):
+                for t in targetable_tiles:
+                    if (t[0]+1, t[1]) not in targetable_tiles:
+                        new_tiles.append((t[0]+1, t[1]))
+                    if (t[0]-1, t[1]) not in targetable_tiles:
+                        new_tiles.append((t[0]-1, t[1]))
+                    if (t[0], t[1]-1) not in targetable_tiles:
+                        new_tiles.append((t[0], t[1]-1))
+                    if (t[0], t[1]+1) not in targetable_tiles:
+                        new_tiles.append((t[0], t[1]+1))
+                for t in new_tiles:
+                    if t not in targetable_tiles and 0 <= t[0] <= 49 and 0 <= t[1] <= 24:
+                        targetable_tiles.append(t)
+        remove_list = []
+        for t in targetable_tiles:
+            if self.bmap[t[0]][t[1]].terrain.movable == 0:
+                remove_list.append(t)
+        for r in remove_list:
+            targetable_tiles.remove(r)
+        return targetable_tiles
+
+    def check_bounds(self, coords):
+        if 0 > coords[0] or coords[0] > self.map_size[0] or 0 > coords[1] or coords[1] > self.map_size[1]:
+            return True
+        return False
+
+    def get_adjusted_mp(self, skill, actor=False): #each summon costs an additional mp for each existing summon
+        if skill.mp != -1:
+            return skill.mp
+        else:
+            if not actor or actor == self.hero:
+                return 1 + (len(self.heroes) - 1) *2
+            else:
+                return 1 + (len(self.enemies) - 1) *2
+
+    def skill_target(self, attacker, skill, affected_tiles):
+        logging.debug(repr(affected_tiles))
+        attacker.mp = attacker.mp - self.get_adjusted_mp(skill, attacker)
+        targets = []
+        if attacker in self.heroes:
+            friendlies = self.heroes
+            enemies = self.enemies
+        elif attacker in self.enemies:
+            friendlies = self.enemies
+            enemies = self.heroes
+        else:
+            enemies = self.heroes
+            friendlies = self.heroes
+        if skill.target == "enemy":
+            for e in enemies:
+                if tuple(e.coords) in affected_tiles and self.attack_roll(attacker, e, skill):
+                    targets.append(e)
+        if skill.target == "friendly":
+            for f in friendlies:
+                if tuple(f.coords) in affected_tiles:
+                    targets.append(f)
+        if skill.target == "empty":
+            targets.append(affected_tiles[0])
+        if skill.target in ["all", "tile"]:
+            for e in enemies:
+                if tuple(e.coords) in affected_tiles and self.attack_roll(attacker, e, skill):
+                    targets.append(e)
+            for f in friendlies:
+                if (tuple(f.coords) in affected_tiles) and (skill.damage <= 0 or self.attack_roll(attacker, f, skill)): #this way friendlies will not roll to avoid beneficial skills
+                    targets.append(f)
+        if targets != []:
+            self.skill_effect(attacker, skill, targets, affected_tiles)
+        return targets
+
+    def skill_effect(self, attacker, skill, targets, affected_tiles):
+        for t in targets:
+            if skill.damage != 0:
+                damage = self.attack_resolution(attacker, t, skill, skill.damage)
+            for effect in skill.effects:
+                if effect["type"] in ["Drain"]:
+                    attacker.hp += damage
+                    if attacker.hp > attacker.maxhp:
+                        attacker.hp = attacker.maxhp
+                elif effect["type"] in ["Pull", "Push"]:
+                    self.forced_move(attacker, t, effect["type"], effect["magnitude"])
+                elif effect["type"] in ["Capture", "Pushto"]:
+                    self.forced_move(attacker, t, effect["type"], effect["magnitude"], affected_tiles[0])
+                elif effect["type"] == "Summon":
+                    self.summon(attacker, effect["magnitude"], targets[0])
+                else:  # status effect
+                    if t.status == ["Dead"] or t.hp <= 0:   #check if target is dead first
+                        continue
+
+                    #resolve dual status skills
+                    if "|" in effect["type"]:
+                        if t in self.enemies and attacker in self.enemies or t in self.heroes and attacker in self.heroes:
+                            effect["type"] = effect["type"].split("|")[0]
+                        else:
+                            effect["type"] = effect["type"].split("|")[1]
+
+                    # if same status already exists, refresh duration
+                    # TODO: overwrite weaker magnitudes if stronger one is applied (end old status)
+                    break_flag = False
+                    for status in t.status:
+                        if status.name == effect["type"]:
+                            status.duration = effect["duration"]
+                            break_flag = True
+                            break
+                    if break_flag:
+                        continue
+                    if effect["type"] in t.immunities:
+                        self.report.add_entry("immunity", t, cause=effect["type"])
+                        continue
+
+                    if effect["type"] in DEFAULT_STATUS_EFFECTS:
+                        modifiers = DEFAULT_STATUS_EFFECTS[effect["type"]].effects
+                        continuous = DEFAULT_STATUS_EFFECTS[effect["type"]].continuous
+                        impairing = DEFAULT_STATUS_EFFECTS[effect["type"]].impairing
+                    else:  # custom status effects defined in xml
+                        modifiers = effect["modifiers"]
+                        continuous = effect["continuous"]
+                        #add impairing if needed
+                        impairing = False
+
+                    status_to_apply = AppliedStatusEffect(effect["type"], modifiers, effect["duration"], self.report,
+                                                          magnitude=effect["magnitude"], continuous=continuous,
+                                                          impairing=impairing)
+                    t.status.append(status_to_apply)
+                    status_to_apply.apply_status(t)
+
+        return
+
+    def summon(self, caster, monster, tile):
+        tile = [tile[0], tile[1]]
+        if caster in self.heroes:
+            self.state_changes.append(("summon", monster, tile, "hero"))
+        else:
+            self.state_changes.append(("summon", monster, tile, "enemy"))
+        return
+
+    def attack_roll(self, attacker, defender, skill):
+        if skill.aoe == 666:
+            return True
+        if skill.stat == "attack":
+            random_roll = random.randint(0, attacker.attack)
+            attack_roll = (attacker.attack/2) + random_roll
+            if attack_roll >= defender.defense:
+                return True
+            else:
+                self.report.add_entry("miss", defender, cause=skill.name)
+                return False
+        elif skill.stat == "magic":
+            attack_roll = (attacker.magic/2) + random.randint(0, attacker.magic)
+            if attack_roll >= defender.resistance:
+                return True
+            else:
+                self.report.add_entry("resist", defender, cause=skill.name)
+                return False
+        return
+
+    def attack_resolution(self, attacker, defender, skill, damage):
+        num_dice = int(damage[0])
+        dice_size = int(damage[1])
+        roll = 0
+        for i in range(num_dice):
+            randoms = [1*(dice_size/abs(dice_size)), dice_size]  #1 or - 1
+            randoms.sort()
+            roll = roll + random.randint(*randoms)
+        if skill.stat == "attack":
+            inflicted_damage = roll + (attacker.attack/3)*(roll/abs(roll))
+        elif skill.stat == "magic":
+            inflicted_damage = roll + (attacker.magic/3)*(roll/abs(roll))
+        else:
+            inflicted_damage = 0
+        defender.hp -= inflicted_damage
+        if defender.hp > defender.maxhp:
+            defender.hp = defender.maxhp
+        if dice_size < 0:
+            self.report.add_entry("heal", defender, cause=skill.name, effect=str(abs(inflicted_damage)))
+        else:
+            self.report.add_entry("damage", defender, cause=skill.name, effect=str(abs(inflicted_damage)))
+        # if defender == self.hero:
+        #     self.damage_taken = self.damage_taken + inflicted_damage
+        return inflicted_damage
+
+    def execute_ai_turn(self, e, skill, target, path):
+        aipath = [(e.coords[0], e.coords[1])]
+        if target is not None:
+            x = target[0]
+            y = target[1]
+        if skill is not None and self.grid_distance(e.coords, (x, y)) <= skill.range:  #can attack before or after moving, so checks twice
+                self.enemy_skill(e, skill, target)
+                return aipath, target, skill
+        # if skill is not None and skill.range == 0: code for PBAOE use doesnt work
+        #         self.enemy_skill(e, skill, e)
+        #         return
+        for i in range(e.move):
+            if path and len(path) > 1:
+                if i >= len(path)-1:
+                    break
+                if self.bmap[path[i+1][0]][path[i+1][1]].actor is not None:
+                    break
+                e.coords[0] = path[i+1][0]
+                e.coords[1] = path[i+1][1]
+                aipath.append((e.coords[0], e.coords[1]))
+                if skill is not None and self.grid_distance(e.coords, (x, y)) <= skill.range:
+                    self.enemy_skill(e, skill, target)
+                    return aipath, target, skill
+        if skill is not None and self.grid_distance(e.coords, (x, y)) <= skill.range:
+            self.enemy_skill(e, skill, target)
+            return aipath, target, skill
+        print "maxrange, waiting:", skill
+        return aipath, target, skill
+
+    def grid_distance(self, actor1, actor2):
+        return abs(actor1[0] - actor2[0]) + abs(actor1[1] - actor2[1])
+
+    def enemy_skill(self, e, skill, target):
+        x = target[0]
+        y = target[1]
+        affected_tiles = self.get_range((x, y), skill.aoe)
+        self.affected_tiles = affected_tiles
+        self.skill_target(e, skill, affected_tiles)
+
+
+    def resolve_status(self, actor):
+        if actor.status == [] or actor.status == ["Dead"]:
+            return
+        remove_list = []
+        for s in actor.status:
+            s.tick_status(actor)
+        if actor.hp <= 0:
+            pass #TODO: status kill
+
+
+        return
+
+    def stat_modifiers(self, a):
+        stats_list = ["attack", "defense", "magic", "resistance", "agility", "move"]
+        for stat in stats_list:
+            stat_mod = getattr(a, stat) + a.statmods[stat]
+            setattr(a, stat, stat_mod)
+
+    def resolve_terrain(self, a):
+        a.move = a.basestats.move
+        a.skillset = a.basestats.skillset
+        x = a.coords[0]
+        y = a.coords[1]
+        if -1 < x < self.map_size[0] and -1 < y < self.map_size[1]:
+            pass
+        else:
+            return False
+        terrain = self.bmap[x][y].terrain
+        if terrain.aquatic == 1:
+            if "Aquatic" not in a.immunities:
+                a.move = 1
+                a.mp -= 1
+                a.skillset = []
+            for s in a.status:
+                if s["type"] == "Burning" or "Haste":
+                    a.status.remove(s)
+                    self.report.append(("statusends",(a.name, s["type"])))
+            return True
+        if terrain.name == "Lava":
+            a.hp = 0
+            self.report.append(("statuskill",[a.name, "Lava"]))
+            a.status = [{"type":"Dead"}]
+            return True
+        if terrain.name == "Wall":
+            return False
+        if terrain.name == "Pit":
+            a.hp = 0
+            self.report.append(("statuskill",[a.name, "Falling"]))
+            a.status = [{"type":"Dead"}]
+            return True
+        return False
+
+    def forced_move(self, attacker, defender, direction, magnitude, origin=False):  #returns a path for later animation
+        print "forced move", defender, origin
+        if "Push" in defender.immunities:
+            self.report.append(("immunity", [defender.name, "Push/Pull"]))
+            return
+        if origin:
+            nexus = origin
+        else:
+            nexus = attacker.coords
+        magnitude = int(magnitude)
+        if direction in ["Push", "Pushto"]:
+            direction = 1
+        elif direction in ["Pull", "Capture"]:
+            direction = -1
+        x_dist =  nexus[0] - defender.coords[0]
+        y_dist =  nexus[1] - defender.coords[1]
+        path = [defender.coords]
+        for i in range(magnitude):
+            prev_coords = tuple(defender.coords)
+            if abs(x_dist) >= abs(y_dist) and nexus[0] > defender.coords[0]:
+                path.append([defender.coords[0]-(1*direction), defender.coords[1]])
+            elif abs(x_dist) >= abs(y_dist) and nexus[0] <= defender.coords[0]:
+                path.append([defender.coords[0]+(1*direction), defender.coords[1]])
+            elif abs(x_dist) < abs(y_dist) and nexus[1] > defender.coords[1]:
+                path.append([defender.coords[0], defender.coords[1]-(1*direction)])
+            elif abs(x_dist) < abs(y_dist) and nexus[1] < defender.coords[1]:
+                path.append([defender.coords[0], defender.coords[1]+(1*direction)])
+            # if self.resolve_terrain(defender):
+            #     pass
+            defender.coords = path[-1]
+            if self.check_bounds(defender.coords) == True or self.bmap[defender.coords[0]][defender.coords[1]].actor is not None or self.bmap[defender.coords[0]][defender.coords[1]].terrain.movable == 0:
+                print defender.coords, "blocked"
+                defender.coords[0] = prev_coords[0]; defender.coords[1] = prev_coords[1]
+                self.state_changes.append(("forcedmove", path, defender))
+                return
+            time.sleep(0.05)
+        self.state_changes.append(("forcedmove", path, defender))
+        print path
+        return

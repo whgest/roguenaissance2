@@ -1,0 +1,78 @@
+<textblocks>
+    <text ident = "Astromancer">
+An arcane practicioner that draws on the heavens as a source of power. A master of disabling enemies, summoning strong otherworldly creatures, and smiting enemies with cosmic energy.
+   </text>
+
+    <text ident = "Pyromancer">
+A wielder of the primal elemental forces of fire and ice. Physically frail, but a master of conjuring raw destructive power and summoning bizarre creatures with but a thought.
+   </text>
+
+    <text ident = "Terramancer">
+A wizard who trains the body alongside the mind, and draws on the powers of the earth and her creatures to smash enemies to bits. A formidable mage and strong in hand-to-hand combat as well.
+   </text>
+
+    <text ident = "Name">
+Most of the forms are fairly routine, if disturbingly personal. You spend several torturous hours filling them out, the paperwork elemental rustling impatiently throughout. The final form asks, once again, for your name:
+   </text>
+
+    <text ident = "Class">
+Finally, it asks which College you belong to. What arcane arts did you spend all these long years studying?
+   </text>
+
+    <text ident = "NameInvalid">
+The space on the form is pretty small.. you can only fit 18 letters.
+   </text>
+
+    <text ident = "battle1">
+With a sigh of rustling papers, the elemental gestures towards a hallway. Words form in your mind: "Use the teleporter behind the first door on your right. If you don't come back within 3 days, we'll send someone to retrieve your corpse and deliver it to your family-- if there's enough left of it."
+$p
+Mentally steeling yourself, you enter the room. The teleporter activates in your present, creating a tiny tear in space-time through which you can see a darkened cavern.
+$p
+It's now or never... if you chicken out now, it's exile or worse. You take your last breath of the dusty air of the Academy, and enter the rift...
+$p
+   </text>
+
+    <text ident = "battle2">
+You escape the first chamber with your life.
+$p
+Your light spell wears off, plunging you into total darkness. Recasting it, you are startled to see a band of heavily armed myconids-- feral mushroom men-- barring your path.
+$p
+"Excuse me, good sirs," you say. "I think there's been some sort of  mistake. This is a testing center for the Aldebaran Academy of..."
+$p
+A feral shrieking from the fungal creatures puts an end to your entreaties. With a sigh, you ready your spells...
+$p
+   </text>
+
+    <text ident = "battle3">
+As you descend, the temperature rises higher and higher. You step into a chamber filled with flowing magma that glows an unearthly red.
+$p
+A man waits for you at the far end of the chamber. As he turns, you gasp-- you recognize his face from countless wanted posters.
+$p
+Belshazzar, the Necromancer, practicioner of forbidden magics.
+$p
+He laughs. "Another lamb to the slaughter. This is the perfect place to lie in ambush. When I have finished off enough promising young wizards, there will be none left to stop me!"
+$p
+An insane glint is in his eye. You ready your spells as the souls of the dead begin to wail...
+$p
+   </text>
+
+    <text ident = "ending">
+write this
+$p
+   </text>
+
+    <text ident = "intro">
+The day you have studied for, worked for, suffered for, longed for, and dreaded is here.
+$p
+Your instructors at the Aldebaran Academy of the Arcane, one of the world's finest wizard colleges, have cleared you to attempt the Final Exam. You will take your place alongside them in the Ivory Tower... if you pass.
+$p
+To pass, you must survive. Die, and you fail. It's very simple, at least.
+$p
+You enter the testing center, dressed in your finest robes and wizard hat. The proctor is a paperwork elemental... a creature summoned from the Plane of Bureaucracy, a gentling swirling vortex of forms, clipboards, and quills.
+$p
+Words form in your mind: "You're 17 seconds late, fool. I will punish you for this." A huge stack of forms and a quill separate themselves from the creature and float gently into your hands.
+$p
+"Suffer, mortal. And don't even consider stealing that quill." You sigh, and set to work.
+$p
+   </text>
+</textblocks>

@@ -1,0 +1,388 @@
+
+<actors>
+    <heroclass ident =  "Astromancer">
+        <character>@</character>
+        <color>white</color>
+        <ai>player</ai>
+        <maxhp>52</maxhp>
+        <maxmp>9</maxmp>
+        <weapon>white sword</weapon>
+        <armor>astral regalia</armor>
+        <attack>17</attack>
+        <defense>19</defense>
+        <magic>20</magic>
+        <resistance>19</resistance>
+        <agility>14</agility>
+        <move>6</move>
+        <immunities>Slow</immunities>
+        <skills>White sword,Gravity Surge,Zodiac Curse,Time Distortion,Soothing Starlight,Singularity,Meteor,Gamma Ray,Skycaller,Summon Meteorman,Summon 4DHypercube</skills>
+        <descr>A wizard mastering the powers of the cosmos.</descr>
+    </heroclass>
+    <heroclass ident =  "Pyromancer">
+        <character>@</character>
+        <color>white</color>
+        <ai>player</ai>
+        <maxhp>45</maxhp>
+        <maxmp>10</maxmp>
+        <weapon>focusing staff</weapon>
+        <armor>flaming cloak</armor>
+        <attack>15</attack>
+        <defense>17</defense>
+        <magic>19</magic>
+        <resistance>20</resistance>
+        <agility>11</agility>
+        <move>6</move>
+        <immunities>Burning</immunities>
+        <skills>Focusing staff,Flash Freeze,Ice Spear,Pyrokinesis,Icy Prison,Life Drain,Frostburn,Absolute Zero,Fuse Atom,Smn. Flaming Crows,Summon Snowball</skills>
+        <descr>A wizard mastering the powers of fire and ice.</descr>
+    </heroclass>
+    <heroclass ident =  "Terramancer">
+        <character>@</character>
+        <color>white</color>
+        <ai>player</ai>
+        <maxhp>60</maxhp>
+        <maxmp>10</maxmp>
+        <weapon>obsidian sword</weapon>
+        <armor>brigandine</armor>
+        <attack>19</attack>
+        <defense>20</defense>
+        <magic>19</magic>
+        <resistance>18</resistance>
+        <agility>15</agility>
+        <move>6</move>
+        <immunities>Dark</immunities>
+        <skills>Obsidian sword,Whirlwind,Stone Armor,Rock Toss,Thunderbolt,Landslide,Vine Grasp,Tectonic Break,Ascendance,Summon Spring Wind,Summon Stegosaur</skills>
+        <descr>A wizard mastering the powers of the earth and her creatures.</descr>
+    </heroclass>
+    <!--Summoned monsters -->
+    <actor ident =  "Meteorman">
+        <character>M</character>
+        <color>lime</color>
+        <ai>player</ai>
+        <maxhp>50</maxhp>
+        <maxmp>2</maxmp>
+        <attack>19</attack>
+        <defense>16</defense>
+        <magic>0</magic>
+        <resistance>13</resistance>
+        <agility>2</agility>
+        <move>4</move>
+        <immunities>None</immunities>
+        <skills>Meteor Punch,Magnetize</skills>
+        <descr>A golem constructed of unyielding asteroid.</descr>
+    </actor>
+
+    <actor ident =  "4D Hypercube">
+        <character>H</character>
+        <color>lime</color>
+        <ai>player</ai>
+        <maxhp>40</maxhp>
+        <maxmp>3</maxmp>
+        <attack>19</attack>
+        <defense>13</defense>
+        <magic>19</magic>
+        <resistance>13</resistance>
+        <agility>11</agility>
+        <move>6</move>
+        <immunities>None</immunities>
+        <skills>Starshards,Cosmic Barrage</skills>
+        <descr>A mind-shredding shard of extradimensional geometry.</descr>
+    </actor>
+
+    <actor ident =  "Snowball">
+        <character>S</character>
+        <color>lime</color>
+        <ai>player</ai>
+        <maxhp>50</maxhp>
+        <maxmp>2</maxmp>
+        <attack>19</attack>
+        <defense>16</defense>
+        <magic>0</magic>
+        <resistance>13</resistance>
+        <agility>2</agility>
+        <move>4</move>
+        <immunities>None</immunities>
+        <skills>Snowball Crush,Snowball Slam</skills>
+        <descr>A rolling snowball.</descr>
+    </actor>
+
+    <actor ident =  "Flaming Crows">
+        <character>C</character>
+        <color>lime</color>
+        <ai>player</ai>
+        <maxhp>45</maxhp>
+        <maxmp>3</maxmp>
+        <attack>20</attack>
+        <defense>11</defense>
+        <magic>20</magic>
+        <resistance>10</resistance>
+        <agility>20</agility>
+        <move>6</move>
+        <immunities>AlwaysBurning</immunities>
+        <skills>Swarm,The Birds</skills>
+        <descr>A flock of burning crows.</descr>
+    </actor>
+
+    <actor ident =  "Spring Wind">
+        <character>w</character>
+        <color>lime</color>
+        <ai>player</ai>
+        <maxhp>20</maxhp>
+        <maxmp>4</maxmp>
+        <attack>1</attack>
+        <defense>10</defense>
+        <magic>12</magic>
+        <resistance>16</resistance>
+        <agility>25</agility>
+        <move>9</move>
+        <immunities>None</immunities>
+        <skills>Breeze Blow,Soothing Breeze,Healstorm</skills>
+        <descr>A pleasant breeze.</descr>
+    </actor>
+
+    <actor ident =  "Stegosaur">
+        <character>S</character>
+        <color>lime</color>
+        <ai>player</ai>
+        <maxhp>50</maxhp>
+        <maxmp>3</maxmp>
+        <attack>20</attack>
+        <defense>17</defense>
+        <magic>0</magic>
+        <resistance>10</resistance>
+        <agility>2</agility>
+        <move>4</move>
+        <immunities>None</immunities>
+        <skills>Tail Swipe,Megastomp</skills>
+        <descr>A rampaging dinosaur.</descr>
+    </actor>
+
+    <actor ident =  "Skelesaur">
+        <character>K</character>
+        <color>red</color>
+        <ai>damage</ai>
+        <maxhp>50</maxhp>
+        <maxmp>3</maxmp>
+        <attack>20</attack>
+        <defense>17</defense>
+        <magic>0</magic>
+        <resistance>10</resistance>
+        <agility>2</agility>
+        <move>4</move>
+        <immunities>None</immunities>
+        <skills>Tail Slam,Skelestomp</skills>
+        <descr>A long-dead dinosaur.</descr>
+    </actor>
+
+    <actor ident =  "Lichdrake">
+        <character>L</character>
+        <color>red</color>
+        <ai>damage</ai>
+        <maxhp>40</maxhp>
+        <maxmp>3</maxmp>
+        <attack>19</attack>
+        <defense>13</defense>
+        <magic>19</magic>
+        <resistance>13</resistance>
+        <agility>11</agility>
+        <move>6</move>
+        <immunities>None</immunities>
+        <skills>Poison Breath,Poison Surge</skills>
+        <descr>An undead wyrmling.</descr>
+    </actor>
+
+    <!-- Monsters -->
+    <actor ident =  "Fluffy kitten">
+        <character>k</character>
+        <color>11</color>
+        <ai>weakest</ai>
+        <maxhp>50</maxhp>
+        <maxmp>0</maxmp>
+        <attack>5</attack>
+        <defense>16</defense>
+        <magic>0</magic>
+        <resistance>0</resistance>
+        <agility>0</agility>
+        <move>5</move>
+        <immunities>None</immunities>
+        <skills>Basic attack</skills>
+        <descr>AI test.</descr>
+    </actor>
+    <actor ident =  "Cute puppy">
+        <character>p</character>
+        <color>14</color>
+        <ai>damage</ai>
+        <maxhp>35</maxhp>
+        <maxmp>0</maxmp>
+        <attack>8</attack>
+        <defense>16</defense>
+        <magic>0</magic>
+        <resistance>0</resistance>
+        <agility>0</agility>
+        <move>4</move>
+        <immunities>None</immunities>
+        <skills>Basic attack</skills>
+        <descr>AI test.</descr>
+    </actor>
+    <actor ident =  "Rabid duckbunny">
+        <character>d</character>
+        <color>red</color>
+        <ai>weakest</ai>
+        <maxhp>40</maxhp>
+        <maxmp>0</maxmp>
+        <attack>18</attack>
+        <defense>14</defense>
+        <magic>0</magic>
+        <resistance>11</resistance>
+        <agility>15</agility>
+        <move>5</move>
+        <immunities>None</immunities>
+        <skills>Bite</skills>
+        <descr>A snarling razor-beaked rodent.</descr>
+    </actor>
+    <actor ident =  "Origami golem">
+        <character>G</character>
+        <color>red</color>
+        <ai>damage</ai>
+        <maxhp>50</maxhp>
+        <maxmp>0</maxmp>
+        <attack>20</attack>
+        <defense>16</defense>
+        <magic>0</magic>
+        <resistance>9</resistance>
+        <agility>15</agility>
+        <move>4</move>
+        <immunities>None</immunities>
+        <skills>Paper cut,Paper slam</skills>
+        <descr>An animated paper construct. Weak against magic.</descr>
+    </actor>
+    <actor ident =  "Dire roach">
+        <character>r</character>
+        <color>red</color>
+        <ai>weakest</ai>
+        <maxhp>30</maxhp>
+        <maxmp>0</maxmp>
+        <attack>18</attack>
+        <defense>13</defense>
+        <magic>0</magic>
+        <resistance>11</resistance>
+        <agility>20</agility>
+        <move>6</move>
+        <immunities>None</immunities>
+        <skills>Bite</skills>
+        <descr>A gigantic cockroach with a taste for wizard blood.</descr>
+    </actor>
+    <actor ident =  "Freezefrog">
+        <character>f</character>
+        <color>red</color>
+        <ai>weakest</ai>
+        <maxhp>35</maxhp>
+        <maxmp>0</maxmp>
+        <attack>13</attack>
+        <defense>12</defense>
+        <magic>18</magic>
+        <resistance>14</resistance>
+        <agility>17</agility>
+        <move>5</move>
+        <immunities>Frostbite</immunities>
+        <skills>Spit ice</skills>
+        <descr>A grotesquely colored frog that spits ice. Somewhat magic resistant.</descr>
+    </actor>
+    <actor ident =  "Evil begonia">
+        <character>b</character>
+        <color>red</color>
+        <ai>weakest</ai>
+        <maxhp>30</maxhp>
+        <maxmp>0</maxmp>
+        <attack>13</attack>
+        <defense>12</defense>
+        <magic>18</magic>
+        <resistance>10</resistance>
+        <agility>17</agility>
+        <move>0</move>
+        <immunities>None</immunities>
+        <skills>Spit poison</skills>
+        <descr>A carnivorous flower. Cannot move.</descr>
+    </actor>
+    <!--Map 2 Monsters-->
+    <actor ident =  "Fungal blowgunner">
+        <character>b</character>
+        <color>red</color>
+        <ai>weakest</ai>
+        <maxhp>38</maxhp>
+        <maxmp>3</maxmp>
+        <attack>17</attack>
+        <defense>12</defense>
+        <magic>10</magic>
+        <resistance>14</resistance>
+        <agility>17</agility>
+        <move>5</move>
+        <immunities>None</immunities>
+        <skills>Blowgun</skills>
+        <descr>A myconid ranged attacker.</descr>
+    </actor>
+    <actor ident =  "Fungal clubber">
+        <character>c</character>
+        <color>red</color>
+        <ai>weakest</ai>
+        <maxhp>47</maxhp>
+        <maxmp>3</maxmp>
+        <attack>17</attack>
+        <defense>14</defense>
+        <magic>0</magic>
+        <resistance>11</resistance>
+        <agility>13</agility>
+        <move>5</move>
+        <immunities>None</immunities>
+        <skills>Club</skills>
+        <descr>A club-wielding myconid.</descr>
+    </actor>
+    <actor ident =  "Fungal sporemage">
+        <character>m</character>
+        <color>red</color>
+        <ai>support</ai>
+        <maxhp>30</maxhp>
+        <maxmp>3</maxmp>
+        <attack>11</attack>
+        <defense>11</defense>
+        <magic>17</magic>
+        <resistance>15</resistance>
+        <agility>17</agility>
+        <move>5</move>
+        <immunities>None</immunities>
+        <skills>Spore Cloud,Fungeneration</skills>
+        <descr>A myconid shaman. Somewhat magic resistant. Heals.</descr>
+    </actor>
+    <actor ident = "Piranha school">
+        <character>p</character>
+        <color>red</color>
+        <ai>aquatic</ai>
+        <maxhp>15</maxhp>
+        <maxmp>0</maxmp>
+        <attack>25</attack>
+        <defense>7</defense>
+        <magic>0</magic>
+        <resistance>7</resistance>
+        <agility>25</agility>
+        <move>7</move>
+        <immunities>Aquatic</immunities>
+        <skills>Frenzy</skills>
+        <descr>A school of vicious piranha.</descr>
+    </actor>
+    <actor ident = "Belshazzar">
+        <character>%</character>
+        <color>black</color>
+        <ai>boss</ai>
+        <maxhp>55</maxhp>
+        <maxmp>10</maxmp>
+        <attack>25</attack>
+        <defense>13</defense>
+        <magic>21</magic>
+        <resistance>13</resistance>
+        <agility>11</agility>
+        <move>6</move>
+        <immunities>Push</immunities>
+        <skills>White sword,Shadow Curse,Necrodrain,Cloudkill,Poisonbolt,Annihilate,Summon Skelesaur,Summon Lichdrake</skills>
+        <descr>An insane necromancer.</descr>
+    </actor>
+</actors>
