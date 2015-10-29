@@ -14,6 +14,7 @@ import time
 import string
 import os
 from time import sleep
+import random
 from RN2 import RN_Sound
 
 
@@ -62,6 +63,12 @@ class RN_UI_Class():
             "enemy_name": "red",
             "text": "silver"
         }
+
+    @staticmethod
+    def wait_for_keypress():
+        pygcurse.waitforkeypress()
+        return
+
 
     def text(self, x, y, s, fgcolor="white", bgcolor="black"):
         self.screen.write(s, x=x, y=y, fgcolor=fgcolor, bgcolor=bgcolor)
@@ -302,13 +309,14 @@ class RN_UI_Class():
             return res[:-1], "yellow"
 
     def print_narration(self, narration_q):
-        self.blank(self.narration_coords)
-        for row, line in enumerate(narration_q):
-            col = self.narration_coords[0]
-            for word in line:
-                self.menutext(col, 42-row, word.string, fgcolor=self.textcolors[word.color_binding])
-                col += len(word.string) + 1
-
+        if narration_q:
+            self.blank(self.narration_coords)
+            for row, line in enumerate(narration_q):
+                col = self.narration_coords[0]
+                for word in line:
+                    self.menutext(col, 42-row, word.string, fgcolor=self.textcolors[word.color_binding])
+                    col += len(word.string) + 1
+            self.screen.update()
         return
 
     def print_battle_menu(self, battle_menu_list, turn_count, battle_index, v_top):
@@ -533,6 +541,9 @@ class RN_UI_Class():
             bgcolor = self.gradient(y, (0,0,0), (-2, -2, -2))
         self.text(x, y, text, fgcolor=fgcolor, bgcolor=bgcolor)
 
+    def wipe_screen(self, from_direction='left', speed=.01):
+        pass
+
     def display_title(self, title):
         map_lines = title.layout[0].value
         map_lines = map_lines.splitlines()
@@ -557,6 +568,65 @@ class RN_UI_Class():
                     self.title_text(x+5, y+8, " ", bgcolor=text_color)
                 else:
                     self.title_text(x+5, y+8, " ")
+
+    def display_game_over(self, title, tips, input, sound):
+        self.draw_border()
+        map_lines = title.layout[0].value
+        map_lines = map_lines.splitlines()
+        for m in map_lines:
+            list(m)
+        rmap = []
+
+        x_size = len(map_lines[0])
+        y_size = len(map_lines)
+
+        x_offset = 10
+        y_offset = 8
+
+        for x in range(x_size):
+            rmap.append([])
+            for y in range(y_size):
+                rmap[x].append(map_lines[y][x])
+        for x in range(x_size):
+            for y in range(y_size):
+                text_color = pygame.Color(85+y*12, 85+y*12, 85+y*12)
+
+                if rmap[x][y][0] not in [" ", ".", "7", "6", "9", "8"]:
+                    self.title_text(x+x_offset, y+y_offset, " ")
+
+                elif rmap[x][y][0] in ["9", "8"]:
+                    self.title_text(x+x_offset, y+y_offset, " ", bgcolor=text_color)
+                else:
+                    self.title_text(x+x_offset, y+y_offset, " ")
+        tip_to_display = tips[random.randint(0, len(tips)-1)]
+        self.text_wrapper("Tip: " + tip_to_display, 3, 24, fgcolor="yellow")
+
+        title_list = [("Retry Battle", 17), ("Quit to Menu", 40)]
+        self.title_text(title_list[0][1], 35, title_list[0][0], bgcolor=self.select_color)
+        self.title_text(title_list[1][1], 35, title_list[1][0])
+
+        title_index = 0
+        self.screen.update()
+        while 1:
+            command = input()
+            if command == "right":
+                sound.play_sound('beep')
+                self.title_text(title_list[title_index][1], 35, title_list[title_index][0])
+                title_index += 1
+            elif command == "left":
+                sound.play_sound('beep')
+                self.title_text(title_list[title_index][1], 35, title_list[title_index][0])
+                title_index -= 1
+            elif command == "activate":
+                sound.play_sound('beep2')
+                selection = title_list[title_index][0]
+                break
+
+            title_index %= len(title_list)
+            self.text(title_list[title_index][1], 35, title_list[title_index][0], bgcolor=self.select_color)
+            self.screen.update()
+
+        return selection == "Retry Battle"
 
     def display_intro(self, text):
         self.draw_border()

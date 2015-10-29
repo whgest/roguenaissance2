@@ -160,6 +160,11 @@
     </music>
 
     <music>
+        <ident>gameover</ident>
+        <filename>wind.ogg</filename>
+    </music>
+
+    <music>
         <ident>wind</ident>
         <filename>wind.ogg</filename>
     </music>
@@ -195,8 +200,8 @@
     </music>
 
     <music>
-        <ident>victory</ident>
-        <filename>victory.ogg</filename>
+        <ident>ending</ident>
+        <filename>ending.ogg</filename>
     </music>
 
     <music>
@@ -205,8 +210,8 @@
     </music>
 
     <music>
-        <ident>ending</ident>
-        <filename>ending.ogg</filename>
+        <ident>victory</ident>
+        <filename>victory.ogg</filename>
     </music>
 
     <music>

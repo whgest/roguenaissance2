@@ -111,7 +111,7 @@ class Game():
         if command == "mute":
             self.RN_sound.mute_switch = not self.RN_sound.mute_switch
             if self.RN_sound.mute_switch:
-                self.RN_sound.play_music("mute")
+                self.RN_sound.cut_music()
             else:
                 pass
                 #turn correct music on
@@ -125,9 +125,9 @@ class Game():
 def main():
     #test mode
     # game = Game()
-    # game.init_hero("Astromancer", "StrongoDragonlord")
+    # game.init_hero("Terramancer", "StrongoDragonlord")
     # game.hero.mp = 99
-    # game.hero.hp = 999
+    # game.hero.hp = 99
     # game.init_battle("1")
     # exit()
 
@@ -155,14 +155,18 @@ def main():
             game.RN_UI.display_intro(game.text["battle" + str(game.hero.current_battle)].value)
             victory = game.init_battle(str(game.hero.current_battle))
             if not victory:
-                break
+                retry = game.RN_UI.display_game_over(game.maps["gameover"], game.battles[str(game.hero.current_battle)]['tips'], game.RN_input, game.RN_sound)
+                if not retry:
+                    break
+                else:
+                    continue
             game.hero.current_battle += 1
             if game.hero.current_battle > game.num_battles:
                 game.RN_sound.play_music("ending")
                 game.RN_UI.display_ending(game.RN_input, game.hero)
                 break
             game.auto_save()
-    exit()
+
 
 if __name__ == "__main__":
     main()

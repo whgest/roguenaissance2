@@ -13,14 +13,13 @@ import RN2_UI
 import RN2_animations
 import copy
 import RN2_AI
-import random
 import logging
 import traceback
-import pygcurse
 import time
 import string as string_module
+import pathfinder
 
-logging.basicConfig(filename="logs/rn_debug.log", filemode="w", level=logging.DEBUG)
+logging.basicConfig(filename="logs/rn_debug.log", filemode="w+", level=logging.DEBUG)
 
 
 class BattleReportLine():
@@ -39,7 +38,8 @@ class BattleReportWord():
         return "%s (%s)" % (self.string, self.color_binding)
 
 class BattleReport():
-    def __init__(self, heroes, enemies):
+    def __init__(self, heroes, enemies, RN_UI):
+        self.RN_UI = RN_UI
         self.narration_q_length = 13
         self.strip_string = string_module.punctuation.replace("%", "")
         self.narration_q = []
@@ -51,7 +51,7 @@ class BattleReport():
         self.ally_names = [h.name for h in heroes]
         self.enemy_names = [e.name for e in enemies]
         self.report_formats = {
-            "use_skill": BattleReportLine("%unit: %cause", cause_color='skill'),
+            "use_skill": BattleReportLine("%unit: --%cause--", cause_color='skill'),
             "damage": BattleReportLine("%unit: Suffers %effect damage from %cause.", cause_color='skill', effect_color='damage'),
             "heal": BattleReportLine("%unit: Gains %effect life from %cause.", cause_color='skill', effect_color='heal'),
             "miss": BattleReportLine("%unit: Evades %cause.", cause_color='skill'),
@@ -66,7 +66,7 @@ class BattleReport():
             "good_status_ends": BattleReportLine("%unit: No longer affected by %cause.", cause_color='good_status'),
             "status_ends": BattleReportLine("%unit: No longer afflicted by %cause.", cause_color='bad_status'),
             "status_kill": BattleReportLine("%unit: Killed by %cause!", cause_color='bad_status'),
-            "victory": BattleReportLine("%unit achieved victory.")
+            "victory": BattleReportLine("%unit achieved victory.", line_color="ally_name")
         }
 
     def colorize_unit_name(self, unit):
@@ -102,13 +102,22 @@ class BattleReport():
             colorized_list.append(BattleReportWord(word, color))
 
         self.turn_report.append(colorized_list)
+        self.process_report()
+
+    def add_raw_entry(self, text, color="text"):
+        colorized_list = []
+        for word in text.split(" "):
+            colorized_list.append(BattleReportWord(word, color))
+        self.turn_report.append(colorized_list)
+        print colorized_list
+        self.process_report()
 
     def process_report(self):
         for report in self.turn_report:
             self.narration_q.insert(0, report)
             del self.narration_q[self.narration_q_length]
         self.turn_report = []
-        return self.narration_q
+        self.RN_UI.print_narration(self.narration_q)
 
 
 class Battle_Controller():
@@ -120,9 +129,6 @@ class Battle_Controller():
         self.battle_data = battle_data
         self.bmap = bmap
         self.input = input
-        self.total_turns = 0
-        self.enemies_killed = 0
-        self.damage_taken = 0
         self.skills = skills
         self.actors = actors
         self.UI = UI
@@ -140,7 +146,7 @@ class Battle_Controller():
 
     def init_battle(self):
         self.battle = RN2_battle.Battle(self.hero, self.battle_data, self.add_actors(self.battle_data), self.bmap)
-        self.report = BattleReport(self.battle.heroes, self.battle.enemies)
+        self.report = BattleReport(self.battle.heroes, self.battle.enemies, self.UI)
         self.battle.report = self.report
         startpos = self.battle.startpos
         self.battle.bmap[startpos[0]][startpos[1]].actor = self.hero
@@ -184,7 +190,18 @@ class Battle_Controller():
             RN_UI.print_legend(battle.bmap.legend_list, battle.unit_list)
             victory = self.battle_events()
             if victory:
-                print "bm victory"
+                self.report.add_entry("victory", self.hero)
+                self.RN_sound.cut_music()
+                self.RN_sound.play_music('victory')
+                time.sleep(1)
+                self.report.add_raw_entry("")
+                self.report.add_raw_entry("Total Turns Taken: " + str(self.hero.score['turns']), color="bad_status")
+                time.sleep(1)
+                self.report.add_raw_entry("Total Damage Taken: " + str(self.hero.score['damage']), color="bad_status")
+                time.sleep(1)
+                self.report.add_raw_entry("Total Enemies Killed: " + str(self.hero.score['killed']), color="good_status")
+                time.sleep(1)
+                RN_UI.wait_for_keypress()
                 return True
             player, battle.active = battle.turn_manager()
             hero = False
@@ -250,7 +267,11 @@ class Battle_Controller():
                     RN2_animations.RN_Animation_Class(battle.affected_tiles, self.RN_sound, RN_UI, skill.animation, battle.bmap, battle.active.coords)
                 self.check_desync(battle)
             self.update_game(battle, RN_UI)
-            self.clear_board(battle, RN_UI)
+            game_over = self.clear_board(battle, RN_UI)
+            if game_over:
+                self.RN_sound.cut_music()
+                self.RN_sound.play_music('gameover')
+                return False
             RN_UI.print_narration(self.report.process_report())
             time.sleep(0.2)
 
@@ -286,7 +307,6 @@ class Battle_Controller():
     def activate_event(self, event):
         effect = event.effect[0].value.split(",")
         if effect[0] == "victory":
-            self.report.add_entry("victory", self.hero)
             print "ae victory"
             return True
         if effect[0] == "add_mobs":
@@ -344,8 +364,11 @@ class Battle_Controller():
                 self.report.add_entry("death", unit)
                 try:
                     battle.enemies.remove(unit)
+                    self.battle.hero.score['killed'] += 1
                 except ValueError:
                     battle.heroes.remove(unit)
+                    if unit == self.battle.hero:
+                        return True #game over
 
     def add_summon(self, data, battle, RN_UI):
         stats = self.actors[data[1]]
@@ -370,17 +393,6 @@ class Battle_Controller():
                 print repr(e.name) + " DESYNC: " + repr(e.coords)
 
     def RN_output(self, command, battle, RN_UI):
-        if command == "mute":
-            self.mute_switch = not self.mute_switch
-            if self.mute_switch == True:
-                #animations.play_music(self, "mute")
-                #self.add_narration("Music OFF")
-                pass
-            else:
-                #self.music_handler()
-                #self.add_narration("Music ON")
-                pass
-            return False, False
         if command == "exit":
             exit()
         if command == "legend":

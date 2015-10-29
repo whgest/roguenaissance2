@@ -512,18 +512,16 @@
         <narration>massively empowers</narration>
         <range>0</range>
         <aoe>0</aoe>
-        <damage>0</damage>
+        <damage>4,-1</damage>
         <effect>
             <type>Ascendant</type>
-            <magnitude>4</magnitude>
-            <modifier>maxhp,2</modifier>
-            <modifier>hp,2</modifier>
-            <modifier>attack,1.25</modifier>
-            <modifier>defense,0.75</modifier>
-            <modifier>resistance,0.75</modifier>
-            <modifier>move,0.25</modifier>
+            <magnitude>1</magnitude>
+            <modifier>attack,15</modifier>
+            <modifier>defense,7</modifier>
+            <modifier>resistance,7</modifier>
+            <modifier>move,2</modifier>
             <continuous>0</continuous>
-            <duration>3</duration>
+            <duration>5</duration>
         </effect>
         <mp>7</mp>
         <prompt>Massively increase physical attack and defenses for 3 turns.</prompt>
@@ -579,7 +577,7 @@
     <skill ident = "Magnetize">
         <target>enemy</target>
         <stat>attack</stat>
-        <narration>emits a strong magnetic field at!</narration>
+        <narration>emits a strong magnetic field at</narration>
         <range>0</range>
         <aoe>4</aoe>
         <damage>1,2</damage>

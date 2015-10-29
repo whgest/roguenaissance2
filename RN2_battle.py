@@ -75,6 +75,7 @@ class AppliedStatusEffect(StatusEffectData):
     def apply_status(self, actor):
         if not self.continuous:
             for effect in self.effects:
+                print self.effects
                 attribute = effect[0]
                 multiplier = effect[1]
                 actor.attribute_modifiers[attribute].append(multiplier * self.magnitude)
@@ -136,6 +137,7 @@ class TurnTracker():
         self.initiative_list.insert(0, active_actor)
         if active_actor == self.heroes[0]:
             self.turn_count += 1
+            self.heroes[0].score['turns'] += 1
         return active_actor
 
 
@@ -394,8 +396,8 @@ class Battle():
             self.report.add_entry("heal", defender, cause=skill.name, effect=str(abs(inflicted_damage)))
         else:
             self.report.add_entry("damage", defender, cause=skill.name, effect=str(abs(inflicted_damage)))
-        # if defender == self.hero:
-        #     self.damage_taken = self.damage_taken + inflicted_damage
+        if defender == self.hero:
+            self.hero.score['damage'] += inflicted_damage
         return inflicted_damage
 
     def execute_ai_turn(self, e, skill, target, path):
@@ -441,12 +443,9 @@ class Battle():
     def resolve_status(self, actor):
         if actor.status == [] or actor.status == ["Dead"]:
             return
-        remove_list = []
+
         for s in actor.status:
             s.tick_status(actor)
-        if actor.hp <= 0:
-            pass #TODO: status kill
-
 
         return
 
@@ -491,7 +490,6 @@ class Battle():
         return False
 
     def forced_move(self, attacker, defender, direction, magnitude, origin=False):  #returns a path for later animation
-        print "forced move", defender, origin
         if "Push" in defender.immunities:
             self.report.append(("immunity", [defender.name, "Push/Pull"]))
             return

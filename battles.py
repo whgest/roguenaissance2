@@ -67,12 +67,19 @@ class music_q2class(Q2API.xml.base_xml.XMLNode):
         self.path = [None, u'battles', u'battle']
         Q2API.xml.base_xml.XMLNode.__init__(self, "music", attrs, None, [])
 
+class tip_q2class(Q2API.xml.base_xml.XMLNode):
+    def __init__(self, attrs):
+        self.level = 3
+        self.path = [None, u'battles', u'battle']
+        Q2API.xml.base_xml.XMLNode.__init__(self, "tip", attrs, None, [])
+
 class battle_q2class(Q2API.xml.base_xml.XMLNode):
     def __init__(self, attrs):
         self.level = 2
         self.path = [None, u'battles']
         self.map = []
         self.actor = []
+        self.tip = []
         self.intro = []
         self.music = []
         self.event = []
@@ -116,6 +123,9 @@ class NodeHandler(xml.sax.handler.ContentHandler):
 
         elif name == "music":
             self.obj_depth.append(music_q2class(p_attrs))
+
+        elif name == "tip":
+            self.obj_depth.append(tip_q2class(p_attrs))
 
         elif name == "battles":
             self.obj_depth.append(battles_q2class(p_attrs))
@@ -168,6 +178,12 @@ class NodeHandler(xml.sax.handler.ContentHandler):
 
         elif name == "music":
             self.obj_depth[-2].music.append(self.obj_depth[-1]) #  make this object a child of the next object up...
+            self.obj_depth[-2].children.append(self.obj_depth[-1]) #  put a reference in the children list as well
+            self.obj_depth.pop() # remove this node from the list, processing is complete
+            self.char_buffer = []
+
+        elif name == "tip":
+            self.obj_depth[-2].tip.append(self.obj_depth[-1]) #  make this object a child of the next object up...
             self.obj_depth[-2].children.append(self.obj_depth[-1]) #  put a reference in the children list as well
             self.obj_depth.pop() # remove this node from the list, processing is complete
             self.char_buffer = []

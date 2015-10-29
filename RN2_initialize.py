@@ -218,6 +218,7 @@ def make_battle(xml_stream):
         room_dict['actors'] = []
         room_dict['events'] = []
         room_dict['music'] = []
+        room_dict['tips'] = []
         room_dict['map'] = b.map[0].value
         room_dict['intro'] = b.intro[0].value
         for a in b.actor:
@@ -226,6 +227,8 @@ def make_battle(xml_stream):
             room_dict['events'].append(e)
         for m in b.music:
             room_dict['music'].append(m.value)
+        for m in b.tip:
+            room_dict['tips'].append(m.value)
         battles_dict[b.attrs[u'ident']] = room_dict
     return battles_dict
 
@@ -259,16 +262,16 @@ def make_skills(xml_stream):
                     effect_attrs["magnitude"] = e.magnitude[0].value
                 if e.duration != []:
                     effect_attrs["duration"] = int(e.duration[0].value)
-                #TODO: allow for custom status effects defined in xml vvvvvv
                 if e.continuous != []:
                     effect_attrs["continuous"] = int(e.continuous[0].value)
                 if e.modifier != []:
                     for modifier in e.modifier:
-                        effect_attrs["modifiers"].append(modifier.value)
+                        custom_modifier = modifier.value.split(',')
+                        custom_modifier[1] = int(custom_modifier[1])
+                        effect_attrs["modifiers"].append(custom_modifier)
                 skill.effects.append(effect_attrs)
         skill.mp = int(a.mp[0].value)
         skills_dict[a.attrs[u'ident']] = skill
-        #print a.attrs[u'ident'], "done"
     return skills_dict
 
 def make_sound(xml_stream):       #dictionary contains paths to sound files and a key to play them
@@ -283,26 +286,26 @@ def make_sound(xml_stream):       #dictionary contains paths to sound files and 
 
 def set_binds():
     binds = {
-    RET_KEY : "activate",
-    A_KEY : "activate",
-    ENT_KEY : "activate",
-    ESC_KEY : "cancel",
-    BACKSPACE : "cancel",
-    SPACE_KEY : "pass",
-    H_KEY : "help",
-    T_KEY : "stats",
-    S_KEY : "skills",
-    L_KEY : "legend",
-    B_KEY : "battle",
-    M_KEY : "mute",
-    Q_KEY : "exit",
-    DOWN_ARROW : "down",
-    LEFT_ARROW : "left",
-    RIGHT_ARROW : "right",
-    UP_ARROW : "up",
-    TWO_KEY : "down",
-    FOUR_KEY : "left",
-    SIX_KEY : "right",
-    EIGHT_KEY : "up",
+        RET_KEY : "activate",
+        A_KEY : "activate",
+        ENT_KEY : "activate",
+        ESC_KEY : "cancel",
+        BACKSPACE : "cancel",
+        SPACE_KEY : "pass",
+        H_KEY : "help",
+        T_KEY : "stats",
+        S_KEY : "skills",
+        L_KEY : "legend",
+        B_KEY : "battle",
+        M_KEY : "mute",
+        Q_KEY : "exit",
+        DOWN_ARROW : "down",
+        LEFT_ARROW : "left",
+        RIGHT_ARROW : "right",
+        UP_ARROW : "up",
+        TWO_KEY : "down",
+        FOUR_KEY : "left",
+        SIX_KEY : "right",
+        EIGHT_KEY : "up"
     }
     return binds
