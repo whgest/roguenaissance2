@@ -15,27 +15,30 @@ class RN_Sound():
         self.mute_switch = False
         self.sound = sound
         self.music = music
+        self.music_to_play = ''
         pygame.mixer.init()
 
     def play_music(self, music_ident, queue=False):
         if music_ident == "mute":
             pygame.mixer.music.stop()
             return
+
         if queue:
+            self.music_to_queue = music_ident
             pygame.mixer.music.queue("sound/" + self.music[music_ident])
             return
         else:
+            self.music_to_play = music_ident
             pygame.mixer.music.load("sound/" + self.music[music_ident])
-
         if not self.mute_switch:
             pygame.mixer.music.play()
-            return
-
-    def check_music(self):
-        return pygame.mixer.music.get_busy()
 
     def cut_music(self):
-        pygame.mixer.music.stop()
+        pygame.mixer.music.fadeout(100)
+
+    def deactivate_mute_switch(self):
+        pygame.mixer.music.load("sound/" +  self.music[self.music_to_play])
+        pygame.mixer.music.play()
 
     def play_sound(self, sound_ident):
         sound = pygame.mixer.Sound("sound/" + self.sound[sound_ident])
@@ -66,21 +69,22 @@ class Game():
         else:
             return False
 
-    def init_hero(self, heroclass, name):
-        heroclass = self.heroclasses[heroclass]
+    def init_hero(self, class_name, name):
+        heroclass = self.heroclasses[class_name]
         self.hero = RN2_initialize.Hero(heroclass, name)
-        self.hero.hclass = heroclass
+        self.hero.class_name = class_name
 
     def load_saved_hero(self, saved_hero):
-        self.hero = RN2_initialize.Hero(saved_hero['hclass'], saved_hero['name'])
-        self.hero.hclass = saved_hero['hclass']
+        heroclass = self.heroclasses[saved_hero['class_name']]
+        self.hero = RN2_initialize.Hero(heroclass, saved_hero['name'])
+        self.hero.class_name = saved_hero['class_name']
         self.hero.score = saved_hero['score']
-        self.hero.current_battle = saved_hero['current_battle']
+        self.hero.current_battle = 3#saved_hero['current_battle']
 
     def auto_save(self):
         save_data = {}
 
-        save_data['hclass'] = self.hero.hclass
+        save_data['class_name'] = self.hero.class_name
         save_data['name'] = self.hero.name
         save_data['score'] = self.hero.score
         save_data['current_battle'] = self.hero.current_battle
@@ -110,12 +114,11 @@ class Game():
             exit()
         if command == "mute":
             self.RN_sound.mute_switch = not self.RN_sound.mute_switch
+
             if self.RN_sound.mute_switch:
                 self.RN_sound.cut_music()
             else:
-                pass
-                #turn correct music on
-            return self.RN_input()
+                self.RN_sound.deactivate_mute_switch()
 
         return command
 
@@ -160,6 +163,7 @@ def main():
                     break
                 else:
                     continue
+            game.hero.reset_actor()
             game.hero.current_battle += 1
             if game.hero.current_battle > game.num_battles:
                 game.RN_sound.play_music("ending")

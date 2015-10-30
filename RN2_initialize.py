@@ -39,6 +39,18 @@ FOUR_KEY = 260
 SIX_KEY = 262
 EIGHT_KEY = 264
 
+F1 = 282
+F2 = 283
+F3 = 284
+F4 = 285
+F5 = 286
+F6 = 287
+F7 = 288
+F8 = 289
+F9 = 290
+F10 = 291
+F11 = 292
+F12 = 293
 
 class ModifiableAttribute(object):
     def __init__(self, name):
@@ -107,6 +119,7 @@ class Actor(object):
         self.enemy = True
         self.descr = stats.descr[0].value
         self.color = "red"
+        self.is_boss = False
 
     def __str__(self):
         return self.character
@@ -153,6 +166,7 @@ class Hero(Actor):
                       "turns": 0,
                       "damage": 0}
         self.current_battle = 1
+        self.class_name = "Mage"
 
 
 class Boss(Actor):
@@ -160,6 +174,7 @@ class Boss(Actor):
         Actor.__init__(self, stats)
         self.death_animation = ""
         self.color = stats.color[0].value
+        self.is_boss = True
 
 
 class Skill():
@@ -174,6 +189,9 @@ class Skill():
         self.mp = 0
         self.prompt = ""
         self.animation = ""
+
+    def __str__(self):
+        return self.ident
 
 
 def open_xml(filename):
@@ -308,4 +326,9 @@ def set_binds():
         SIX_KEY : "right",
         EIGHT_KEY : "up"
     }
+
+    #add function keys
+    for f in range(12):
+        binds[281 + f] = "F" + str(f)
+
     return binds

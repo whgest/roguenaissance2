@@ -109,7 +109,6 @@ class BattleReport():
         for word in text.split(" "):
             colorized_list.append(BattleReportWord(word, color))
         self.turn_report.append(colorized_list)
-        print colorized_list
         self.process_report()
 
     def process_report(self):
@@ -154,7 +153,12 @@ class Battle_Controller():
         self.UI.draw_UI()
         self.UI.print_map(self.battle.bmap)
         self.UI.print_legend(self.battle.bmap.legend_list, self.battle.unit_list)
+        self.init_music()
 
+        victory = self.battle_manager(self.battle, self.UI)
+        return victory
+
+    def init_music(self):
         self.RN_sound.cut_music()
         try:
             self.RN_sound.play_music(self.battle_data['music'][0])
@@ -165,15 +169,16 @@ class Battle_Controller():
         except KeyError: #no music defined
             pass
 
-        victory = self.battle_manager(self.battle, self.UI)
-        return victory
-
     def add_actors(self, battle):
         b_actors = []
         for e in battle["actors"]:
             e2 = e.split("/")
             stats = self.actors[e2[0]]  #pull stats from database
-            enemy = RN2_initialize.Actor(stats)
+
+            if stats.ai[0].value == "boss":
+                enemy = RN2_initialize.Boss(stats)
+            else:
+                enemy = RN2_initialize.Actor(stats)
             enemy.coords = [int(c) for c in e2[1].split(",")]
             enemy.name = e2[0]
             b_actors.append(enemy)
@@ -296,18 +301,16 @@ class Battle_Controller():
                 event_trigger = True
             elif condition[0] == "playerxIs" and self.battle.hero.coords[0] == int(condition[1]):
                 event_trigger = True
-            elif condition[0] == "bosskill" and self.battle.enemies[0].hp <= 0:
+            elif condition[0] == "bosskill" and (not self.battle.enemies or not self.battle.enemies[0].is_boss):
                 event_trigger = True
 
             if event_trigger:
                 if self.activate_event(e):
-                    print "be victory"
                     return True
 
     def activate_event(self, event):
         effect = event.effect[0].value.split(",")
         if effect[0] == "victory":
-            print "ae victory"
             return True
         if effect[0] == "add_mobs":
             for f in effect:
@@ -339,7 +342,6 @@ class Battle_Controller():
             if change[0] == "summon":
                 self.add_summon(change, battle, RN_UI)
             elif change[0] == "forcedmove":
-                print "moving", change
                 path = change[1]
                 for i in range(len(change[1])-1):
                     RN_UI.update_map(change[1][i], change[1][i+1], change[2], battle.bmap)
@@ -349,7 +351,6 @@ class Battle_Controller():
             elif change[0] == "terrainmod":
                 pass
             else:
-                print "STATE CHANGE ERROR", change[0]
                 pass
         battle.state_changes = []
         return
@@ -401,6 +402,10 @@ class Battle_Controller():
         if command == "stats":
             RN_UI.print_stats(battle.active)
             return False, False
+        if command == "mute":
+            self.init_music()
+            return False, False
+
         turn, newstate = self.states[battle.state](command, battle, RN_UI)
         return turn, newstate
 
@@ -429,7 +434,7 @@ class Battle_Controller():
             RN_UI.highlight_area(True, battle.affected_tiles, battle.bmap, "lime")
             RN_UI.print_prompt("ENTER to confirm attack, ESC to cancel.")
         elif battle.state == "skills":
-            RN_UI.draw_skills_menu(battle.active.skillset, 0, self.skills[battle.active.skillset[1]].prompt)
+            RN_UI.draw_skills_menu(battle.active.skillset[1:], 0, self.skills[battle.active.skillset[1]].prompt, battle.get_adjusted_mp, self.skills)
             battle.skill_index = 0
         elif battle.state == "battle":
             battle.battle_menu_list = []
@@ -485,11 +490,13 @@ class Battle_Controller():
         else:
             return False, "invalid"
         if battle.check_bounds(active.coords) is True or battle.bmap[active.coords[0]][active.coords[1]].actor is not None or battle.bmap[active.coords[0]][active.coords[1]].terrain.movable != 1:
-            active.coords[0] = prev_coords[0]; active.coords[1] = prev_coords[1]
+            active.coords[0] = prev_coords[0]
+            active.coords[1] = prev_coords[1]
             self.RN_sound.play_sound("error")
             RN_UI.print_prompt("That direction is blocked.")
         if tuple(active.coords) not in battle.move_range:
-            active.coords[0] = prev_coords[0]; active.coords[1] = prev_coords[1]
+            active.coords[0] = prev_coords[0]
+            active.coords[1] = prev_coords[1]
             self.RN_sound.play_sound("error")
             RN_UI.print_prompt("You can't move that far.")
         battle.bmap[prev_coords[0]][prev_coords[1]].actor = None
@@ -503,10 +510,10 @@ class Battle_Controller():
         skill = battle.selected_skill
         x = RN_UI.cursor.x
         y = RN_UI.cursor.y
-        prev_cursor = (x,y)
+        prev_cursor = (x, y)
 
         if command == "left":
-            RN_UI.cursor.show(x,y, battle.bmap[x][y], False)
+            RN_UI.cursor.show(x, y, battle.bmap[x][y], False)
             x -= 1
         elif command == "up":
             RN_UI.cursor.show(x,y, battle.bmap[x][y], False)
@@ -531,7 +538,7 @@ class Battle_Controller():
                 return False, "confirm"
 
         elif command == "cancel":
-            RN_UI.cursor.show(x,y,battle.bmap[x][y],False)
+            RN_UI.cursor.show(x, y, battle.bmap[x][y],False)
             RN_UI.highlight_area(False, battle.targetable_tiles, battle.bmap)
             RN_UI.print_legend(battle.bmap.legend_list, battle.unit_list)
             RN_UI.print_prompt("arrows = move. a = attack. s = use skills. space = end turn. h = help")
@@ -573,18 +580,23 @@ class Battle_Controller():
         return False, False
 
     def skillmenu(self, command, battle, RN_UI):
+        selectable_skills = battle.active.skillset[1:] #remove basic attack
+
         if command == "up":
             battle.skill_index -= 1
         elif command == "down":
             battle.skill_index += 1
-        elif command == "activate":
-            if battle.active.mp < battle.get_adjusted_mp(self.skills[battle.active.skillset[battle.skill_index+1]]):
+        elif command == "activate" or command[0] == "F":
+            if command[0] == "F":
+                f_key = int(command[1:])
+                battle.skill_index = f_key - 1
+            if battle.active.mp < battle.get_adjusted_mp(self.skills[selectable_skills[battle.skill_index]]):
                 self.RN_sound.play_sound("error")
-                RN_UI.print_prompt("Insufficient MP.")
+                RN_UI.draw_skills_menu(selectable_skills, battle.skill_index, "Insufficient MP.", battle.get_adjusted_mp, self.skills)
                 return False, False
             else:
                 RN_UI.print_legend(battle.bmap.legend_list, battle.unit_list)
-                battle.selected_skill = self.skills[battle.active.skillset[battle.skill_index+1]]
+                battle.selected_skill = self.skills[selectable_skills[battle.skill_index]]
                 battle.targetable_tiles = battle.get_range(battle.active.coords, battle.selected_skill.range)
                 if battle.selected_skill.range != 0:  #pb-AOEs skip target state
                     return False, "target"
@@ -593,12 +605,12 @@ class Battle_Controller():
                     return False, "confirm"
         elif command == "cancel":
             return False, "move"
-        #TODO: needs F key support
-        battle.skill_index %= len(battle.active.skillset)-1
-        prompt = self.skills[battle.active.skillset[battle.skill_index+1]].prompt
-        RN_UI.draw_skills_menu(battle.active.skillset, battle.skill_index, prompt)
-        return False, False
 
+
+        battle.skill_index %= len(selectable_skills)
+        prompt = self.skills[selectable_skills[battle.skill_index]].prompt
+        RN_UI.draw_skills_menu(selectable_skills, battle.skill_index, prompt, battle.get_adjusted_mp, self.skills)
+        return False, False
 
     def show_ai_turn(self, e, path, target, skill, RN_UI, battle):
         for i in range(len(path)-1):
@@ -607,35 +619,13 @@ class Battle_Controller():
         return
 
 
-
-    def init_hero(self, heroclass, name):
-        heroclass = self.heroclasses[heroclass]
-        self.hero = RN2_initialize.Hero(heroclass, name)
-        self.hero.hclass = heroclass
-        self.heroes.append(self.hero)
-
-def main():
-    game = Battle_Controller()
-    RN_UI = RN2_UI.RN_UI_Class()
-    ident = "1"
-    battle_data = game.battles[ident]
-    actors = game.add_actors(battle_data)
-    game.init_hero("Astromancer", "Strongo D")
-    #battle initiation
-    battle = RN2_battle.Battle(game.hero, battle_data, actors, game.maps[game.battles[ident]["map"]])
-    startpos = battle.startpos
-    battle.bmap[startpos[0]][startpos[1]].actor = game.hero
-    game.hero.coords = [startpos[0], startpos[1]]
-    RN_UI.print_map(battle.bmap)
-    RN_UI.print_legend(battle.bmap.legend_list, battle.unit_list)
-    game.battle_manager(battle, RN_UI)
-    #pygcurse.waitforkeypress()
-    exit()
-
-if __name__ == "__main__":
-    try:
-        main()
-    except:
-        exception_string = traceback.format_exc()
-        logging.error(exception_string)
-        print exception_string
+# def main():
+#     pass
+#
+# if __name__ == "__main__":
+#     try:
+#         main()
+#     except:
+#         exception_string = traceback.format_exc()
+#         logging.error(exception_string)
+#         print exception_string

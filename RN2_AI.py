@@ -237,7 +237,9 @@ class RN_AI_Class():
     def drain(self):
         heal_skill = ""
         for s in self.e.skillset:
-            if self.skills[s].effect[0]["type"] == "Drain":
+            print s, self.e.skillset, self.skills[s]
+            print self.skills[s].effects
+            if self.skills[s].effects[0]["type"] == "Drain":
                 skill_name = s
                 heal_skill = self.skills[s]
                 if heal_skill.mp > self.e.mp:

@@ -968,6 +968,8 @@
         <damage>1,6</damage>
         <effect>
             <type>Drain</type>
+            <magnitude>1</magnitude>
+            <duration>1</duration>
         </effect>
         <mp>2</mp>
         <prompt>Absorbs HP from an ally. Range 7.</prompt>

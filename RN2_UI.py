@@ -194,39 +194,35 @@ class RN_UI_Class():
         line = s.split(delimiter)
         return line[0] + ":" + " "*num_spaces + line[1]
 
-    def draw_skills_menu(self, skills, skill_index, prompt):
+    def draw_skills_menu(self, skills, skill_index, prompt, get_adjusted_mp, skill_data):
         self.blank(self.right_menu_coords)
         self.menutext(51, 1, "SKILLS:")
-        line_count = 1
-        skip_first = True
-        skill_menu_list = []
-        for s in skills:
-            if skip_first == True:
-                skip_first = False
-                continue
-            skill_menu_list.append("F" +str(line_count) + ": " + s)
-            line_count += 1
-        for i, skill in enumerate(skill_menu_list):
-            self.menutext(51, (3+i), skill)
-        self.text(51, 3+skill_index, skill_menu_list[skill_index], bgcolor = self.select_color)
-        self.print_skill_prompt(prompt)
+
+        for i, skill in enumerate(skills):
+            self.menutext(51, (3+i), 'F' + str(i+1) + ': ')
+            self.menutext(55, (3+i), skill)
+
+        self.text(55, 3+skill_index, skills[skill_index], bgcolor=self.select_color)
+        self.print_skill_prompt(prompt, skill_data[skills[skill_index]], get_adjusted_mp)
         self.screen.update()
 
     def print_turn(self, a, hero=True):
         self.blank((51,24,23,1))
-        if hero: color = "lime";
-        else: color = "red"
-        self.menutext(51, 24, "ACT: "+ a, fgcolor = color)
+        if hero:
+            color = "lime"
+        else:
+            color = "red"
+        self.menutext(51, 24, "ACT: " + a, fgcolor=color)
         return
 
-    def print_prompt(self, s = ""):
-        self.blank((1,28,73,1))
+    def print_prompt(self, s=""):
+        self.blank((1, 28, 73, 1))
         self.menutext(1, 28, s)
 
-    def print_skill_prompt(self, s):
+    def print_skill_prompt(self, prompt, skill, get_adjusted_mp):
         self.blank((1,28,73,1))
-        #self.menutext(1,28,"(MP: " + str(self.get_adjusted_mp(skill))+ ")")
-        self.menutext(9, 28, s)
+        self.menutext(1,28,"(MP: " + str(get_adjusted_mp(skill)) + ")")
+        self.menutext(9, 28, prompt)
 
     def print_map(self, battle_map):
         for x in range (50):
@@ -750,18 +746,21 @@ class RN_UI_Class():
 
     def display_ending(self, input, hero):
         self.draw_border()
+        self.screen._autoupdate = True
 
         self.title_text(10, 4, "ALDEBARAN ACADEMY FINAL EXAM SCORE:")
         sleep(1)
-        self.text(10, 6, "TURNS TAKEN:               " + str(hero.score['turns']))
+        self.title_text(10, 8, "TURNS TAKEN:                         " + str(hero.score['turns']), fgcolor='yellow')
         sleep(1)
-        self.text(10, 7, "DAMAGE TAKEN:              " + str(hero.score['damage']))
+        self.title_text(10, 9, "PERSONAL DAMAGE RECIEVED:            " + str(hero.score['damage']), fgcolor='yellow')
         sleep(1)
-        self.text(10, 8, "ENEMIES SLAIN:             " + str(hero.score['killed']))
+        self.title_text(10, 10, "ENEMIES SLAIN:                       " + str(hero.score['killed']), fgcolor='aqua')
         sleep(3)
-        score = 500 - (hero.score['turns'] * 3.5) - hero.score['damage'] + (hero.score['killed']*8)
-        self.text(10, 18, "FINAL SCORE:               " + str(score))
+        print hero.score
+        score = 500 - (hero.score['turns'] * 3.5) - hero.score['damage'] + (hero.score['killed'] * 8)
+        self.title_text(10, 18, "FINAL SCORE:                         " + str(score))
         sleep(3)
+        grade = "F"
         if score < 100:
             grade = "D"
         if score > 100:
@@ -772,28 +771,30 @@ class RN_UI_Class():
             grade = "A"
         if score > 400:
             grade = "S"
-        self.text(10, 20, "GRADE:               " + grade)
+        self.title_text(10, 20, "GRADE:                                 " + grade, fgcolor="lime")
         try:
             fin = open("highscores.dat", "a")
         except IOError:
             fin = open("highscores.dat", "w+")
 
-        fin.write(hero.name + "|" + hero.hclass + "|" + str(int(score)) + "\n")
+        fin.write(hero.name + "|" + hero.class_name + "|" + str(int(score)) + "\n")
         fin.close()
 
-        sleep(3)
+        sleep(1)
+        self.text_wrapper("Congratulations! The faculty of Aldebaran Academy are pleased to present you with a full wizarding degree... and a hefty tuition bill. You are a true wizard!", 3, 30, fgcolor="yellow")
 
         while 1:
             self.screen.update()
             command = input()
             if command:
+                self.screen._autoupdate = False
                 break
 
         return
 
     def high_scores(self, input):
 
-        fin = open("highscores.dat", 'w+')
+        fin = open("highscores.dat", 'r+')
         highscores = fin.read()
         fin.close()
 

@@ -90,16 +90,6 @@
         <tip>Forcing Belshazzar to drain life from his minions instead of attacking or summoning is one way to turn the fight against him.</tip>
     </battle>
 
-    <battle ident = "4">
-        <intro>battle3</intro>
-        <map>lava</map>
-        <music>battle3</music>
-        <event ident = "1">
-                <condition>start</condition>
-                <effect>pass</effect>
-        </event>
-
-    </battle>
 </battles>
 
 

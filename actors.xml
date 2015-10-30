@@ -382,7 +382,7 @@
         <agility>11</agility>
         <move>6</move>
         <immunities>Push</immunities>
-        <skills>White sword,Shadow Curse,Necrodrain,Cloudkill,Poisonbolt,Annihilate,Summon Skelesaur,Summon Lichdrake</skills>
+        <skills>Shadow Curse,Necrodrain,Cloudkill,Poisonbolt,Annihilate,Summon Skelesaur,Summon Lichdrake</skills>
         <descr>An insane necromancer.</descr>
     </actor>
 </actors>
