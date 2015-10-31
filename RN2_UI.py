@@ -15,7 +15,7 @@ import string
 import os
 from time import sleep
 import random
-from RN2 import RN_Sound
+import math
 
 
 class RN_Cursor():
@@ -47,6 +47,7 @@ class RN_UI_Class():
         self.cell_size = (self.screen.cellheight, self.screen.cellwidth)
         self.right_menu_coords = (51,1,23,22)
         self.narration_coords = ((1,30,73,13))
+        self.battle_grid_coords = (0, 0, 50, 25)
         self.menu_base_color = (40,95,173)
         self.menu_gradient = (2,3,4)
         self.select_color = "fuchsia"
@@ -110,18 +111,30 @@ class RN_UI_Class():
         self.screen.settint(r, g, b, region)
         return
 
+    def clear_screen_tint(self):
+        self.tint(0, 0, 0, (0, 0, self.grid_size[0], self.grid_size[1]))
+        self.screen.update()
+
+    def fade_to_black(self, speed=.05, increment=10):
+        num_increments = int(math.ceil(127.5/increment))
+        for i in range(num_increments):
+            tint_value = -1 * int(math.floor(127.5 + (i * increment)))
+            self.tint(tint_value, tint_value, tint_value, (0, 0, self.grid_size[0], self.grid_size[1]))
+            self.screen.update()
+            sleep(speed)
+
     def draw_UI(self):
         self.blank((0, 0, 74, 45))
         for y in range(24):
-            self.text(50, y+1, u"║" + " "*23 + u"║", fgcolor = "white", bgcolor = self.gradient(y, self.menu_base_color, self.menu_gradient))
+            self.text(50, y+1, u"║" + " "*23 + u"║", fgcolor= "white", bgcolor = self.gradient(y, self.menu_base_color, self.menu_gradient))
         for y in range(17):
-            self.text(0, y+26, u"║" + " "*73 + u"║", bgcolor = self.gradient(y+26, self.menu_base_color, self.menu_gradient))
-        self.text(50, 0, u'╔' + u"═"*23 + u'╗', fgcolor = "white", bgcolor=self.menu_base_color)
-        self.text(50, 23, u'╠' + u"═"*23 + u'╣', fgcolor = "white", bgcolor = self.gradient(23, self.menu_base_color, self.menu_gradient))
-        self.text(0, 25, u'╔' + u"═"*49 + u'╩' + u"═"*23 + u'╣', fgcolor = "white",  bgcolor = self.gradient(25, self.menu_base_color, self.menu_gradient))
-        self.text(0, 27, u'╠' + u"═"*73 + u'╣', fgcolor = "white",  bgcolor = self.gradient(27, self.menu_base_color, self.menu_gradient))
-        self.text(0, 29, u'╠' + u"═"*73 + u'╣', fgcolor = "white",  bgcolor = self.gradient(29, self.menu_base_color, self.menu_gradient))
-        self.text(0, 43, u'╚' + u"═"*73 + u'╝', fgcolor = "white",  bgcolor = self.gradient(43, self.menu_base_color, self.menu_gradient))
+            self.text(0, y+26, u"║" + " "*73 + u"║", bgcolor= self.gradient(y+26, self.menu_base_color, self.menu_gradient))
+        self.text(50, 0, u'╔' + u"═"*23 + u'╗', fgcolor= "white", bgcolor=self.menu_base_color)
+        self.text(50, 23, u'╠' + u"═"*23 + u'╣', fgcolor= "white", bgcolor= self.gradient(23, self.menu_base_color, self.menu_gradient))
+        self.text(0, 25, u'╔' + u"═"*49 + u'╩' + u"═"*23 + u'╣', fgcolor= "white",  bgcolor= self.gradient(25, self.menu_base_color, self.menu_gradient))
+        self.text(0, 27, u'╠' + u"═"*73 + u'╣', fgcolor= "white",  bgcolor = self.gradient(27, self.menu_base_color, self.menu_gradient))
+        self.text(0, 29, u'╠' + u"═"*73 + u'╣', fgcolor= "white",  bgcolor = self.gradient(29, self.menu_base_color, self.menu_gradient))
+        self.text(0, 43, u'╚' + u"═"*73 + u'╝', fgcolor= "white",  bgcolor = self.gradient(43, self.menu_base_color, self.menu_gradient))
         self.screen.update()
 
     def print_legend(self, legend_list, unit_list):
@@ -566,6 +579,7 @@ class RN_UI_Class():
                     self.title_text(x+5, y+8, " ")
 
     def display_game_over(self, title, tips, input, sound):
+        self.clear_screen_tint()
         self.draw_border()
         map_lines = title.layout[0].value
         map_lines = map_lines.splitlines()
@@ -625,6 +639,7 @@ class RN_UI_Class():
         return selection == "Retry Battle"
 
     def display_intro(self, text):
+        self.clear_screen_tint()
         self.draw_border()
         lines = 1
         for t in text.splitlines():
@@ -746,6 +761,7 @@ class RN_UI_Class():
 
     def display_ending(self, input, hero):
         self.draw_border()
+        self.clear_screen_tint()
         self.screen._autoupdate = True
 
         self.title_text(10, 4, "ALDEBARAN ACADEMY FINAL EXAM SCORE:")

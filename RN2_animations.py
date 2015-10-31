@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from time import sleep
-import pygame.mixer
+import math
 import random
 
 class RN_Animation_Class():
@@ -16,14 +16,14 @@ class RN_Animation_Class():
         self.animation()
         self.UI.screen._autoupdate = False
 
-    def cleanup(self, tiles, clean_tint=True, tint = (0,0,0)):
+    def cleanup(self, tiles, clean_tint=True, tint=(0, 0, 0)):
         if type(tiles) is not list:
             tiles = [tiles]
         for t in tiles:
             if clean_tint is True:
                 self.UI.tint(tint[0], tint[1], tint[2], (t[0],t[1],1,1))
             display = self.bmap[t[0]][t[1]].display()
-            self.UI.text(t[0], t[1], display[0], fgcolor = display[1], bgcolor = display[2])
+            self.UI.text(t[0], t[1], display[0], fgcolor=display[1], bgcolor=display[2])
         return
 
     def flash_tiles(self, tiles, flash_list, reps=1, delay=0.15, fast_update=True, cleanup=True):
@@ -32,7 +32,8 @@ class RN_Animation_Class():
         for i in range(reps):
             for f in flash_list:
                 for t in tiles:
-                    self.UI.tint(f[0], f[1], f[2], (t[0],t[1],1,1))
+                    print f, t
+                    self.UI.tint(f[0], f[1], f[2], (t[0], t[1], 1, 1))
                 if fast_update is True:
                     self.UI.screen.update()
                 sleep(delay)
@@ -42,21 +43,32 @@ class RN_Animation_Class():
             self.UI.screen._autoupdate = True
         return
 
-    # def recolor_tiles(self, tiles, flash_list, reps=1, delay=0.15, fast_update=False, cleanup=True):
-    #     if fast_update is True:
-    #         self.UI.screen._autoupdate = False
-    #     for i in range(reps):
-    #         for f in flash_list:
-    #             for t in tiles:
-    #                 self.UI.text(f[0], f[1], f[2], (t[0],t[1],1,1))
-    #             if fast_update is True:
-    #                 self.UI.screen.update()
-    #             sleep(delay)
-    #     if cleanup is True:
-    #         self.cleanup(self.tiles)
-    #     if fast_update is True:
-    #         self.UI.screen._autoupdate = True
-    #     return
+    def flash_screen(self, color=(255, 255, 255), delay=0.15, reps=1):
+        self.UI.screen._autoupdate = False
+        for r in range(reps):
+            self.UI.tint(color[0], color[1], color[2], self.UI.battle_grid_coords)
+            sleep(delay)
+            self.UI.screen.update()
+            self.UI.tint(0, 0, 0, self.UI.battle_grid_coords)
+            sleep(delay)
+            self.UI.screen.update()
+
+        self.UI.screen._autoupdate = True
+        return
+
+    def tint_screen(self, tint, speed=.05, increments=3):
+        r = tint[0]
+        g = tint[1]
+        b = tint[2]
+
+        for i in range(increments):
+            red_tint_value = int(math.floor(r/(increments-i)))
+            green_tint_value = int(math.floor(g/(increments-i)))
+            blue_tint_value = int(math.floor(b/(increments-i)))
+            self.UI.tint(red_tint_value, green_tint_value, blue_tint_value, self.UI.battle_grid_coords)
+            self.UI.screen.update()
+            sleep(speed)
+
 
     def projectile(self, start, end, character_list, color_list, delay=0.05, clear=True):
             if type(end) is list:
@@ -111,7 +123,7 @@ class RN_Animation_Class():
         self.cleanup(tiles)
         return
 
-    def firework(self, origin, size, character, color, delay = 0.005, reverse=False, clean_wait=True):
+    def firework(self, origin, size, character, color, delay=0.005, reverse=False, clean_wait=True, cleanup=True):
         self.UI.screen._autoupdate = False
         cleanup_list = []
         x = origin[0]
@@ -142,15 +154,18 @@ class RN_Animation_Class():
             if clean_wait is False:
                 self.cleanup(cleanup_list, tint = tint)
                 cleanup_list = []
-        self.cleanup(cleanup_list, tint = tint)
-        self.UI.screen._autoupdate = True
 
+        if cleanup:
+            self.cleanup(cleanup_list, tint = tint)
+
+        self.UI.screen._autoupdate = True
 
     def grid_distance(self, actor1, actor2):
         return abs(actor1[0] - actor2[0]) + abs(actor1[1] - actor2[1])
 
-    def animation(self):
 
+    #TODO: refactor this nonsense into a dict
+    def animation(self):
         if self.anim_id == "meteor":
            self.game.play_sound("fall")
            self.projectile((self.tiles[0][0], 0), (self.tiles[0][0], self.tiles[0][1]), ["O"], ["red", "maroon"])
@@ -273,8 +288,10 @@ class RN_Animation_Class():
             self.flash_tiles(self.tiles, [(-50, -50, 150), (70, -35, 150), (-200, -200, -200)], 4)
 
         elif self.anim_id == "zero":
+            self.tint_screen((50, 50, 200))
             self.game.play_sound("zero")
             self.flash_tiles(self.tiles, [(-50, 150, 200), (-100, -150, 200), (200, 200, 200)], 4, delay=0.075)
+            self.tint_screen((0, 0, 0))
 
         elif self.anim_id == "skycaller":
             self.game.play_sound("starstorm")
@@ -288,13 +305,13 @@ class RN_Animation_Class():
         elif self.anim_id == "tectonic":
             self.game.play_sound("quake")
             self.game.play_sound("bigboom")
-            self.firework(self.attacker, 50, u"Ж", "olive", delay = 0.025)
+            self.firework(self.attacker, 40, u"Ж", "olive", delay = 0.015)
             self.game.play_sound("surge")
             self.flash_tiles(self.tiles, [(0, -50, -100), (-100, -100, -100)], 4, fast_update=True)
 
         elif self.anim_id == "splitatom":
             self.flash_tiles(self.tiles, [(-30, -30, -30), (-60, -60, -60), (-100, -100, -100)], 1, fast_update=True, cleanup=False)
-            self.firework((25,13), 25, u"∙", "red", reverse=True, clean_wait=False)
+            self.firework((25, 13), 25, u"∙", "red", reverse=True, clean_wait=False)
             self.game.play_sound("burn3")
             self.game.play_sound("bigboom")
             self.flash_tiles(self.tiles, [(255,255,255), (255,255,255), (255,-200,-200), (255,-100,-100), (200,-50,-50), (100,0,0), (50,0,0)], 1, fast_update=True, cleanup=True, delay=0.3)
@@ -310,65 +327,11 @@ class RN_Animation_Class():
             self.game.play_sound("worldbreak")
             self.flash_tiles(self.tiles, [(200,200,200), (-200, -200, -200)], 4, fast_update=True, cleanup=True, delay=0.3)
 
+        elif self.anim_id == "beldeath":
+            self.flash_screen(color=(150, 150, 150), reps=2)
+            self.game.play_sound("zero")
+            self.flash_tiles(self.tiles, [(-50, -50, -50), (-150, -150, -150)], 8, cleanup=False)
+            self.game.play_sound("bigboom")
+            self.firework(self.tiles[0], 15, "X", (0, 0, 0), cleanup=False)
         else:
             return
-
-
-
-
-
-        #
-        # if a_id == "ascend":
-        #     play_sound(game, "fall")
-        #     game.screen.text(origin[0], 0, " ", 255)
-        #     for i in range(origin[1]-1):
-        #         game.screen.text(origin[0], i+1, " ", 255)
-        #         sleep(0.03)
-        #     game.screen.text(origin[0], origin[1], "@", 240)
-        #     sleep(0.03)
-        #     for i in range(origin[1]):
-        #         restore_tile(game, origin[0], i)
-        #         sleep(0.03)
-        #     play_sound(game, "surge")
-        #     anim_tiles = game.get_range(origin,2)
-        #     for i in range(5):
-        #         for t in anim_tiles:
-        #             if game.rmap[t[0]][t[1]][0] == ("",""):
-        #                 game.screen.text(t[0], t[1], game.rmap[t[0]][t[1]][1][0], game.rmap[t[0]][t[1]][1][1]%16 + 96+(16*i))
-        #             else:
-        #                 game.screen.text(t[0], t[1], game.rmap[t[0]][t[1]][0][0], game.rmap[t[0]][t[1]][0][1] - game.rmap[t[0]][t[1]][1][1]%16 + 96+(16*i))
-        #         sleep(0.1)
-        #         cleanup(game, anim_tiles)
-        #         sleep(0.1)
-        #
-        #     return
-
-
-
-        #
-
-        #
-        # if a_id == "annihilate":
-        #     play_sound(game, "annihilate")
-        #     play_sound(game, "worldbreak")
-        #     for i in range(3):
-        #         for j in range(25):
-        #             for t in range (50):
-        #                 if game.rmap[t][j][0] == ("",""):
-        #                     game.screen.text(t, j, game.rmap[t][j][1][0], 15)
-        #                 else:
-        #                     game.screen.text(t, j, game.rmap[t][j][0][0], 15)
-        #             sleep(0.01)
-        #         for j in range(25):
-        #             for t in range (50):
-        #                 if game.rmap[t][j][0] == ("",""):
-        #                     game.screen.text(t, j, game.rmap[t][j][1][0], 240)
-        #                 else:
-        #                     game.screen.text(t, j, game.rmap[t][j][0][0], 240)
-        #             sleep(0.01)
-        #
-        #     for j in range(25):
-        #         for t in range (50):
-        #             restore_tile(game,t,j)
-        #         sleep(0.04)
-        #     return

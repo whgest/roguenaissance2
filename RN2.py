@@ -79,7 +79,7 @@ class Game():
         self.hero = RN2_initialize.Hero(heroclass, saved_hero['name'])
         self.hero.class_name = saved_hero['class_name']
         self.hero.score = saved_hero['score']
-        self.hero.current_battle = 3#saved_hero['current_battle']
+        self.hero.current_battle = saved_hero['current_battle']
 
     def auto_save(self):
         save_data = {}
@@ -128,11 +128,12 @@ class Game():
 def main():
     #test mode
     # game = Game()
-    # game.init_hero("Terramancer", "StrongoDragonlord")
+    # game.init_hero("Pyromancer", "StrongoDragonlord")
     # game.hero.mp = 99
-    # game.hero.hp = 99
-    # game.init_battle("1")
-    # exit()
+    # game.hero.hp = 999
+    # game.RN_sound.mute_switch = False
+    # game.init_battle("3")
+    exit()
 
     while 1:
         game = Game()
@@ -158,6 +159,7 @@ def main():
             game.RN_UI.display_intro(game.text["battle" + str(game.hero.current_battle)].value)
             victory = game.init_battle(str(game.hero.current_battle))
             if not victory:
+                game.hero.reset_actor()
                 retry = game.RN_UI.display_game_over(game.maps["gameover"], game.battles[str(game.hero.current_battle)]['tips'], game.RN_input, game.RN_sound)
                 if not retry:
                     break

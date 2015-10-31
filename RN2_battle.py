@@ -12,6 +12,7 @@ import RN2_loadmap
 import random
 import time
 import logging
+import RN2_AI
 
 
 class StatusEffectData():
@@ -75,10 +76,10 @@ class AppliedStatusEffect(StatusEffectData):
     def apply_status(self, actor):
         if not self.continuous:
             for effect in self.effects:
-                print self.effects
                 attribute = effect[0]
                 multiplier = effect[1]
                 actor.attribute_modifiers[attribute].append(multiplier * self.magnitude)
+                print self.name, 'applied to', actor.name, [actor.attribute_modifiers]
 
         if self.is_beneficial:
             self.report.add_entry("good_status", actor, cause=self.name)
@@ -173,13 +174,15 @@ class Battle():
                  active_actor.mp += 1
             if active_actor.hp > 0 and not active_actor.stunned:
                 break
+            else:
+                self.report.add_entry('stunned', active_actor)
+
         if active_actor.ai == "player":
             return True, active_actor
         else:
-            #self.execute_ai_turn(RN2_AI.enemy_turn(self, active_actor))
             return False, active_actor
 
-    def get_range(self, origin, arange):
+    def get_range(self, origin, arange, pathfind=False):
         targetable_tiles = []
         if arange == 777: #line attack
             if origin[0] == self.hero.coords[0] and origin [1] > self.hero.coords[1]: #down
@@ -237,6 +240,13 @@ class Battle():
         for t in targetable_tiles:
             if self.bmap[t[0]][t[1]].terrain.movable == 0:
                 remove_list.append(t)
+
+        if pathfind:
+            for t in targetable_tiles:
+                path = RN2_AI.pathfind(tuple(origin)[::-1], t[::-1], self.bmap)
+                if path[0] > arange + 1:
+                    remove_list.append(t)
+
         for r in remove_list:
             targetable_tiles.remove(r)
         return targetable_tiles

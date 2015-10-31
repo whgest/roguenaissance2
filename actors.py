@@ -119,6 +119,12 @@ class weapon_q2class(Q2API.xml.base_xml.XMLNode):
         self.path = [None, u'actors', u'heroclass']
         Q2API.xml.base_xml.XMLNode.__init__(self, "weapon", attrs, None, [])
 
+class deathanim_q2class(Q2API.xml.base_xml.XMLNode):
+    def __init__(self, attrs):
+        self.level = 3
+        self.path = [None, u'actors', u'heroclass']
+        Q2API.xml.base_xml.XMLNode.__init__(self, "deathanim", attrs, None, [])
+
 class actor_q2class(Q2API.xml.base_xml.XMLNode):
     def __init__(self, attrs):
         self.level = 2
@@ -137,6 +143,7 @@ class actor_q2class(Q2API.xml.base_xml.XMLNode):
         self.maxhp = []
         self.skills = []
         self.immunities = []
+        self.deathanim = []
         Q2API.xml.base_xml.XMLNode.__init__(self, "actor", attrs, None, [])
 
 class heroclass_q2class(Q2API.xml.base_xml.XMLNode):
@@ -159,6 +166,7 @@ class heroclass_q2class(Q2API.xml.base_xml.XMLNode):
         self.maxhp = []
         self.skills = []
         self.immunities = []
+        self.deathanim = []
         Q2API.xml.base_xml.XMLNode.__init__(self, "heroclass", attrs, None, [])
 
 class actors_q2class(Q2API.xml.base_xml.XMLNode):
@@ -241,6 +249,9 @@ class NodeHandler(xml.sax.handler.ContentHandler):
             self.obj_depth.append(skills_q2class(p_attrs))
 
         elif name == "immunities":
+            self.obj_depth.append(immunities_q2class(p_attrs))
+
+        elif name == "deathanim":
             self.obj_depth.append(immunities_q2class(p_attrs))
 
         self.char_buffer = []
@@ -366,6 +377,12 @@ class NodeHandler(xml.sax.handler.ContentHandler):
 
         elif name == "immunities":
             self.obj_depth[-2].immunities.append(self.obj_depth[-1]) #  make this object a child of the next object up...
+            self.obj_depth[-2].children.append(self.obj_depth[-1]) #  put a reference in the children list as well
+            self.obj_depth.pop() # remove this node from the list, processing is complete
+            self.char_buffer = []
+
+        elif name == "deathanim":
+            self.obj_depth[-2].deathanim.append(self.obj_depth[-1]) #  make this object a child of the next object up...
             self.obj_depth[-2].children.append(self.obj_depth[-1]) #  put a reference in the children list as well
             self.obj_depth.pop() # remove this node from the list, processing is complete
             self.char_buffer = []

@@ -73,13 +73,22 @@ class ModifiableAttribute(object):
             base_stat = self.data[instance]
         except KeyError:
             pass
-        for modifier in self.attribute_modifiers[self.name]:
+        for modifier in instance.attribute_modifiers[self.name]:
             total_modifier += modifier
         return base_stat + total_modifier
 
 
-class Actor(object):
+class ModifiableMoveAttribute(ModifiableAttribute):
+    def __init__(self, name):
+        ModifiableAttribute.__init__(self, name)
 
+    def get_modified_value(self, instance):
+        if instance.attribute_modifiers['rooted']:
+            return 0
+        else:
+            return super(ModifiableMoveAttribute, self).get_modified_value(instance)
+
+class Actor(object):
     MODIFIABLE_ATTRIBUTES = ["maxhp", "maxmp", "attack", "defense", "magic", "resistance", "agility", "move", "stunned",
                              "rooted"]
     attribute_modifiers = {}
@@ -90,7 +99,7 @@ class Actor(object):
     magic = ModifiableAttribute("magic")
     resistance = ModifiableAttribute("resistance")
     agility = ModifiableAttribute("agility")
-    move = ModifiableAttribute("move")
+    move = ModifiableMoveAttribute("move")
     stunned = ModifiableAttribute("stunned")
     rooted = ModifiableAttribute("rooted")
 
@@ -120,6 +129,7 @@ class Actor(object):
         self.descr = stats.descr[0].value
         self.color = "red"
         self.is_boss = False
+        self.death_animation = None
 
     def __str__(self):
         return self.character
@@ -172,12 +182,12 @@ class Hero(Actor):
 class Boss(Actor):
     def __init__(self, stats):
         Actor.__init__(self, stats)
-        self.death_animation = ""
+        self.death_animation = stats.deathanim[0].value
         self.color = stats.color[0].value
         self.is_boss = True
 
 
-class Skill():
+class Skill(object):
     def __init__(self):
         self.ident = ""
         self.target = ""

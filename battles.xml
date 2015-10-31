@@ -25,7 +25,7 @@
                 <effect>add_mobs,4,5,6,7</effect>
         </event>
         <event ident = "4">
-                <condition>playeryGreater,0</condition>
+                <condition>playeryIs,0</condition>
                 <effect>victory</effect>
         </event>
         <tip>Summoning friendly monsters is the best way to even the odds. Summoning will cost more MP the more active summons you have.</tip>
@@ -70,6 +70,7 @@
         <tip>Clustered enemies can be crushed with a spell featuring a wide area of effect.</tip>
         <tip>Your strongest spell can only be cast with full MP, but devastates all enemy units.</tip>
         <tip>Summoned monsters have skills too, but they usually need a turn or two to charge up enough MP to use them.</tip>
+        <tip>All classes have a defensively oriented summon. Pyromancers and Astromancers also have an offensive summon, and Terramancers a healing summon.</tip>
 
     </battle>
     <battle ident = "3">
@@ -93,4 +94,3 @@
 </battles>
 
 
-<!-- possible conditions: turn #, playerx, playery, enemies remaining -->

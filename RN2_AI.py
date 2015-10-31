@@ -3,10 +3,43 @@ import pathfinder
 import random
 import logging
 
+
+def check_bounds(coords):
+    if coords[1] > 49 or coords[0] > 24 or coords[0] < 0 or coords[1] < 0:
+        return True
+
+
+def pathfind(start, end, map):   #return true distance, path
+    pfmap = gridmap.GridMap(25,50)
+    pf = pathfinder.PathFinder(pfmap.successors, pfmap.move_cost, pfmap.move_cost)
+    logging.debug("Pathfinding from: " + repr(start) + " " + repr(end))
+    if check_bounds(start) or check_bounds(end):
+        logging.debug("Check bounds failed.")
+        return 0, []
+
+    if map[end[1]][end[0]].terrain.movable == 0:
+        return 0, []
+
+    for x in range(50):
+        for y in range(25):
+            if map[x][y].actor is not None or map[x][y].terrain.movable == 0:
+                pfmap.set_blocked((y, x))
+
+    pfmap.set_blocked((start[0], start[1]), False)
+    pfmap.set_blocked((end[0], end[1]), False)
+
+    path = list(pf.compute_path(start, end))
+    adjusted_path = []
+    for p in path:
+        adjusted_path.append((p[1], p[0]))
+    return len(adjusted_path), adjusted_path
+
+
 class RN_AI_Class():
     def __init__(self, battle, e, skills):
         self.skills = skills
         self.battle = battle
+        self.map = self.battle.bmap
         self.e = e
         self.target_list = []
         self.friendly_list = []
@@ -47,10 +80,10 @@ class RN_AI_Class():
             aqua = True
         if self.e.ai in ["support", "boss"]:
             for n in self.battle.enemies:
-                distance, path = self.pathfind((self.e.coords[1], self.e.coords[0]), (n.coords[1], n.coords[0]))
+                distance, path = pathfind((self.e.coords[1], self.e.coords[0]), (n.coords[1], n.coords[0]), self.map)
                 friendly_list.append((distance, n, path))
         for h in self.battle.heroes:
-            distance, path = self.pathfind((self.e.coords[1], self.e.coords[0]), (h.coords[1], h.coords[0]), aqua)
+            distance, path = pathfind((self.e.coords[1], self.e.coords[0]), (h.coords[1], h.coords[0]), self.map)
             target_list.append({"distance": distance, "unit": h, "path": path})
         return target_list, friendly_list
 
@@ -151,55 +184,26 @@ class RN_AI_Class():
     def general_move(self):
         path = []
         for i in range(5):
-            dist, path = self.pathfind((self.e.coords[1], self.e.coords[0]), (self.battle.hero.coords[1]+(i+1), self.battle.hero.coords[0]))
+            dist, path = pathfind((self.e.coords[1], self.e.coords[0]), (self.battle.hero.coords[1]+(i+1), self.battle.hero.coords[0]), self.map)
             if path != []:
                 break
-            dist, path = self.pathfind((self.e.coords[1], self.e.coords[0]), (self.battle.hero.coords[1], self.battle.hero.coords[0]+(i+1)))
+            dist, path = pathfind((self.e.coords[1], self.e.coords[0]), (self.battle.hero.coords[1], self.battle.hero.coords[0]+(i+1)), self.map)
             if path != []:
                 break
-            dist, path = self.pathfind((self.e.coords[1], self.e.coords[0]), (self.battle.hero.coords[1]-(i+1), self.battle.hero.coords[0]))
+            dist, path = pathfind((self.e.coords[1], self.e.coords[0]), (self.battle.hero.coords[1]-(i+1), self.battle.hero.coords[0]), self.map)
             if path != []:
                 break
-            dist, path = self.pathfind((self.e.coords[1], self.e.coords[0]), (self.battle.hero.coords[1]+1, self.battle.hero.coords[0]-(i+1)))
+            dist, path = pathfind((self.e.coords[1], self.e.coords[0]), (self.battle.hero.coords[1]+1, self.battle.hero.coords[0]-(i+1)), self.map)
             if path != []:
                 break
         return path
 
-    def check_bounds(self, coords):
-        if coords[1] > 49 or coords[0] > 24 or coords[0] < 0 or coords[1] < 0:
-            return True
+
 
     def grid_distance(self, actor1, actor2):
         return abs(actor1[0] - actor2[0]) + abs(actor1[1] - actor2[1])
 
-    def pathfind(self, start, end, aquatic=False):   #return true distance, path
-        pfmap = gridmap.GridMap(25,50)
-        pf = pathfinder.PathFinder(pfmap.successors, pfmap.move_cost, pfmap.move_cost)
-        logging.debug("Pathfinding from: " + repr(start) + " " + repr(end))
-        if self.check_bounds(start) or self.check_bounds(end):
-            logging.debug("Check bounds failed.")
-            return 0, []
-        # if aquatic == True:
-        #     if bmap[end[1]][end[0]][1][0] in [" ", chr(176)]: #bad terrain
-        #         return 0, []
-        #     for x in range (50):
-        #         for y in range (25):
-        #             if bmap[x][y][0].actor is not None or bmap[x][y][1][0] not in [chr(247)]:
-        #                 pfmap.set_blocked((y,x))
-        if aquatic == False:
-            if self.battle.bmap[end[1]][end[0]].terrain.movable == 0:
-                return 0, []
-            for x in range (50):
-                for y in range (25):
-                    if self.battle.bmap[x][y].actor is not None or self.battle.bmap[x][y].terrain.movable == 0:
-                        pfmap.set_blocked((y,x))
-        pfmap.set_blocked((start[0], start[1]), False)
-        pfmap.set_blocked((end[0], end[1]), False)
-        path = list(pf.compute_path(start, end))
-        adjusted_path = []
-        for p in path:
-            adjusted_path.append((p[1], p[0]))
-        return len(adjusted_path), adjusted_path
+
 
     def boss_logic(self):
         if self.e.hp < 20:
@@ -237,8 +241,6 @@ class RN_AI_Class():
     def drain(self):
         heal_skill = ""
         for s in self.e.skillset:
-            print s, self.e.skillset, self.skills[s]
-            print self.skills[s].effects
             if self.skills[s].effects[0]["type"] == "Drain":
                 skill_name = s
                 heal_skill = self.skills[s]

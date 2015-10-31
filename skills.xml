@@ -126,6 +126,7 @@
         <effect>
             <type>Root</type>
             <duration>2</duration>
+            <magnitude>1</magnitude>
         </effect>
         <effect>
             <type>Capture</type>
@@ -259,6 +260,7 @@
         <damage>1,8</damage>
         <effect>
             <type>Drain</type>
+            <magnitude>1</magnitude>
         </effect>
         <mp>1</mp>
         <prompt>Absorbs HP from an enemy. Range 7.</prompt>
@@ -298,6 +300,7 @@
         <effect>
             <type>Root</type>
             <duration>3</duration>
+            <magnitude>1</magnitude>
         </effect>
         <mp>1</mp>
         <prompt>Damages enemy and inflicts Root. Range 7.</prompt>
@@ -314,6 +317,7 @@
         <effect>
             <type>Stun</type>
             <duration>3</duration>
+            <magnitude>1</magnitude>
         </effect>
         <effect>
             <type>Frostbite</type>
@@ -516,9 +520,9 @@
         <effect>
             <type>Ascendant</type>
             <magnitude>1</magnitude>
-            <modifier>attack,15</modifier>
-            <modifier>defense,7</modifier>
-            <modifier>resistance,7</modifier>
+            <modifier>attack,5</modifier>
+            <modifier>defense,3</modifier>
+            <modifier>resistance,3</modifier>
             <modifier>move,2</modifier>
             <continuous>0</continuous>
             <duration>5</duration>

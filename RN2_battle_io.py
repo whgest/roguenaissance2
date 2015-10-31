@@ -60,6 +60,7 @@ class BattleReport():
             "good_status": BattleReportLine("%unit: Affected by %cause.", cause_color='good_status'),
             "immunity": BattleReportLine("%unit: Immune to %cause.", cause_color='bad_status'),
             "death": BattleReportLine("%unit dies!", line_color="death"),
+            "stunned": BattleReportLine("%unit is stunned and cannot act.", line_color='bad_status'),
             "status_damage": BattleReportLine("%unit: Suffers %effect damage from %cause.", cause_color='bad_status', effect_color='damage'),
             "regen": BattleReportLine("%unit: Gains %effect life from %cause.", cause_color='good_status', effect_color='heal'),
             "status_update": BattleReportLine("%unit: Afflicted by %cause: %effect!", cause_color='bad_status', effect_color='bad_status'),
@@ -207,6 +208,7 @@ class Battle_Controller():
                 self.report.add_raw_entry("Total Enemies Killed: " + str(self.hero.score['killed']), color="good_status")
                 time.sleep(1)
                 RN_UI.wait_for_keypress()
+                RN_UI.fade_to_black()
                 return True
             player, battle.active = battle.turn_manager()
             hero = False
@@ -226,7 +228,7 @@ class Battle_Controller():
                     battle.state = "move"
                     battle.prevstate = "move"
                     battle.move_range = 0
-                    battle.move_range = battle.get_range(tuple(battle.active.coords), battle.active.move)
+                    battle.move_range = battle.get_range(tuple(battle.active.coords), battle.active.move, pathfind=True)
                     RN_UI.highlight_area(True, battle.move_range, battle.bmap, "teal")
                     turn = False
                     while not turn:
@@ -276,6 +278,7 @@ class Battle_Controller():
             if game_over:
                 self.RN_sound.cut_music()
                 self.RN_sound.play_music('gameover')
+                RN_UI.fade_to_black()
                 return False
             RN_UI.print_narration(self.report.process_report())
             time.sleep(0.2)
@@ -359,10 +362,13 @@ class Battle_Controller():
         unit_list = battle.enemies + battle.heroes
         for unit in unit_list:
             if unit.hp <= 0 or unit.status == [{"type": "Dead"}]:
+                self.report.add_entry("death", unit)
+                if unit.death_animation:
+                    self.RN_sound.cut_music()
+                    RN2_animations.RN_Animation_Class([tuple(unit.coords)], self.RN_sound, RN_UI, unit.death_animation, battle.bmap, battle.active.coords)
                 battle.bmap[unit.coords[0]][unit.coords[1]].actor = None
                 RN_UI.update_map(unit.coords, "dead", unit, battle.bmap)
                 self.battle.turn_tracker.remove_unit(unit)
-                self.report.add_entry("death", unit)
                 try:
                     battle.enemies.remove(unit)
                     self.battle.hero.score['killed'] += 1
