@@ -167,11 +167,13 @@ class RN_Animation_Class():
     #TODO: refactor this nonsense into a dict
     def animation(self):
         if self.anim_id == "meteor":
-           self.game.play_sound("fall")
-           self.projectile((self.tiles[0][0], 0), (self.tiles[0][0], self.tiles[0][1]), ["O"], ["red", "maroon"])
-           self.game.play_sound("bigboom")
-           self.flash_tiles(self.tiles, [(50,-50,-50), (150,-50,-50)], 3)
-           return
+            self.tint_screen((200, 25, 25))
+            self.game.play_sound("fall")
+            self.projectile((self.tiles[0][0], 0), (self.tiles[0][0], self.tiles[0][1]), ["O"], ["red", "maroon"])
+            self.game.play_sound("bigboom")
+            self.flash_tiles(self.tiles, [(50,-50,-50), (150,-50,-50)], 3)
+            self.tint_screen((0, 0, 0))
+            return
 
         elif self.anim_id == "basic":
             self.game.play_sound("slash")
@@ -194,16 +196,16 @@ class RN_Animation_Class():
             return
 
         elif self.anim_id == "tbolt":
-           self.game.play_sound("bigboom")
-           self.projectile((self.tiles[0][0], 0), (self.tiles[0][0], self.tiles[0][1]), ["\\", "/"], ["white"], clear=False)
-           self.game.play_sound("shock")
-           self.flash_tiles(self.tiles, [(150,150,150), (100,100,100)], 3)
-           return
+            self.game.play_sound("bigboom")
+            self.projectile((self.tiles[0][0], 0), (self.tiles[0][0], self.tiles[0][1]), ["\\", "/"], ["white"], clear=False)
+            self.game.play_sound("shock")
+            self.flash_tiles(self.tiles, [(150,150,150), (100,100,100)], 3)
+            return
 
         elif self.anim_id == "vine":
-           self.projectile(self.attacker, self.tiles, [u"ζ"], ["green"], clear=False)
-           self.game.play_sound("slash")
-           return
+            self.projectile(self.attacker, self.tiles, [u"ζ"], ["green"], clear=False)
+            self.game.play_sound("slash")
+            return
 
         elif self.anim_id == "rock toss":
             print self.attacker, self.tiles
@@ -303,11 +305,13 @@ class RN_Animation_Class():
             self.flash_tiles(self.tiles, [(200, 200, -25), (200, 200, 200), (200, 0, 150)], 4, fast_update=True)
 
         elif self.anim_id == "tectonic":
+            self.tint_screen((139, 69, 19))
             self.game.play_sound("quake")
             self.game.play_sound("bigboom")
-            self.firework(self.attacker, 40, u"Ж", "olive", delay = 0.015)
+            self.firework(self.attacker, 40, u"Ж", "olive", delay=0.015)
             self.game.play_sound("surge")
             self.flash_tiles(self.tiles, [(0, -50, -100), (-100, -100, -100)], 4, fast_update=True)
+            self.tint_screen((0, 0, 0))
 
         elif self.anim_id == "splitatom":
             self.flash_tiles(self.tiles, [(-30, -30, -30), (-60, -60, -60), (-100, -100, -100)], 1, fast_update=True, cleanup=False)
@@ -316,9 +320,18 @@ class RN_Animation_Class():
             self.game.play_sound("bigboom")
             self.flash_tiles(self.tiles, [(255,255,255), (255,255,255), (255,-200,-200), (255,-100,-100), (200,-50,-50), (100,0,0), (50,0,0)], 1, fast_update=True, cleanup=True, delay=0.3)
 
+        elif self.anim_id == "avalanche":
+            self.game.play_sound("buff")
+            self.flash_tiles([self.attacker], [(100, 100, 100), (0, 0, 0)], 4)
+            self.game.play_sound("bighit")
+            self.game.play_sound("fall")
+            self.hit(self.tiles, ['/', '\\', '|', 'X'], ['white'], delay=0.15)
+            self.flash_screen((139, 69, 19))
+            self.game.play_sound('impact')
+
         elif self.anim_id == "ascend":
             self.game.play_sound("fall")
-            self.projectile((self.tiles[0][0], 0), (self.tiles[0][0], self.tiles[0][1]), [u"█"], ["white"], clear = False)
+            self.projectile((self.tiles[0][0], 0), (self.tiles[0][0], self.tiles[0][1]), [u"█"], ["white"], clear=False)
             self.game.play_sound("surge")
             self.flash_tiles(self.tiles, [(0, -50, -100), (-50, 200, -50), (-50, -50, 200)], 3)
 
@@ -327,11 +340,22 @@ class RN_Animation_Class():
             self.game.play_sound("worldbreak")
             self.flash_tiles(self.tiles, [(200,200,200), (-200, -200, -200)], 4, fast_update=True, cleanup=True, delay=0.3)
 
+        elif self.anim_id == "playerdeath":
+            self.game.play_sound("zero")
+            self.flash_tiles(self.tiles, [(200, -50, -50), (100, 0, 0)], 6, cleanup=False)
+            self.game.play_sound("bigboom")
+            self.firework(self.tiles[0], 5, "X", (0, 0, 0), cleanup=False)
+
+        elif self.anim_id == "deathanim":
+            self.game.play_sound("death")
+            self.flash_tiles(self.tiles, [(200, -50, -50), (200, 0, 0), (-50, -100, -100), (-100, -200, -200), (-255, -255, -255)], 1)
+
         elif self.anim_id == "beldeath":
             self.flash_screen(color=(150, 150, 150), reps=2)
-            self.game.play_sound("zero")
+            self.game.play_sound("annihilate")
             self.flash_tiles(self.tiles, [(-50, -50, -50), (-150, -150, -150)], 8, cleanup=False)
             self.game.play_sound("bigboom")
             self.firework(self.tiles[0], 15, "X", (0, 0, 0), cleanup=False)
+
         else:
             return
