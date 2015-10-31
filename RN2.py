@@ -133,7 +133,7 @@ def main():
     # game.hero.hp = 999
     # game.RN_sound.mute_switch = False
     # game.init_battle("3")
-    exit()
+    #exit()
 
     while 1:
         game = Game()

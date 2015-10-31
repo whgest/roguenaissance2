@@ -142,7 +142,8 @@ class Actor(object):
         return attacker.enemy == self.enemy
 
     def clear_attribute_modifiers(self):
-        self.attribute_modifiers = {}
+        pass
+    #     self.attribute_modifiers = {}
 
     def clear_status(self):
         self.status = []
