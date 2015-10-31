@@ -161,12 +161,13 @@ class Battle_Controller():
 
     def init_music(self):
         self.RN_sound.cut_music()
+
         try:
             self.RN_sound.play_music(self.battle_data['music'][0])
-            if len(self.battle_data['music']) > 1:
-                for i, track in enumerate(self.battle_data['music']):
-                    if i > 0:
-                        self.RN_sound.play_music(track, True)
+            # if len(self.battle_data['music']) > 1:
+            #     for i, track in enumerate(self.battle_data['music']):
+            #         if i > 0:
+            #             self.RN_sound.play_music(track, queue=True)
         except KeyError: #no music defined
             pass
 
@@ -215,12 +216,13 @@ class Battle_Controller():
             if battle.active in battle.heroes:
                 hero = True
             RN_UI.print_turn(battle.active.name, hero)
-            battle.resolve_status(battle.active)
-            #battle.resolve_terrain(battle.active)
-            RN_UI.print_narration(self.report.process_report())
-            if battle.active.hp <= 0 or battle.active.stunned == 1 or battle.active.status == [{"type":"Dead"}]:
+
+            active_can_act = battle.resolve_status(battle.active)
+            if not active_can_act:
                 self.update_game(battle, RN_UI)
                 continue
+
+            RN_UI.print_narration(self.report.process_report())
             if player:
                     self.RN_sound.play_sound("beep2")
                     RN_UI.turn_indication(battle.active)
@@ -364,7 +366,6 @@ class Battle_Controller():
             if unit.hp <= 0 or unit.status == [{"type": "Dead"}]:
                 self.report.add_entry("death", unit)
                 if unit.death_animation:
-                    self.RN_sound.cut_music()
                     RN2_animations.RN_Animation_Class([tuple(unit.coords)], self.RN_sound, RN_UI, unit.death_animation, battle.bmap, battle.active.coords)
                 battle.bmap[unit.coords[0]][unit.coords[1]].actor = None
                 RN_UI.update_map(unit.coords, "dead", unit, battle.bmap)

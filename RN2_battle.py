@@ -64,6 +64,8 @@ class AppliedStatusEffect(StatusEffectData):
                 attribute = effect[0]
                 multiplier = effect[1]
                 effect = multiplier * self.magnitude
+                print getattr(actor, attribute)
+                print effect
                 new_value = getattr(actor, attribute) + effect
                 setattr(actor, attribute, new_value)
                 if self.is_beneficial:
@@ -172,10 +174,8 @@ class Battle():
             active_actor = self.turn_tracker.get_next_unit()
             if active_actor.mp < active_actor.maxmp:
                  active_actor.mp += 1
-            if active_actor.hp > 0 and not active_actor.stunned:
+            if active_actor.hp > 0:
                 break
-            else:
-                self.report.add_entry('stunned', active_actor)
 
         if active_actor.ai == "player":
             return True, active_actor
@@ -185,7 +185,7 @@ class Battle():
     def get_range(self, origin, arange, pathfind=False):
         targetable_tiles = []
         if arange == 777: #line attack
-            if origin[0] == self.hero.coords[0] and origin [1] > self.hero.coords[1]: #down
+            if origin[0] == self.hero.coords[0] and origin[1] > self.hero.coords[1]: #down
                 for i in range(self.map_size[1] - origin[1]):
                     if self.bmap[origin[0]][origin[1]+i].terrain.targetable == 0:
                         break
@@ -315,41 +315,43 @@ class Battle():
                 elif effect["type"] == "Summon":
                     self.summon(attacker, effect["magnitude"], targets[0])
                 else:  # status effect
-                    if t.status == ["Dead"] or t.hp <= 0:   #check if target is dead first
+                    if t.hp <= 0:   #check if target is dead first
                         continue
 
+                    effect_type = effect['type']
                     #resolve dual status skills
                     if "|" in effect["type"]:
-                        if t in self.enemies and attacker in self.enemies or t in self.heroes and attacker in self.heroes:
-                            effect["type"] = effect["type"].split("|")[0]
+                        if (t in self.enemies and attacker in self.enemies) or (t in self.heroes and attacker in self.heroes):
+                            effect_type = effect["type"].split("|")[0]
                         else:
-                            effect["type"] = effect["type"].split("|")[1]
+                            effect_type = effect["type"].split("|")[1]
 
                     # if same status already exists, refresh duration
-                    # TODO: overwrite weaker magnitudes if stronger one is applied (end old status)
                     break_flag = False
                     for status in t.status:
-                        if status.name == effect["type"]:
+                        if status.name == effect_type:
                             status.duration = effect["duration"]
+                            if status.magnitude < effect['magnitude']:
+                                status.magnitude = effect["magnitude"]
                             break_flag = True
                             break
                     if break_flag:
                         continue
-                    if effect["type"] in t.immunities:
-                        self.report.add_entry("immunity", t, cause=effect["type"])
+                    if effect_type in t.immunities:
+                        self.report.add_entry("immunity", t, cause=effect_type)
                         continue
 
-                    if effect["type"] in DEFAULT_STATUS_EFFECTS:
-                        modifiers = DEFAULT_STATUS_EFFECTS[effect["type"]].effects
-                        continuous = DEFAULT_STATUS_EFFECTS[effect["type"]].continuous
-                        impairing = DEFAULT_STATUS_EFFECTS[effect["type"]].impairing
+                    if effect_type in DEFAULT_STATUS_EFFECTS:
+                        modifiers = DEFAULT_STATUS_EFFECTS[effect_type].effects
+                        continuous = DEFAULT_STATUS_EFFECTS[effect_type].continuous
+                        impairing = DEFAULT_STATUS_EFFECTS[effect_type].impairing
                     else:  # custom status effects defined in xml
                         modifiers = effect["modifiers"]
                         continuous = effect["continuous"]
                         #add impairing if needed
                         impairing = False
 
-                    status_to_apply = AppliedStatusEffect(effect["type"], modifiers, effect["duration"], self.report,
+                    status_to_apply = AppliedStatusEffect(effect_type, modifiers, effect["duration"], self.report,
                                                           magnitude=effect["magnitude"], continuous=continuous,
                                                           impairing=impairing)
                     t.status.append(status_to_apply)
@@ -406,7 +408,7 @@ class Battle():
             self.report.add_entry("heal", defender, cause=skill.name, effect=str(abs(inflicted_damage)))
         else:
             self.report.add_entry("damage", defender, cause=skill.name, effect=str(abs(inflicted_damage)))
-        if defender == self.hero:
+        if defender == self.hero and inflicted_damage > 0:
             self.hero.score['damage'] += inflicted_damage
         return inflicted_damage
 
@@ -436,7 +438,6 @@ class Battle():
         if skill is not None and self.grid_distance(e.coords, (x, y)) <= skill.range:
             self.enemy_skill(e, skill, target)
             return aipath, target, skill
-        print "maxrange, waiting:", skill
         return aipath, target, skill
 
     def grid_distance(self, actor1, actor2):
@@ -449,15 +450,21 @@ class Battle():
         self.affected_tiles = affected_tiles
         self.skill_target(e, skill, affected_tiles)
 
-
     def resolve_status(self, actor):
-        if actor.status == [] or actor.status == ["Dead"]:
-            return
+        can_act = True
+        if actor.status == []:
+            return can_act
 
         for s in actor.status:
             s.tick_status(actor)
+            if actor.stunned:
+                self.report.add_entry('stunned', actor)
+                can_act = False
 
-        return
+            if actor.hp <= 0:
+                can_act = False
+
+        return can_act
 
     def stat_modifiers(self, a):
         stats_list = ["attack", "defense", "magic", "resistance", "agility", "move"]
@@ -475,16 +482,6 @@ class Battle():
         else:
             return False
         terrain = self.bmap[x][y].terrain
-        if terrain.aquatic == 1:
-            if "Aquatic" not in a.immunities:
-                a.move = 1
-                a.mp -= 1
-                a.skillset = []
-            for s in a.status:
-                if s["type"] == "Burning" or "Haste":
-                    a.status.remove(s)
-                    self.report.append(("statusends",(a.name, s["type"])))
-            return True
         if terrain.name == "Lava":
             a.hp = 0
             self.report.append(("statuskill",[a.name, "Lava"]))
@@ -501,7 +498,7 @@ class Battle():
 
     def forced_move(self, attacker, defender, direction, magnitude, origin=False):  #returns a path for later animation
         if "Push" in defender.immunities:
-            self.report.append(("immunity", [defender.name, "Push/Pull"]))
+            self.report.add_entry("immunity", defender, cause="Push/Pull")
             return
         if origin:
             nexus = origin
@@ -512,8 +509,8 @@ class Battle():
             direction = 1
         elif direction in ["Pull", "Capture"]:
             direction = -1
-        x_dist =  nexus[0] - defender.coords[0]
-        y_dist =  nexus[1] - defender.coords[1]
+        x_dist = nexus[0] - defender.coords[0]
+        y_dist = nexus[1] - defender.coords[1]
         path = [defender.coords]
         for i in range(magnitude):
             prev_coords = tuple(defender.coords)

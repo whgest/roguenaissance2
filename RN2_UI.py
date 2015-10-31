@@ -53,7 +53,7 @@ class RN_UI_Class():
         self.select_color = "fuchsia"
         self.highlight_tint = (125,-120,47)
         self.textcolors = {
-            "damage": "maroon",
+            "damage": "yellow",
             "heal":  "lime",
             "skill": "fuchsia",
             "death": "red",

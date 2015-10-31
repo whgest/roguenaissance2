@@ -88,6 +88,7 @@ class ModifiableMoveAttribute(ModifiableAttribute):
         else:
             return super(ModifiableMoveAttribute, self).get_modified_value(instance)
 
+
 class Actor(object):
     MODIFIABLE_ATTRIBUTES = ["maxhp", "maxmp", "attack", "defense", "magic", "resistance", "agility", "move", "stunned",
                              "rooted"]
@@ -129,7 +130,7 @@ class Actor(object):
         self.descr = stats.descr[0].value
         self.color = "red"
         self.is_boss = False
-        self.death_animation = None
+        self.death_animation = 'deathanim'
 
     def __str__(self):
         return self.character
@@ -137,19 +138,18 @@ class Actor(object):
     def display(self):
         return self.character, self.color
 
-    #determine if an enemy is affected by ally/enemy only spells
     def is_hostile(self, attacker):
         return attacker.enemy == self.enemy
 
     def clear_attribute_modifiers(self):
-        pass
-    #     self.attribute_modifiers = {}
+        for attr in self.MODIFIABLE_ATTRIBUTES:
+            self.attribute_modifiers[attr] = []
 
     def clear_status(self):
         self.status = []
 
     def set_base_mp(self):
-        self.mp = int(math.ceil(self.maxmp / 2))
+        self.mp = int(math.floor(self.maxmp / 2) - 1)
 
     def reset_actor(self):
         self.clear_attribute_modifiers()
@@ -178,6 +178,7 @@ class Hero(Actor):
                       "damage": 0}
         self.current_battle = 1
         self.class_name = "Mage"
+        self.death_animation = 'playerdeath'
 
 
 class Boss(Actor):
@@ -286,9 +287,13 @@ def make_skills(xml_stream):
                 effect_attrs["duration"] = None
                 effect_attrs["modifiers"] = []
                 effect_attrs["continuous"] = None
-                effect_attrs["type"] = (e.type[0].value)
+                effect_attrs["type"] = e.type[0].value
                 if e.magnitude != []:
-                    effect_attrs["magnitude"] = e.magnitude[0].value
+                    #TODO: Stop using magnitude for summon spells and delete this crap
+                    try:
+                        effect_attrs["magnitude"] = int(e.magnitude[0].value)
+                    except ValueError:
+                        effect_attrs["magnitude"] = e.magnitude[0].value
                 if e.duration != []:
                     effect_attrs["duration"] = int(e.duration[0].value)
                 if e.continuous != []:

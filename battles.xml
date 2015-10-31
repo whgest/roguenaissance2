@@ -29,6 +29,7 @@
                 <effect>victory</effect>
         </event>
         <tip>Summoning friendly monsters is the best way to even the odds. Summoning will cost more MP the more active summons you have.</tip>
+        <tip>Forced movement spells that Push or Pull foes can keep enemies off your back for as long you have the MP to use them.</tip>
         <tip>Haste and Slow effects change how far units can move each turn. Use these to maneuver around enemies. Rooted units can not move at all, but can attack.</tip>
         <tip>All classes have some way to heal. Astromancers can regenerate health over time with Soothing Starlight, Pyromancers can Drain Life, and Terramancers can summon a Spring Breeze to heal them.</tip>
     </battle>

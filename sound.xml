@@ -151,7 +151,15 @@
         <filename>summon.wav</filename>
     </sound>
 
+    <sound>
+        <ident>death</ident>
+        <filename>death.wav</filename>
+    </sound>
 
+    <sound>
+        <ident>impact</ident>
+        <filename>projectileimpact.wav</filename>
+    </sound>
 
  <!--music files -->
     <music>
@@ -218,5 +226,16 @@
         <ident>trans</ident>
         <filename>trans.ogg</filename>
     </music>
+
+    <music>
+        <ident>test1</ident>
+        <filename>groundbreaking.wav</filename>
+    </music>
+
+    <music>
+        <ident>test2</ident>
+        <filename>annihilate.wav</filename>
+    </music>
+
 
 </sounds>

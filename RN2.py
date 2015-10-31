@@ -24,20 +24,22 @@ class RN_Sound():
             return
 
         if queue:
-            self.music_to_queue = music_ident
-            pygame.mixer.music.queue("sound/" + self.music[music_ident])
+            # self.music_to_queue = music_ident
+            # print 'queueing', self.music[music_ident]
+            # pygame.mixer.music.queue("sound/" + self.music[music_ident])
             return
         else:
             self.music_to_play = music_ident
-            pygame.mixer.music.load("sound/" + self.music[music_ident])
+
         if not self.mute_switch:
-            pygame.mixer.music.play()
+            pygame.mixer.music.load("sound/" + self.music[music_ident])
+            pygame.mixer.music.play(-1)
 
     def cut_music(self):
         pygame.mixer.music.fadeout(100)
 
     def deactivate_mute_switch(self):
-        pygame.mixer.music.load("sound/" +  self.music[self.music_to_play])
+        pygame.mixer.music.load("sound/" + self.music[self.music_to_play])
         pygame.mixer.music.play()
 
     def play_sound(self, sound_ident):
@@ -127,13 +129,14 @@ class Game():
 
 def main():
     #test mode
-    # game = Game()
-    # game.init_hero("Pyromancer", "StrongoDragonlord")
-    # game.hero.mp = 99
-    # game.hero.hp = 999
-    # game.RN_sound.mute_switch = False
-    # game.init_battle("3")
-    #exit()
+    game = Game()
+    game.init_hero("Terramancer", "StrongoDragonlord")
+    game.hero.mp = 99
+    game.hero.hp = 999
+    game.hero.attribute_modifiers['move'] = [10]
+    game.RN_sound.mute_switch = False
+    game.init_battle("1")
+    exit()
 
     while 1:
         game = Game()

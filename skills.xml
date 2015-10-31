@@ -88,7 +88,7 @@
         <narration>sends healing energy to</narration>
         <range>4</range>
         <aoe>1</aoe>
-        <damage>1,-3</damage>
+        <damage>1,-1</damage>
         <effect>
             <type>Regen</type>
             <magnitude>5</magnitude>
@@ -160,9 +160,9 @@
         <narration>fires a gamma ray at</narration>
         <range>1</range>
         <aoe>777</aoe>
-        <damage>2,8</damage>
-        <mp>1</mp>
-        <prompt>Damages and blinds all units. Fires in a line.</prompt>
+        <damage>2,12</damage>
+        <mp>2</mp>
+        <prompt>Damages all units. Fires in a line.</prompt>
         <animation>gamma</animation>
     </skill>
 
@@ -313,18 +313,18 @@
         <narration>stops the molecules of</narration>
         <range>6</range>
         <aoe>4</aoe>
-        <damage>3,6</damage>
+        <damage>2,6</damage>
         <effect>
             <type>Stun</type>
-            <duration>3</duration>
+            <duration>2</duration>
             <magnitude>1</magnitude>
         </effect>
         <effect>
             <type>Frostbite</type>
             <magnitude>3</magnitude>
-            <duration>4</duration>
+            <duration>3</duration>
         </effect>
-        <mp>4</mp>
+        <mp>5</mp>
         <prompt>Damages all units and inflicts Frostbite, Stun. Range 3, area 4.</prompt>
         <animation>zero</animation>
     </skill>
@@ -440,7 +440,7 @@
         <animation>rock toss</animation>
     </skill>
 
-    <skill ident = "Landslide">
+    <skill ident = "Venom Slash">
         <target>enemy</target>
         <stat>attack</stat>
         <narration>strikes with the force of a landslide at</narration>
@@ -489,8 +489,24 @@
             <magnitude>9</magnitude>
         </effect>
         <mp>2</mp>
-        <prompt>Damage a pull a distant enemy to you. Range 9.</prompt>
+        <prompt>Damage and pull a distant enemy to you. Range 9.</prompt>
         <animation>vine</animation>
+    </skill>
+
+    <skill ident = "Avalanche Strike">
+        <target>enemy</target>
+        <stat>attack</stat>
+        <narration></narration>
+        <range>2</range>
+        <aoe>0</aoe>
+        <damage>3,12</damage>
+        <effect>
+            <type>Push</type>
+            <magnitude>8</magnitude>
+        </effect>
+        <mp>3</mp>
+        <prompt>Sending an enemy flying with a fully empowered slash.</prompt>
+        <animation>avalanche</animation>
     </skill>
 
     <skill ident = "Tectonic Break">
@@ -672,7 +688,7 @@
         <prompt>Basic.</prompt>
         <animation>bite</animation>
     </skill>
-    <skill ident = "The Birds">
+    <skill ident = "Talon Frenzy">
         <target>enemy</target>
         <stat>magic</stat>
         <narration>frenzies at</narration>
@@ -776,14 +792,14 @@
         <narration>creates a healstorm around</narration>
         <range>0</range>
         <aoe>2</aoe>
-        <damage>1,-1</damage>
+        <damage>0</damage>
         <effect>
-            <type>Regen</type>
+            <type>Regen|Poison</type>
             <magnitude>3</magnitude>
-            <duration>4</duration>
+            <duration>3</duration>
         </effect>
         <mp>4</mp>
-        <prompt>Heal and regenerate all nearby allies.</prompt>
+        <prompt>Regenerate all nearby allies, poison all enemies.</prompt>
         <animation>heal</animation>
     </skill>
 
