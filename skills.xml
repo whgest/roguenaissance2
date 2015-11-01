@@ -284,7 +284,7 @@
             <magnitude>2</magnitude>
             <duration>4</duration>
         </effect>
-        <mp>1</mp>
+        <mp>2</mp>
         <prompt>Damages enemy and inflicts Burning and Frostbite. Range 9.</prompt>
         <animation>frostfire</animation>
     </skill>
@@ -488,7 +488,7 @@
             <type>Pull</type>
             <magnitude>9</magnitude>
         </effect>
-        <mp>2</mp>
+        <mp>1</mp>
         <prompt>Damage and pull a distant enemy to you. Range 9.</prompt>
         <animation>vine</animation>
     </skill>
@@ -496,7 +496,7 @@
     <skill ident = "Avalanche Strike">
         <target>enemy</target>
         <stat>attack</stat>
-        <narration></narration>
+        <narration>None</narration>
         <range>2</range>
         <aoe>0</aoe>
         <damage>3,12</damage>
@@ -536,9 +536,9 @@
         <effect>
             <type>Ascendant</type>
             <magnitude>1</magnitude>
-            <modifier>attack,5</modifier>
-            <modifier>defense,3</modifier>
-            <modifier>resistance,3</modifier>
+            <modifier>attack,6</modifier>
+            <modifier>defense,4</modifier>
+            <modifier>resistance,4</modifier>
             <modifier>move,2</modifier>
             <continuous>0</continuous>
             <duration>5</duration>
@@ -756,7 +756,7 @@
         <target>enemy</target>
         <stat>attack</stat>
         <narration>tail slams</narration>
-        <range>0</range>
+        <range>1</range>
         <aoe>1</aoe>
         <damage>1,6</damage>
         <mp>0</mp>
@@ -803,23 +803,18 @@
         <animation>heal</animation>
     </skill>
 
-    <skill ident = "Poison Breath">
+    <skill ident = "Bone Toss">
         <target>enemy</target>
         <stat>magic</stat>
         <narration>blasts poison breath at</narration>
-        <range>5</range>
+        <range>4</range>
         <aoe>1</aoe>
         <damage>1,10</damage>
-        <effect>
-            <type>Poison</type>
-            <magnitude>2</magnitude>
-            <duration>4</duration>
-        </effect>
         <mp>0</mp>
         <prompt>Basic attack.</prompt>
         <animation>basic ranged</animation>
     </skill>
-    <skill ident = "Poison Surge">
+    <skill ident = "Poison Breath">
         <target>enemy</target>
         <stat>magic</stat>
         <narration>unleashes a blast of poison breath at</narration>
@@ -985,7 +980,7 @@
         <narration>feeds on dark energy from</narration>
         <range>5</range>
         <aoe>0</aoe>
-        <damage>1,6</damage>
+        <damage>1,4</damage>
         <effect>
             <type>Drain</type>
             <magnitude>1</magnitude>
@@ -1024,7 +1019,7 @@
             <magnitude>3</magnitude>
             <duration>3</duration>
         </effect>
-        <mp>1</mp>
+        <mp>2</mp>
         <prompt>Damages enemy and inflicts Poison. Range 8.</prompt>
         <animation>poisonbolt</animation>
     </skill>

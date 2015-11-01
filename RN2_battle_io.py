@@ -67,6 +67,7 @@ class BattleReport():
             "good_status_ends": BattleReportLine("%unit: No longer affected by %cause.", cause_color='good_status'),
             "status_ends": BattleReportLine("%unit: No longer afflicted by %cause.", cause_color='bad_status'),
             "status_kill": BattleReportLine("%unit: Killed by %cause!", cause_color='bad_status'),
+            "terrain_kill": BattleReportLine("%unit: Falls into %cause!", cause_color='bad_status'),
             "victory": BattleReportLine("%unit achieved victory.", line_color="ally_name")
         }
 
@@ -217,9 +218,10 @@ class Battle_Controller():
                 hero = True
             RN_UI.print_turn(battle.active.name, hero)
 
+            terrain_ok = battle.resolve_terrain(battle.active)
             active_can_act = battle.resolve_status(battle.active)
-            if not active_can_act:
-                self.update_game(battle, RN_UI)
+            if not active_can_act or not terrain_ok:
+                self.clear_board(battle, RN_UI)
                 continue
 
             RN_UI.print_narration(self.report.process_report())
@@ -230,7 +232,7 @@ class Battle_Controller():
                     battle.state = "move"
                     battle.prevstate = "move"
                     battle.move_range = 0
-                    battle.move_range = battle.get_range(tuple(battle.active.coords), battle.active.move, pathfind=True)
+                    battle.move_range = battle.get_range(tuple(battle.active.coords), battle.active.move, pathfind=True, is_move=True)
                     RN_UI.highlight_area(True, battle.move_range, battle.bmap, "teal")
                     turn = False
                     while not turn:
@@ -457,7 +459,6 @@ class Battle_Controller():
         RN_UI.highlight_area(True, battle.move_range, battle.bmap)
         prev_coords = tuple(active.coords)
         if command == "activate":
-            #RN_UI.highlight_area(False, move_range)
             if len(active.skillset) <= 1:
                 self.RN_sound.play_sound("error")
                 RN_UI.print_prompt("No usable skills.")
@@ -523,16 +524,16 @@ class Battle_Controller():
             RN_UI.cursor.show(x, y, battle.bmap[x][y], False)
             x -= 1
         elif command == "up":
-            RN_UI.cursor.show(x,y, battle.bmap[x][y], False)
+            RN_UI.cursor.show(x, y, battle.bmap[x][y], False)
             y -= 1
         elif command == "down":
-            RN_UI.cursor.show(x,y, battle.bmap[x][y], False)
+            RN_UI.cursor.show(x, y, battle.bmap[x][y], False)
             y += 1
         elif command == "right":
-            RN_UI.cursor.show(x,y, battle.bmap[x][y], False)
+            RN_UI.cursor.show(x, y, battle.bmap[x][y], False)
             x += 1
         elif command == "activate":
-            attack_target = (x,y)
+            attack_target = (x, y)
             if skill.target == "empty":
                 if battle.bmap[attack_target[0]][attack_target[1]].actor is None and battle.bmap[attack_target[0]][attack_target[1]].terrain.movable == 1:
                     battle.target_tile = attack_target

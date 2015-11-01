@@ -157,6 +157,11 @@ class Actor(object):
         self.hp = self.maxhp
         self.set_base_mp()
 
+    def kill_actor(self):
+        self.clear_attribute_modifiers()
+        self.clear_status()
+        self.hp = 0
+
 class Ally(Actor):
     def __init__(self, stats):
         Actor.__init__(self, stats)

@@ -32,7 +32,6 @@ class RN_Animation_Class():
         for i in range(reps):
             for f in flash_list:
                 for t in tiles:
-                    print f, t
                     self.UI.tint(f[0], f[1], f[2], (t[0], t[1], 1, 1))
                 if fast_update is True:
                     self.UI.screen.update()
@@ -208,7 +207,6 @@ class RN_Animation_Class():
             return
 
         elif self.anim_id == "rock toss":
-            print self.attacker, self.tiles
             self.projectile(self.attacker, self.tiles, [u"■"], ["olive"])
             self.game.play_sound("bighit")
             self.hit(self.tiles, ["*", "o", "O"], ["olive"])

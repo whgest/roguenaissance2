@@ -50,7 +50,7 @@
         <resistance>18</resistance>
         <agility>15</agility>
         <move>6</move>
-        <immunities>Dark</immunities>
+        <immunities>Poison</immunities>
         <skills>Obsidian sword,Whirlwind,Stone Armor,Rock Toss,Thunderbolt,Venom Slash,Vine Grasp,Avalanche Strike,Tectonic Break,Ascendance,Summon Spring Wind,Summon Stegosaur</skills>
         <descr>A wizard mastering the powers of the earth and her creatures.</descr>
     </heroclass>
@@ -119,7 +119,7 @@
         <agility>20</agility>
         <move>6</move>
         <immunities>AlwaysBurning</immunities>
-        <skills>Swarm,The Birds</skills>
+        <skills>Swarm,Talon Frenzy</skills>
         <descr>A flock of burning crows.</descr>
     </actor>
 
@@ -187,7 +187,7 @@
         <agility>11</agility>
         <move>6</move>
         <immunities>None</immunities>
-        <skills>Poison Breath,Poison Surge</skills>
+        <skills>Bone Toss,Poison Breath</skills>
         <descr>An undead wyrmling.</descr>
     </actor>
 
@@ -376,12 +376,12 @@
         <maxhp>55</maxhp>
         <maxmp>10</maxmp>
         <attack>25</attack>
-        <defense>13</defense>
+        <defense>12</defense>
         <magic>21</magic>
-        <resistance>13</resistance>
+        <resistance>12</resistance>
         <agility>11</agility>
         <move>6</move>
-        <immunities>Push</immunities>
+        <immunities>Terrain</immunities>
         <deathanim>beldeath</deathanim>
         <skills>Shadow Curse,Necrodrain,Cloudkill,Poisonbolt,Annihilate,Summon Skelesaur,Summon Lichdrake</skills>
         <descr>An insane necromancer.</descr>

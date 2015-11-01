@@ -9,6 +9,7 @@ import RN2_UI
 import pygame.event
 import pygame.mixer
 import pickle
+import copy
 
 class RN_Sound():
     def __init__(self, sound, music):
@@ -62,7 +63,7 @@ class Game():
         self.num_battles = 3
 
     def init_battle(self, ident):
-        battle = self.battles[ident]
+        battle = copy.deepcopy(self.battles[ident])
         battle_controller = RN2_battle_io.Battle_Controller(self.hero, battle, self.maps[battle["map"]], self.RN_UI,
                                                             self.RN_sound, self.skills, self.actors, self.RN_input)
         victory = battle_controller.init_battle()
@@ -129,14 +130,14 @@ class Game():
 
 def main():
     #test mode
-    game = Game()
-    game.init_hero("Terramancer", "StrongoDragonlord")
-    game.hero.mp = 99
-    game.hero.hp = 999
-    game.hero.attribute_modifiers['move'] = [10]
-    game.RN_sound.mute_switch = False
-    game.init_battle("1")
-    exit()
+    # game = Game()
+    # game.init_hero("Terramancer", "StrongoDragonlord")
+    # game.hero.mp = 99
+    # game.hero.hp = 999
+    # game.hero.attribute_modifiers['move'] = [10]
+    # game.RN_sound.mute_switch = False
+    # game.init_battle("3")
+    # exit()
 
     while 1:
         game = Game()

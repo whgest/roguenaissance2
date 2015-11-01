@@ -12,7 +12,6 @@ def check_bounds(coords):
 def pathfind(start, end, map):   #return true distance, path
     pfmap = gridmap.GridMap(25,50)
     pf = pathfinder.PathFinder(pfmap.successors, pfmap.move_cost, pfmap.move_cost)
-    logging.debug("Pathfinding from: " + repr(start) + " " + repr(end))
     if check_bounds(start) or check_bounds(end):
         logging.debug("Check bounds failed.")
         return 0, []
@@ -214,7 +213,7 @@ class RN_AI_Class():
             return "Annihilate", self.e, []
         if self.battle.hero.hp < 15:
             return self.choose_skill_boss()
-        if len(self.battle.enemies) < 3 and self.e.mp > 2:
+        if len(self.battle.enemies) < 3 and self.e.mp > 2 or len(self.battle.enemies) < 2 and self.e.mp > 0:
             if len(self.battle.enemies) == 2 and self.battle.enemies[1].name == "Lichdrake":
                 skill = "Summon Skelesaur"
             elif len(self.battle.enemies) == 2 and self.battle.enemies[1].name == "Skelesaur":
@@ -227,14 +226,18 @@ class RN_AI_Class():
         return self.choose_skill_boss()
 
     def find_empty_tile(self):
+        def test_tile(tile):
+            return tile.actor is None and tile.terrain.movable == 1
+
+        bmap = self.battle.bmap
         for i in range(5):
-            if self.battle.bmap[self.e.coords[0]+1+i][self.e.coords[1]].actor == None:
+            if test_tile(bmap[self.e.coords[0]+1+i][self.e.coords[1]]):
                 return (self.e.coords[0]+1+i, self.e.coords[1])
-            if self.battle.bmap[self.e.coords[0]-1-i][self.e.coords[1]].actor == None:
+            if test_tile(bmap[self.e.coords[0]-1-i][self.e.coords[1]]):
                 return (self.e.coords[0]-1-i, self.e.coords[1])
-            if self.battle.bmap[self.e.coords[0]][self.e.coords[1]+1+i].actor == None:
+            if test_tile(bmap[self.e.coords[0]][self.e.coords[1]+1+i]):
                 return (self.e.coords[0], self.e.coords[1]+1+i)
-            if self.battle.bmap[self.e.coords[0]][self.e.coords[1]-1-i].actor == None:
+            if test_tile(bmap[self.e.coords[0]][self.e.coords[1]-1-i]):
                 return (self.e.coords[0], self.e.coords[1]-1-i)
         return False
 

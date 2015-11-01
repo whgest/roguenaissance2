@@ -87,7 +87,7 @@
                 <condition>bosskill</condition>
                 <effect>victory</effect>
         </event>
-        <tip>Belshazzar cannot be pushed or pulled, but his minions can be forced into lava for an instant kill.</tip>
+        <tip>Belshazzar's minions can be pushed or pulled into lava for an instant kill, but Belshazzar himself will not be felled so easily.</tip>
         <tip>Belshazzar's MP are used and regenerated just like yours... if you let him fully charge, he will unleash a devastating spell.</tip>
         <tip>Forcing Belshazzar to drain life from his minions instead of attacking or summoning is one way to turn the fight against him.</tip>
     </battle>

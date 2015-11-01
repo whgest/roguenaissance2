@@ -136,6 +136,7 @@ class TurnTracker():
         self.initiative_list.remove(unit)
 
     def get_next_unit(self):
+        print self.initiative_list
         active_actor = self.initiative_list.pop()
         self.initiative_list.insert(0, active_actor)
         if active_actor == self.heroes[0]:
@@ -182,7 +183,7 @@ class Battle():
         else:
             return False, active_actor
 
-    def get_range(self, origin, arange, pathfind=False):
+    def get_range(self, origin, arange, pathfind=False, is_move=False):
         targetable_tiles = []
         if arange == 777: #line attack
             if origin[0] == self.hero.coords[0] and origin[1] > self.hero.coords[1]: #down
@@ -237,8 +238,9 @@ class Battle():
                     if t not in targetable_tiles and 0 <= t[0] <= 49 and 0 <= t[1] <= 24:
                         targetable_tiles.append(t)
         remove_list = []
+
         for t in targetable_tiles:
-            if self.bmap[t[0]][t[1]].terrain.movable == 0:
+            if (is_move and self.bmap[t[0]][t[1]].terrain.movable == 0) or (not is_move and self.bmap[t[0]][t[1]].terrain.targetable == 0):
                 remove_list.append(t)
 
         if pathfind:
@@ -472,29 +474,17 @@ class Battle():
             stat_mod = getattr(a, stat) + a.statmods[stat]
             setattr(a, stat, stat_mod)
 
-    def resolve_terrain(self, a):
-        a.move = a.basestats.move
-        a.skillset = a.basestats.skillset
-        x = a.coords[0]
-        y = a.coords[1]
-        if -1 < x < self.map_size[0] and -1 < y < self.map_size[1]:
-            pass
-        else:
-            return False
-        terrain = self.bmap[x][y].terrain
-        if terrain.name == "Lava":
-            a.hp = 0
-            self.report.append(("statuskill",[a.name, "Lava"]))
-            a.status = [{"type":"Dead"}]
-            return True
-        if terrain.name == "Wall":
-            return False
-        if terrain.name == "Pit":
-            a.hp = 0
-            self.report.append(("statuskill",[a.name, "Falling"]))
-            a.status = [{"type":"Dead"}]
-            return True
-        return False
+    def resolve_terrain(self, actor):
+        is_okay = True
+        is_terrain_immune = 'Terrain' in actor.immunities
+        actor_on_tile = self.bmap[actor.coords[0]][actor.coords[1]]
+
+        if actor_on_tile.terrain.fatal and not is_terrain_immune:
+            actor.kill_actor()
+            self.report.add_entry('terrain_kill', actor, cause=actor_on_tile.terrain.name)
+            is_okay = False
+
+        return is_okay
 
     def forced_move(self, attacker, defender, direction, magnitude, origin=False):  #returns a path for later animation
         if "Push" in defender.immunities:
@@ -522,15 +512,23 @@ class Battle():
                 path.append([defender.coords[0], defender.coords[1]-(1*direction)])
             elif abs(x_dist) < abs(y_dist) and nexus[1] < defender.coords[1]:
                 path.append([defender.coords[0], defender.coords[1]+(1*direction)])
-            # if self.resolve_terrain(defender):
-            #     pass
             defender.coords = path[-1]
-            if self.check_bounds(defender.coords) == True or self.bmap[defender.coords[0]][defender.coords[1]].actor is not None or self.bmap[defender.coords[0]][defender.coords[1]].terrain.movable == 0:
-                print defender.coords, "blocked"
-                defender.coords[0] = prev_coords[0]; defender.coords[1] = prev_coords[1]
-                self.state_changes.append(("forcedmove", path, defender))
-                return
-            time.sleep(0.05)
+
+            defender_on_tile = self.bmap[defender.coords[0]][defender.coords[1]]
+
+            if self.check_bounds(defender.coords) == True or defender_on_tile.actor is not None or defender_on_tile.terrain.blocking == 1:
+                defender.coords[0] = prev_coords[0]
+                defender.coords[1] = prev_coords[1]
+                break
+
+            if defender_on_tile.terrain.fatal == 1:
+                if 'Terrain' in defender.immunities:
+                    self.report.add_entry("immunity", defender, cause="fatal terrain")
+                    defender.coords[0] = prev_coords[0]
+                    defender.coords[1] = prev_coords[1]
+                break
+
+
+            time.sleep(0.1)
         self.state_changes.append(("forcedmove", path, defender))
-        print path
         return

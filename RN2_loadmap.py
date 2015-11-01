@@ -13,11 +13,9 @@ class Terrain():
         self.movecost = 1
         self.aquatic = 0
         self.targetable = 0
-
-    def print_terrain(self, x, y, screen):
-        #screen.text(x, y, self.character, self.color + self.basecolor)     which?
-        #return self.character, self.color, self.basecolor
-        pass
+        self.blocking = 0
+        self.moveable = 1
+        self.fatal = 0
 
 #Terrain types:
 
@@ -62,9 +60,7 @@ class Lava(Terrain):
         self.aquatic = 0
         self.targetable = 1
         self.movable = 0
-
-    def terrain_effect(self):
-        pass   #death
+        self.fatal = 1
 
 class Pit(Terrain):
     def __init__(self):
@@ -77,9 +73,7 @@ class Pit(Terrain):
         self.aquatic = 0
         self.targetable = 0
         self.movable = 0
-
-    def terrain_effect(self):
-        pass   #death
+        self.fatal = 1
 
 class Water(Terrain):
     def __init__(self):
@@ -92,6 +86,7 @@ class Water(Terrain):
         self.aquatic = 1
         self.targetable = 1
         self.movable = 0
+        self.blocking = 1
 
     def terrain_effect(self):
         pass   #no skills, no mana regen, immune to burning, etc.
@@ -107,6 +102,7 @@ class Wall(Terrain):
         self.aquatic = 0
         self.targetable = 0
         self.movable = 0
+        self.blocking = 1
 
     def terrain_effect(self):
         pass   #bounce back
