@@ -432,11 +432,11 @@ class Battle_Controller():
         elif battle.state == "target":
             battle.attack_target = None
             battle.affected_tiles = None
-            RN_UI.highlight_area(True, battle.targetable_tiles, battle.bmap, "maroon")
             x = battle.active.coords[0]
             y = battle.active.coords[1]
-            RN_UI.cursor.show(x,y, battle.bmap[x][y], True)
+            RN_UI.cursor.move_cursor(x, y, battle.bmap[x][y])
             RN_UI.print_prompt(battle.selected_skill.name + " --- " + "Choose target tile. (Range: " + str(battle.selected_skill.range) + ")")
+            RN_UI.highlight_area(True, battle.targetable_tiles, battle.bmap, "maroon")
         elif battle.state == "confirm":
             battle.affected_tiles = battle.get_range(battle.target_tile, battle.selected_skill.aoe)
             RN_UI.highlight_area(False, battle.targetable_tiles, battle.bmap)
@@ -514,6 +514,11 @@ class Battle_Controller():
         return False, False
 
     def targetstate(self, command, battle, RN_UI):
+        def get_shared_tiles(in_range, targeted):
+            overlap_tiles = set(range_tiles).intersection(set(targeted))
+            range_only = set(in_range).difference(overlap_tiles)
+            aoe_only = set(targeted_aoe).difference(overlap_tiles)
+            return range_only, aoe_only, overlap_tiles
 
         skill = battle.selected_skill
         x = RN_UI.cursor.x
@@ -521,16 +526,12 @@ class Battle_Controller():
         prev_cursor = (x, y)
 
         if command == "left":
-            RN_UI.cursor.show(x, y, battle.bmap[x][y], False)
             x -= 1
         elif command == "up":
-            RN_UI.cursor.show(x, y, battle.bmap[x][y], False)
             y -= 1
         elif command == "down":
-            RN_UI.cursor.show(x, y, battle.bmap[x][y], False)
             y += 1
         elif command == "right":
-            RN_UI.cursor.show(x, y, battle.bmap[x][y], False)
             x += 1
         elif command == "activate":
             attack_target = (x, y)
@@ -546,7 +547,7 @@ class Battle_Controller():
                 return False, "confirm"
 
         elif command == "cancel":
-            RN_UI.cursor.show(x, y, battle.bmap[x][y],False)
+            RN_UI.cursor.move_cursor(x, y, battle.bmap[x][y])
             RN_UI.highlight_area(False, battle.targetable_tiles, battle.bmap)
             RN_UI.print_legend(battle.bmap.legend_list, battle.unit_list)
             RN_UI.print_prompt("arrows = move. a = attack. s = use skills. space = end turn. h = help")
@@ -556,11 +557,25 @@ class Battle_Controller():
             x = prev_cursor[0]
             y = prev_cursor[1]
             self.RN_sound.play_sound("error")
-        RN_UI.highlight_area(True, battle.targetable_tiles, battle.bmap, "maroon")
-        RN_UI.cursor.show(x,y, battle.bmap[x][y], True)
 
-        if battle.bmap[x][y].actor is not None and battle.bmap[x][y].actor in battle.enemies:
-            RN_UI.print_target(battle.active, battle.bmap[x][y].actor, battle.selected_skill)
+        RN_UI.clear_highlight_area(battle.bmap)
+
+        RN_UI.cursor.move_cursor(x, y, battle.bmap[x][y])
+
+        range_tiles = list(battle.targetable_tiles)
+        targeted_aoe = battle.get_range((x, y), skill.aoe)
+        range_only, aoe_only, overlap = get_shared_tiles(range_tiles, targeted_aoe)
+
+        RN_UI.highlight_area(True, range_only, battle.bmap, color="maroon")
+        RN_UI.highlight_area(True, aoe_only, battle.bmap, color='white')
+        RN_UI.highlight_area(True, overlap, battle.bmap, color='fuchsia')
+
+        affected_units = battle.get_targets_for_area(battle.active, battle.selected_skill, targeted_aoe)
+
+        if len(affected_units) == 1:
+            RN_UI.print_target(battle.active, affected_units[0], battle.selected_skill)
+        elif len(affected_units) > 1:
+            RN_UI.print_multi_target(battle.active, affected_units, battle.selected_skill)
         else:
             RN_UI.print_legend(battle.bmap.legend_list, battle.unit_list)
 

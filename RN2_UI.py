@@ -20,20 +20,26 @@ import math
 
 class RN_Cursor():
     def __init__(self, UI):
-       self.bgcolor = "yellow"
-       self.fgcolor = "black"
-       self.UI = UI
-       self.x = 0
-       self.y = 0
-       self.visible = 0
+        self.bgcolor = "yellow"
+        self.fgcolor = "black"
+        self.UI = UI
+        self.x = 0
+        self.y = 0
+        self.tile = None #tile under cursor's position
+        self.visible = 0
 
-    def show(self, x, y, tile, switch):
+    def cleanup(self):
+        if self.tile:
+            self.UI.text(self.x, self.y, self.tile.display()[0], fgcolor=self.tile.display()[1], bgcolor=self.tile.display()[2])
+        return
+
+    def move_cursor(self, x, y, tile):
+        self.cleanup()
         self.x = x
         self.y = y
-        if switch:
-            self.UI.text(x,y,tile.display()[0], fgcolor=self.fgcolor, bgcolor=self.bgcolor)
-        else:
-            self.UI.text(x,y,tile.display()[0], fgcolor=tile.display()[1], bgcolor=tile.display()[2])
+        self.tile = tile
+        self.UI.text(x, y, tile.display()[0], fgcolor=self.fgcolor, bgcolor=self.bgcolor)
+
         self.UI.screen.update()
 
 class RN_UI_Class():
@@ -52,6 +58,7 @@ class RN_UI_Class():
         self.menu_gradient = (2,3,4)
         self.select_color = "fuchsia"
         self.highlight_tint = (125,-120,47)
+        self.highlighted_tiles = []
         self.textcolors = {
             "damage": "yellow",
             "heal":  "lime",
@@ -248,30 +255,35 @@ class RN_UI_Class():
                     self.text(x, y, battle_map[x][y].terrain.character, fgcolor=battle_map[x][y].terrain.fgcolor, bgcolor=battle_map[x][y].terrain.bgcolor)
         self.screen.update()
 
-    def highlight_area(self, switch, tiles, battle_map, color = "teal"):
-        if switch == True:
-            for t in tiles:
-                x = t[0]
-                y = t[1]
-                if battle_map[x][y].terrain.movable == 0:
-                    pass
-                elif battle_map[x][y].actor != None:
-                    self.text(x,y, battle_map[x][y].actor.character, fgcolor = battle_map[x][y].actor.color, bgcolor = color)
-                elif battle_map[x][y].terrainmod != None:
-                    self.text(x,y, battle_map[x][y].terrainmod.character, fgcolor = battle_map[x][y].terrainmod.fgcolor, bgcolor = color)
-                else:
-                    self.text(x,y, battle_map[x][y].terrain.character, fgcolor = battle_map[x][y].terrain.fgcolor, bgcolor = color)
-        elif switch == False:
-            for t in tiles:
-                x = t[0]
-                y = t[1]
-                if battle_map[x][y].actor != None:
-                    self.text(x,y, battle_map[x][y].actor.character, fgcolor = battle_map[x][y].actor.color, bgcolor = battle_map[x][y].terrain.bgcolor)
-                elif battle_map[x][y].terrainmod != None:
-                    self.text(x,y, battle_map[x][y].terrainmod.character, fgcolor = battle_map[x][y].terrainmod.fgcolor, bgcolor = battle_map[x][y].terrain.bgcolor)
-                else:
-                    self.text(x,y, battle_map[x][y].terrain.character, fgcolor = battle_map[x][y].terrain.fgcolor, bgcolor = battle_map[x][y].terrain.bgcolor)
+    def highlight_area(self, highlight, tiles, battle_map, color="teal", is_target=False):
+        for t in tiles:
+            x = t[0]
+            y = t[1]
+            tile = battle_map[x][y]
+            if (not tile.terrain.movable and not is_target) or (is_target and not tile.terrain.targetable):
+                pass
+            if highlight:
+                self.text(x, y, tile.display()[0], tile.display()[1], bgcolor=color)
+                self.highlighted_tiles.append((x, y))
+            else:
+                #clear highlight
+                self.text(x, y, tile.display()[0], tile.display()[1], tile.display()[2])
+                if (x, y) in self.highlighted_tiles:
+                    self.highlighted_tiles.remove((x, y))
         self.screen.update()
+
+    def clear_highlight_area(self, battle_map):
+        for t in self.highlighted_tiles:
+            x = t[0]
+            y = t[1]
+            tile = battle_map[x][y]
+            #clear highlight
+            self.text(x, y, tile.display()[0], tile.display()[1], tile.display()[2])
+
+        self.highlighted_tiles = []
+        self.screen.update()
+
+
 
     def update_map(self, prev_c, new_c, actor, rmap):
         if prev_c != "new":
@@ -397,24 +409,16 @@ class RN_UI_Class():
         center_space = (22 - len(defender.name))/2
         self.menutext(51, 11, (" "*center_space) +defender.name, fgcolor="red")
         self.menutext(51, 12, " HP " + str(defender.hp) + "/" + str(defender.maxhp) + " (" + self.get_status(defender)[0] + ")", fgcolor="red")
-        if skill.stat == "attack":
-            hit_chance = (((attacker.attack - defender.defense)+(attacker.attack/2.0))/attacker.attack) *100.0
-            hit_chance = round(hit_chance, 2)
-        elif skill.stat == "magic":
-            hit_chance = (((attacker.magic - defender.resistance)+(attacker.magic/2.0))/attacker.magic) *100.0
-            hit_chance = round(hit_chance, 2)
-        if hit_chance < 0:
-            hit_chance = 0
-        if hit_chance > 100:
-            hit_chance = 100
-        self.menutext(51, 15, "Hit Chance: "+ str(hit_chance) + "%", fgcolor="yellow")
+
+        if not skill.is_beneficial:
+            hit_chance = skill.get_hit_chance(attacker, defender)
+            self.menutext(51, 15, "Hit Chance: " + str(hit_chance) + "%", fgcolor="yellow")
+
         if skill.damage != 0:
-            damage = skill.damage
-            if skill.stat == "magic":
-                dmg_range = str((attacker.magic/3) + int(damage[0])), str((attacker.magic/3) + (int(damage[0]) * int(damage[1])))
-            if skill.stat == "attack":
-                dmg_range = str((attacker.attack/3) + int(damage[0])), str((attacker.attack/3) + (int(damage[0]) * int(damage[1])))
-            self.menutext(51, 16, "Damage: " + dmg_range[0] + " - " + dmg_range[1], fgcolor="yellow")
+            color = 'lime' if skill.is_beneficial else 'yellow'
+            noun = 'Healing: ' if skill.is_beneficial else 'Damage: '
+            dmg_range = skill.get_damage_range(attacker)
+            self.menutext(51, 16, noun + str(dmg_range[0]) + " - " + str(dmg_range[1]), fgcolor=color)
 
         for i, effect in enumerate(skill.effects):
             self.menutext(51, 18, "Additional Effects: ", fgcolor="yellow")
@@ -432,52 +436,49 @@ class RN_UI_Class():
         if skill.target == "empty":
             return
 
-        self.blank((self.right_menu_coords))
+        self.blank(self.right_menu_coords)
         center_space = (22 - len(attacker.name))/2
-        self.menutext(51, 2, (" "*center_space) + attacker.name, fgcolor="lime")
-        self.menutext(51, 3, " HP " + str(attacker.hp) + "/" + str(attacker.maxhp) + " (" + self.get_status(attacker)[0] + ")", fgcolor="lime")
+        self.menutext(51, 1, (" "*center_space) + attacker.name, fgcolor="lime")
+        self.menutext(51, 2, " HP " + str(attacker.hp) + "/" + str(attacker.maxhp) + " (" + self.get_status(attacker)[0] + ")", fgcolor="lime")
         center_space = (22 - len(skill.name))/2
 
-        self.menutext(51, 4, (" "*10) + u"▼")
-        self.menutext(51, 5, (" "*center_space) + skill.name, fgcolor='white')
-        self.menutext(51, 6, (" "*10) + u"▼")
+        self.menutext(51, 3, (" "*10) + u"▼")
+        self.menutext(51, 4, (" "*center_space) + skill.name, fgcolor='white')
+        self.menutext(51, 5, (" "*10) + u"▼")
 
-        current_line = 8
+        current_line = 7
+
+        if len(defenders) > 5:
+            defenders = defenders[:4]
+            overflow_str = "+ %s more targets." % str(len(defenders) - 5)
+            self.menutext(51, 15, overflow_str, fgcolor="yellow")
+
         for defender in defenders:
+            hit_chance_string = ''
+            if not skill.is_beneficial:
+                hit_chance = skill.get_hit_chance(attacker, defender)
+                hit_chance_string = "Hit: " + str(hit_chance) + "%"
+
             center_space = (22 - len(defender.name))/2
-            self.menutext(51, current_line, (" "*center_space) +defender.name, fgcolor="red")
-            self.menutext(51, current_line + 1, " HP " + str(defender.hp) + "/" + str(defender.maxhp) + " (" + self.get_status(defender)[0] + ")", fgcolor="red")
-            if skill.stat == "attack":
-                hit_chance = (((attacker.attack - defender.defense)+(attacker.attack/2.0))/attacker.attack) * 100.0
-                hit_chance = round(hit_chance, 2)
-            elif skill.stat == "magic":
-                hit_chance = (((attacker.magic - defender.resistance)+(attacker.magic/2.0))/attacker.magic) * 100.0
-                hit_chance = round(hit_chance, 2)
-
-            if hit_chance < 0:
-                hit_chance = 0
-            if hit_chance > 100:
-                hit_chance = 100
-
-            self.menutext(51, current_line + 2, "Hit Chance: "+ str(hit_chance) + "%", fgcolor="yellow")
-            current_line += 4
+            color = 'red' if defender.is_hostile(attacker) else 'lime'
+            self.menutext(51, current_line, (" " * center_space) + defender.name, fgcolor=color)
+            self.menutext(51, current_line + 1, " HP " + str(defender.hp) + "/" + str(defender.maxhp) + '  ' + hit_chance_string, fgcolor=color)
+            current_line += 2
 
         if skill.damage != 0:
-            damage = skill.damage
-            if skill.stat == "magic":
-                dmg_range = str((attacker.magic/3) + int(damage[0])), str((attacker.magic/3) + (int(damage[0]) * int(damage[1])))
-            if skill.stat == "attack":
-                dmg_range = str((attacker.attack/3) + int(damage[0])), str((attacker.attack/3) + (int(damage[0]) * int(damage[1])))
-            self.menutext(51, 16, "Damage: " + dmg_range[0] + " - " + dmg_range[1], fgcolor="yellow")
+            color = 'lime' if skill.is_beneficial else 'yellow'
+            noun = 'Healing: ' if skill.is_beneficial else 'Damage: '
+            dmg_range = skill.get_damage_range(attacker)
+            self.menutext(51, 16, noun + str(dmg_range[0]) + " - " + str(dmg_range[1]), fgcolor=color)
 
         for i, effect in enumerate(skill.effects):
-            self.menutext(51, 18, "Additional Effects: ", fgcolor="yellow")
+            self.menutext(51, 19, "Additional Effects: ", fgcolor="yellow")
             if effect["duration"] and effect["magnitude"]:
-                self.menutext(51, 19+i, effect["type"] + " " + str(effect["magnitude"]) + " for " + str(effect["duration"]) + " turns.", fgcolor="white")
+                self.menutext(51, 20+i, effect["type"] + " " + str(effect["magnitude"]) + " for " + str(effect["duration"]) + " turns.", fgcolor="white")
             elif effect["duration"]:
-                self.menutext(51, 19+i, effect["type"] + " for " + str(effect["duration"]) + " turns.", fgcolor="white")
+                self.menutext(51, 20+i, effect["type"] + " for " + str(effect["duration"]) + " turns.", fgcolor="white")
             elif effect["magnitude"]:
-                self.menutext(51, 19+i, effect["type"] + " " + str(effect["magnitude"]) + " spaces.", fgcolor="white")
+                self.menutext(51, 20+i, effect["type"] + " " + str(effect["magnitude"]) + " spaces.", fgcolor="white")
 
         self.screen.update()
         return

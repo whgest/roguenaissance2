@@ -139,7 +139,7 @@ class Actor(object):
         return self.character, self.color
 
     def is_hostile(self, attacker):
-        return attacker.enemy == self.enemy
+        return not attacker.enemy == self.enemy
 
     def clear_attribute_modifiers(self):
         for attr in self.MODIFIABLE_ATTRIBUTES:
@@ -162,11 +162,13 @@ class Actor(object):
         self.clear_status()
         self.hp = 0
 
+
 class Ally(Actor):
     def __init__(self, stats):
         Actor.__init__(self, stats)
         self.enemy = False
         self.color = "lime"
+
 
 class Hero(Actor):
     def __init__(self, stats, name):
@@ -209,6 +211,42 @@ class Skill(object):
 
     def __str__(self):
         return self.ident
+
+    @property
+    def is_beneficial(self):
+        return self.damage != 0 and self.damage[1] < 0
+
+    def get_damage_range(self, attacker):
+        """
+        Damage formula for all skills is (skillStat / 3) + defined dice rolls num_dice, dice_size, (ie 2,6 is 2d6 or the
+        cumulative result of 2 separate six sided dice rolls)
+        """
+        damage = self.damage
+        print damage
+        if not damage:
+            return
+
+        num_dice = damage[0]
+        dice_size = abs(damage[1])
+        return (getattr(attacker, self.stat)/3) + num_dice, (getattr(attacker, self.stat)/3) + (num_dice * dice_size)
+
+    def get_hit_chance(self, attacker, defender):
+        """
+        To hit formula for all hostile skills is (skillStat/2) + random integer between 0 and skillStat vs. defenseStat
+        The below equation gets success chance, hopefully
+        """
+        defending_stat = 'resistance' if self.stat == 'magic' else 'defense'
+
+        hit_numerator = (getattr(attacker, self.stat) - getattr(defender, defending_stat)) + (getattr(attacker, self.stat) / 2.0)
+        hit_denominator = getattr(attacker, self.stat)
+
+        hit_chance = (hit_numerator / hit_denominator) * 100.0
+        hit_chance = round(hit_chance, 2)
+
+        if hit_chance == 0 or hit_chance == 100:
+            hit_chance = int(hit_chance)
+
+        return hit_chance
 
 
 def open_xml(filename):

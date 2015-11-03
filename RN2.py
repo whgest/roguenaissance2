@@ -130,14 +130,14 @@ class Game():
 
 def main():
     #test mode
-    # game = Game()
-    # game.init_hero("Terramancer", "StrongoDragonlord")
-    # game.hero.mp = 99
-    # game.hero.hp = 999
-    # game.hero.attribute_modifiers['move'] = [10]
-    # game.RN_sound.mute_switch = False
-    # game.init_battle("3")
-    # exit()
+    game = Game()
+    game.init_hero("Astromancer", "StrongoDragonlord")
+    game.hero.mp = 99
+    game.hero.hp = 999
+    game.hero.attribute_modifiers['move'] = [10]
+    game.RN_sound.mute_switch = True
+    game.init_battle("1")
+    exit()
 
     while 1:
         game = Game()

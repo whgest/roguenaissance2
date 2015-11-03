@@ -263,13 +263,11 @@ class Battle():
             return skill.mp
         else:
             if not actor or actor == self.hero:
-                return 1 + (len(self.heroes) - 1) *2
+                return 1 + (len(self.heroes) - 1) * 2
             else:
-                return 1 + (len(self.enemies) - 1) *2
+                return 1 + (len(self.enemies) - 1) * 2
 
-    def skill_target(self, attacker, skill, affected_tiles):
-        logging.debug(repr(affected_tiles))
-        attacker.mp = attacker.mp - self.get_adjusted_mp(skill, attacker)
+    def get_targets_for_area(self, attacker, skill, affected_tiles):
         targets = []
         if attacker in self.heroes:
             friendlies = self.heroes
@@ -280,26 +278,40 @@ class Battle():
         else:
             enemies = self.heroes
             friendlies = self.heroes
+
         if skill.target == "enemy":
             for e in enemies:
-                if tuple(e.coords) in affected_tiles and self.attack_roll(attacker, e, skill):
+                if tuple(e.coords) in affected_tiles:
                     targets.append(e)
         if skill.target == "friendly":
             for f in friendlies:
                 if tuple(f.coords) in affected_tiles:
                     targets.append(f)
+
         if skill.target == "empty":
+            #empty is for summons and skills that do NOT target an actor
             targets.append(affected_tiles[0])
+
         if skill.target in ["all", "tile"]:
             for e in enemies:
-                if tuple(e.coords) in affected_tiles and self.attack_roll(attacker, e, skill):
+                if tuple(e.coords) in affected_tiles:
                     targets.append(e)
             for f in friendlies:
-                if (tuple(f.coords) in affected_tiles) and (skill.damage <= 0 or self.attack_roll(attacker, f, skill)): #this way friendlies will not roll to avoid beneficial skills
+                if tuple(f.coords) in affected_tiles:
                     targets.append(f)
-        if targets != []:
-            self.skill_effect(attacker, skill, targets, affected_tiles)
+
         return targets
+
+    def skill_target(self, attacker, skill, affected_tiles):
+        attacker.mp = attacker.mp - self.get_adjusted_mp(skill, attacker)
+        potential_targets = self.get_targets_for_area(attacker, skill, affected_tiles)
+        affected_targets = []
+        for target in potential_targets:
+            if skill.is_beneficial or skill.target == 'empty' or self.attack_roll(attacker, target, skill):
+                affected_targets.append(target)
+
+        if affected_targets:
+            self.skill_effect(attacker, skill, affected_targets, affected_tiles)
 
     def skill_effect(self, attacker, skill, targets, affected_tiles):
         for t in targets:
