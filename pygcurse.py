@@ -107,6 +107,7 @@ SOUTHWEST = 'SW'
 colornames = {'white':   pygame.Color(255, 255, 255),
               'yellow':  pygame.Color(255, 255,   0),
               'fuchsia': pygame.Color(255,   0, 255),
+              'darkred': pygame.Color(255,   50,   50),
               'red':     pygame.Color(255,   0,   0),
               'silver':  pygame.Color(192, 192, 192),
               'gray':    pygame.Color(128, 128, 128),
@@ -119,6 +120,7 @@ colornames = {'white':   pygame.Color(255, 255, 255),
               'green':   pygame.Color(  0, 128,   0),
               'blue':    pygame.Color(  0,   0, 255),
               'navy':    pygame.Color(  0,   0, 128),
+              'orange':  pygame.Color(255,140,0),
               'black':   pygame.Color(  0,   0,   0)}
 
 

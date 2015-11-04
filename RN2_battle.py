@@ -136,7 +136,6 @@ class TurnTracker():
         self.initiative_list.remove(unit)
 
     def get_next_unit(self):
-        print self.initiative_list
         active_actor = self.initiative_list.pop()
         self.initiative_list.insert(0, active_actor)
         if active_actor == self.heroes[0]:
@@ -145,7 +144,7 @@ class TurnTracker():
         return active_actor
 
 
-class Battle():
+class Battle:
     def __init__(self, hero, battle, actors, bmap):
         self.heroes = [hero]
         self.actors = actors

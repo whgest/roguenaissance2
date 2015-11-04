@@ -22,14 +22,15 @@ import pathfinder
 logging.basicConfig(filename="logs/rn_debug.log", filemode="w+", level=logging.DEBUG)
 
 
-class BattleReportLine():
+class BattleReportLine:
     def __init__(self, string, cause_color='', effect_color='', line_color=''):
         self.string = string
         self.effect_color = effect_color
         self.cause_color = cause_color
         self.line_color = line_color
 
-class BattleReportWord():
+
+class BattleReportWord:
     def __init__(self, string, color):
         self.string = string
         self.color_binding = color
@@ -37,7 +38,8 @@ class BattleReportWord():
     def __str__(self):
         return "%s (%s)" % (self.string, self.color_binding)
 
-class BattleReport():
+
+class BattleReport:
     def __init__(self, heroes, enemies, RN_UI):
         self.RN_UI = RN_UI
         self.narration_q_length = 13
@@ -121,7 +123,7 @@ class BattleReport():
         self.RN_UI.print_narration(self.narration_q)
 
 
-class Battle_Controller():
+class Battle_Controller:
     def __init__(self, hero, battle_data, bmap, UI, RN_sound, skills, actors, input):
 
         self.hero = hero
@@ -276,7 +278,7 @@ class Battle_Controller():
 
                 if skill is not None:
                     RN2_animations.RN_Animation_Class(battle.affected_tiles, self.RN_sound, RN_UI, skill.animation, battle.bmap, battle.active.coords)
-                self.check_desync(battle)
+
             self.update_game(battle, RN_UI)
             game_over = self.clear_board(battle, RN_UI)
             if game_over:
@@ -349,12 +351,11 @@ class Battle_Controller():
             if change[0] == "summon":
                 self.add_summon(change, battle, RN_UI)
             elif change[0] == "forcedmove":
-                path = change[1]
                 for i in range(len(change[1])-1):
                     RN_UI.update_map(change[1][i], change[1][i+1], change[2], battle.bmap)
                     battle.bmap[change[1][0][0]][change[1][0][1]].actor = None
                     battle.bmap[change[1][-1][0]][change[1][-1][1]].actor = change[2]
-                    #time.sleep(0.05)
+                    time.sleep(0.05)
             elif change[0] == "terrainmod":
                 pass
             else:
@@ -396,12 +397,6 @@ class Battle_Controller():
         battle.turn_tracker.add_unit(summon)
         RN_UI.update_map("new", summon.coords, summon, battle.bmap)
 
-
-    def check_desync(self, battle):
-        for e in battle.enemies:
-            if battle.bmap[e.coords[0]][e.coords[1]].actor != e:
-                print repr(e.name) + " DESYNC: " + repr(e.coords)
-
     def RN_output(self, command, battle, RN_UI):
         if command == "exit":
             exit()
@@ -436,11 +431,14 @@ class Battle_Controller():
             y = battle.active.coords[1]
             RN_UI.cursor.move_cursor(x, y, battle.bmap[x][y])
             RN_UI.print_prompt(battle.selected_skill.name + " --- " + "Choose target tile. (Range: " + str(battle.selected_skill.range) + ")")
-            RN_UI.highlight_area(True, battle.targetable_tiles, battle.bmap, "maroon")
+            targeted_aoe = battle.get_range((x, y), battle.selected_skill.aoe)
+            self.highlight_targetable_area(battle, targeted_aoe, (x, y), RN_UI)
+            self.print_target_display(targeted_aoe, RN_UI)
         elif battle.state == "confirm":
             battle.affected_tiles = battle.get_range(battle.target_tile, battle.selected_skill.aoe)
             RN_UI.highlight_area(False, battle.targetable_tiles, battle.bmap)
             RN_UI.highlight_area(True, battle.affected_tiles, battle.bmap, "lime")
+            self.print_target_display(battle.affected_tiles, RN_UI)
             RN_UI.print_prompt("ENTER to confirm attack, ESC to cancel.")
         elif battle.state == "skills":
             RN_UI.draw_skills_menu(battle.active.skillset[1:], 0, self.skills[battle.active.skillset[1]].prompt, battle.get_adjusted_mp, self.skills)
@@ -513,13 +511,33 @@ class Battle_Controller():
         RN_UI.highlight_area(True, battle.move_range, battle.bmap)
         return False, False
 
-    def targetstate(self, command, battle, RN_UI):
+    def highlight_targetable_area(self, battle, targeted_aoe, cursor_pos, RN_UI):
         def get_shared_tiles(in_range, targeted):
             overlap_tiles = set(range_tiles).intersection(set(targeted))
-            range_only = set(in_range).difference(overlap_tiles)
-            aoe_only = set(targeted_aoe).difference(overlap_tiles)
-            return range_only, aoe_only, overlap_tiles
+            range_only_tiles = set(in_range).difference(overlap_tiles)
+            aoe_only_tiles = set(targeted_aoe).difference(overlap_tiles)
+            return range_only_tiles, aoe_only_tiles, overlap_tiles
 
+        range_tiles = list(battle.targetable_tiles)
+        range_only, aoe_only, overlap = get_shared_tiles(range_tiles, targeted_aoe)
+
+        RN_UI.highlight_area(True, range_only, battle.bmap, color='maroon')
+        RN_UI.highlight_area(True, aoe_only, battle.bmap, color='yellow')
+        RN_UI.highlight_area(True, overlap, battle.bmap, color='orange')
+        RN_UI.highlight_area(True, [cursor_pos], battle.bmap, color='white')
+
+    def print_target_display(self, targeted_aoe, RN_UI):
+        battle = self.battle
+        affected_units = battle.get_targets_for_area(battle.active, battle.selected_skill, targeted_aoe)
+
+        if len(affected_units) == 1:
+            RN_UI.print_target(battle.active, affected_units[0], battle.selected_skill)
+        elif len(affected_units) > 1:
+            RN_UI.print_multi_target(battle.active, affected_units, battle.selected_skill)
+        else:
+            RN_UI.print_legend(battle.bmap.legend_list, battle.unit_list)
+
+    def targetstate(self, command, battle, RN_UI):
         skill = battle.selected_skill
         x = RN_UI.cursor.x
         y = RN_UI.cursor.y
@@ -548,36 +566,24 @@ class Battle_Controller():
 
         elif command == "cancel":
             RN_UI.cursor.move_cursor(x, y, battle.bmap[x][y])
-            RN_UI.highlight_area(False, battle.targetable_tiles, battle.bmap)
+            RN_UI.clear_highlight_area(battle.bmap)
             RN_UI.print_legend(battle.bmap.legend_list, battle.unit_list)
             RN_UI.print_prompt("arrows = move. a = attack. s = use skills. space = end turn. h = help")
             return False, "move"
 
-        if battle.check_bounds((x, y)) or (x, y) not in battle.targetable_tiles or battle.bmap[x][y].terrain.targetable == 0:
+        if battle.check_bounds((x, y)) \
+                or (x, y) not in battle.targetable_tiles \
+                or battle.bmap[x][y].terrain.targetable == 0:
             x = prev_cursor[0]
             y = prev_cursor[1]
             self.RN_sound.play_sound("error")
 
         RN_UI.clear_highlight_area(battle.bmap)
-
         RN_UI.cursor.move_cursor(x, y, battle.bmap[x][y])
 
-        range_tiles = list(battle.targetable_tiles)
         targeted_aoe = battle.get_range((x, y), skill.aoe)
-        range_only, aoe_only, overlap = get_shared_tiles(range_tiles, targeted_aoe)
-
-        RN_UI.highlight_area(True, range_only, battle.bmap, color="maroon")
-        RN_UI.highlight_area(True, aoe_only, battle.bmap, color='white')
-        RN_UI.highlight_area(True, overlap, battle.bmap, color='fuchsia')
-
-        affected_units = battle.get_targets_for_area(battle.active, battle.selected_skill, targeted_aoe)
-
-        if len(affected_units) == 1:
-            RN_UI.print_target(battle.active, affected_units[0], battle.selected_skill)
-        elif len(affected_units) > 1:
-            RN_UI.print_multi_target(battle.active, affected_units, battle.selected_skill)
-        else:
-            RN_UI.print_legend(battle.bmap.legend_list, battle.unit_list)
+        self.highlight_targetable_area(battle, targeted_aoe, (x, y), RN_UI)
+        self.print_target_display(targeted_aoe, RN_UI)
 
         return False, False
 
@@ -588,7 +594,10 @@ class Battle_Controller():
             return True, "confirmed"
         else:
             RN_UI.print_legend(battle.bmap.legend_list, battle.unit_list)
-            return False, "target"
+            if battle.target_tile == battle.hero.coords:
+                return False, "move"
+            else:
+                return False, "target"
 
     def battlemenu(self, command, battle, RN_UI):
         RN_UI.highlight_active(battle.battle_menu_list[battle.battle_index][2], False)
