@@ -55,7 +55,7 @@ class BattleReport:
         self.report_formats = {
             "use_skill": BattleReportLine("%unit: --%cause--", cause_color='skill'),
             "damage": BattleReportLine("%unit: Suffers %effect damage from %cause.", cause_color='skill', effect_color='damage'),
-            "heal": BattleReportLine("%unit: Gains %effect life from %cause.", cause_color='skill', effect_color='heal'),
+            "heal": BattleReportLine("%unit: Gains %effect HP from %cause.", cause_color='skill', effect_color='heal'),
             "miss": BattleReportLine("%unit: Evades %cause.", cause_color='skill'),
             "resist": BattleReportLine("%unit: Resists %cause.", cause_color='skill'),
             "bad_status": BattleReportLine("%unit: Afflicted by %cause.", cause_color='bad_status'),
@@ -177,15 +177,15 @@ class Battle_Controller:
     def add_actors(self, battle):
         b_actors = []
         for e in battle["actors"]:
-            e2 = e.split("/")
-            stats = self.actors[e2[0]]  #pull stats from database
+
+            stats = self.actors[e['ident']]  #pull stats from database
 
             if stats.ai[0].value == "boss":
                 enemy = RN2_initialize.Boss(stats)
             else:
                 enemy = RN2_initialize.Actor(stats)
-            enemy.coords = [int(c) for c in e2[1].split(",")]
-            enemy.name = e2[0]
+            enemy.coords = [int(c) for c in e['loc'].split(",")]
+            enemy.name = e['ident']
             b_actors.append(enemy)
         return b_actors
 
@@ -236,21 +236,20 @@ class Battle_Controller:
                     battle.move_range = 0
                     battle.move_range = battle.get_range(tuple(battle.active.coords), battle.active.move, pathfind=True, is_move=True)
                     RN_UI.highlight_area(True, battle.move_range, battle.bmap, "teal")
-                    turn = False
-                    while not turn:
+                    turn_ended = False
+                    while not turn_ended:
                         RN_UI.print_status(battle.active, battle.bmap[battle.active.coords[0]][battle.active.coords[1]].terrain)
                         command = self.input()
                         if command == "invalid":
                             RN_UI.print_prompt("Invalid command.")
                             self.RN_sound.play_sound("error")
                             continue
-                        turn, newstate = self.RN_output(command, battle, RN_UI)
+                        turn_ended, newstate = self.RN_output(command, battle, RN_UI)
                         if newstate != battle.state and newstate is not False:
                             self.change_state(battle.state, newstate, battle)
                             self.prep_state(battle, RN_UI)
-                    if battle.state != "confirmed":
-                        pass
-                    else:
+
+                    if battle.state == "confirmed":
                         self.report.add_entry("use_skill", battle.active, battle.selected_skill.name)
                         RN_UI.print_narration(self.report.process_report())
                         RN2_animations.RN_Animation_Class(battle.affected_tiles, self.RN_sound, RN_UI, battle.selected_skill.animation, battle.bmap, battle.active.coords)
@@ -295,22 +294,23 @@ class Battle_Controller:
             return
         for e in self.battle.events:
             event_trigger = False
-            condition = e.condition[0].value.split(",")
-            if condition[0] == "turn" and self.battle.turn_tracker.turn_count == int(condition[1]):
+            trigger_type = e['condition']['trigger_type']
+            condition = e['condition'].get('trigger_condition')
+            if trigger_type == "turn" and self.battle.turn_tracker.turn_count == condition:
                 event_trigger = True
-            elif condition[0] == "playeryGreater" and self.battle.hero.coords[1] >= int(condition[1]):
+            elif trigger_type == "playeryGreater" and self.battle.hero.coords[1] >= condition:
                 event_trigger = True
-            elif condition[0] == "playeryLesser" and self.battle.hero.coords[1] <= int(condition[1]):
+            elif trigger_type == "playeryLesser" and self.battle.hero.coords[1] <= condition:
                 event_trigger = True
-            elif condition[0] == "playeryIs" and self.battle.hero.coords[1] == int(condition[1]):
+            elif trigger_type == "playeryIs" and self.battle.hero.coords[1] == condition:
                 event_trigger = True
-            elif condition[0] == "playerxLesser" and self.battle.hero.coords[0] <= int(condition[1]):
+            elif trigger_type == "playerxLesser" and self.battle.hero.coords[0] <= condition:
                 event_trigger = True
-            elif condition[0] == "playerxGreater" and self.battle.hero.coords[0] >= int(condition[1]):
+            elif trigger_type == "playerxGreater" and self.battle.hero.coords[0] >= condition:
                 event_trigger = True
-            elif condition[0] == "playerxIs" and self.battle.hero.coords[0] == int(condition[1]):
+            elif trigger_type == "playerxIs" and self.battle.hero.coords[0] == condition:
                 event_trigger = True
-            elif condition[0] == "bosskill" and (not self.battle.enemies or not self.battle.enemies[0].is_boss):
+            elif trigger_type == "bosskill" and (not self.battle.enemies or not self.battle.enemies[0].is_boss):
                 event_trigger = True
 
             if event_trigger:
@@ -318,21 +318,18 @@ class Battle_Controller:
                     return True
 
     def activate_event(self, event):
-        effect = event.effect[0].value.split(",")
-        if effect[0] == "victory":
+        effect_type = event['effect']['type']
+        if effect_type == "victory":
             return True
-        if effect[0] == "add_mobs":
-            for f in effect:
-                if f == "add_mobs":
-                    continue
-                e = int(f)
-                enemy = self.battle.actors[e]
+        elif effect_type == "add_mobs":
+            for mob_id in event['effect']['ids']:
+                enemy = self.battle.actors[mob_id]
                 self.battle.enemies.append(enemy)
                 self.battle.turn_tracker.add_unit(enemy)
                 self.battle.bmap[enemy.coords[0]][enemy.coords[1]].actor = enemy
                 self.UI.update_map("new", enemy.coords, enemy, self.battle.bmap)
-            if effect[0] == "pass":
-                pass
+        elif effect_type == "pass":
+            pass
         self.battle.events.remove(event)
         return
 
@@ -346,7 +343,7 @@ class Battle_Controller:
                 unit_list.append((e.character, e.name, e.color))
         return unit_list
 
-    def update_game(self, battle, RN_UI):   #death, summons, forced movement
+    def update_game(self, battle, RN_UI):  #summons, forced movement
         for change in battle.state_changes:
             if change[0] == "summon":
                 self.add_summon(change, battle, RN_UI)

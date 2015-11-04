@@ -51,12 +51,12 @@ class RN_Sound():
 class Game():
     def __init__(self):
         self.bindings = RN2_initialize.set_binds()
-        self.battles = RN2_initialize.make_battle(RN2_initialize.open_xml("battles"))
+        self.battles = RN2_initialize.make_battle()
         self.heroclasses, self.actors = RN2_initialize.make_actor(RN2_initialize.open_xml("actors"))
         self.skills = RN2_initialize.make_skills(RN2_initialize.open_xml("skills"))
-        self.maps = RN2_initialize.make_maps(RN2_initialize.open_xml("maps"))
+        self.maps = RN2_initialize.make_maps()
         self.text = RN2_initialize.make_text(RN2_initialize.open_xml("text"))
-        self.sound, self.music = RN2_initialize.make_sound(RN2_initialize.open_xml("sound"))
+        self.sound, self.music = RN2_initialize.make_sound()
         self.RN_UI = RN2_UI.RN_UI_Class()
         self.RN_sound = RN_Sound(self.sound, self.music)
         self.hero = None
@@ -131,12 +131,12 @@ class Game():
 def main():
     #test mode
     game = Game()
-    game.init_hero("Terramancer", "StrongoDragonlord")
+    game.init_hero("Astromancer", "StrongoDragonlord")
     game.hero.mp = 99
-    game.hero.hp = 999
+    game.hero.hp = 1
     game.hero.attribute_modifiers['move'] = [10]
-    game.RN_sound.mute_switch = True
-    game.init_battle("1")
+    game.RN_sound.mute_switch = False
+    game.init_battle(3)
     exit()
 
     while 1:
@@ -144,7 +144,7 @@ def main():
         done = 0
         game.RN_sound.play_music("title")
         while not done:
-           done, load, hero = game.RN_UI.title_screen(game.maps["title"], game.RN_input, game.RN_sound)
+            done, load, hero = game.RN_UI.title_screen(game.maps["title"], game.RN_input, game.RN_sound)
         if not load:
            game.RN_UI.display_intro(game.text["intro"].value)
            name, hclass = game.RN_UI.create_character(game.text["Name"].value, game.text["Class"].value,
@@ -160,11 +160,11 @@ def main():
 
         while 1:
             game.RN_sound.play_music("trans")
-            game.RN_UI.display_intro(game.text["battle" + str(game.hero.current_battle)].value)
-            victory = game.init_battle(str(game.hero.current_battle))
+            game.RN_UI.display_intro(game.text["battle" + str(game.hero.current_battle)])
+            victory = game.init_battle(game.hero.current_battle)
             if not victory:
                 game.hero.reset_actor()
-                retry = game.RN_UI.display_game_over(game.maps["gameover"], game.battles[str(game.hero.current_battle)]['tips'], game.RN_input, game.RN_sound)
+                retry = game.RN_UI.display_game_over(game.maps["gameover"], game.battles[game.hero.current_battle]['tips'], game.RN_input, game.RN_sound)
                 if not retry:
                     break
                 else:

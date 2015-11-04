@@ -149,7 +149,7 @@ class BMap():
     def __init__(self):
         self.contents = []
         self.legend_list = []
-        self.terrain_types = [(".", Grass()), (",", Stone()), ("~", Water()), ("#", Lava()), ("X", Pit()), ("G", Goal()), ("*", Wall()), ("|", Wood())]
+        self.terrain_types = [(".", Grass()), (",", Stone()), ("~", Water()), ("L", Lava()), ("X", Pit()), ("G", Goal()), ("*", Wall()), ("|", Wood())]
 
     def __getitem__(self, item):
         return self.contents[item]
@@ -177,8 +177,8 @@ class Tile():
 
 def load_map(map_data):
     startpos = []
-    map_lines = map_data.layout[0].value
-    for c in map_data.start[0].value.split(","):
+    map_lines = map_data['layout']
+    for c in map_data['start'].split(","):
         startpos.append(int(c))
     map_lines = map_lines.splitlines()
     for m in map_lines:
@@ -188,9 +188,12 @@ def load_map(map_data):
         battle_map.append([])
         for y in range(25):
             tile = Tile(x, y)
+            print x, y
             tile, map_list = analyze_data(map_lines[y][x], battle_map, tile)
             battle_map[x].append(tile)
+    print battle_map
     return battle_map, startpos
+
 
 def analyze_data(character, battle_map, tile):
     for m in battle_map.terrain_types:     #m is tuple(character, terrain class)
@@ -198,7 +201,7 @@ def analyze_data(character, battle_map, tile):
             tile.terrain = m[1]
     if tile.terrain is None:
         logging.debug("Tile" + repr(tile.x) + repr(tile.y) + "invalid or not found.")
-        exit()
+        raise TypeError
     if (tile.terrain.character, tile.terrain.fgcolor, tile.terrain.bgcolor, tile.terrain.name) not in battle_map.legend_list and tile.terrain.character != " ":  #add to the legend
         battle_map.legend_list.append((tile.terrain.character, tile.terrain.fgcolor, tile.terrain.bgcolor, tile.terrain.name))
     return tile, battle_map

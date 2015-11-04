@@ -11,6 +11,7 @@ import sound as sound_class
 import maps
 import text
 import math
+import yaml
 
 #pygame input constants, NOT ASCII CODES
 
@@ -269,12 +270,10 @@ def make_actor(xml_stream):
         hero_dict[h.attrs[u'ident']] = h
     return hero_dict, actors_dict
 
-def make_maps(xml_stream):
-    maps_dict = dict()
-    map_data = maps.obj_wrapper(xml_stream)[1]
-    for m in map_data.map:
-        maps_dict[m.attrs[u'ident']] = m
-    return maps_dict
+def make_maps():
+    with open('maps.yaml') as maps:
+        map_data = yaml.load(maps)
+        return map_data
 
 def make_text(xml_stream):
     text_dict = dict()
@@ -283,27 +282,10 @@ def make_text(xml_stream):
         text_dict[m.attrs[u'ident']] = m
     return text_dict
 
-def make_battle(xml_stream):
-    battles_dict = dict()
-    battle_data = battles.obj_wrapper(xml_stream)[1]
-    for b in battle_data.battle:
-        room_dict = dict()
-        room_dict['actors'] = []
-        room_dict['events'] = []
-        room_dict['music'] = []
-        room_dict['tips'] = []
-        room_dict['map'] = b.map[0].value
-        room_dict['intro'] = b.intro[0].value
-        for a in b.actor:
-            room_dict['actors'].append(a.value)
-        for e in b.event:
-            room_dict['events'].append(e)
-        for m in b.music:
-            room_dict['music'].append(m.value)
-        for m in b.tip:
-            room_dict['tips'].append(m.value)
-        battles_dict[b.attrs[u'ident']] = room_dict
-    return battles_dict
+def make_battle():
+    with open('battles.yaml') as battles:
+        battle_data = yaml.load(battles)
+        return battle_data
 
 def make_skills(xml_stream):
     skills_dict = dict()
@@ -351,15 +333,11 @@ def make_skills(xml_stream):
         skills_dict[a.attrs[u'ident']] = skill
     return skills_dict
 
-def make_sound(xml_stream):       #dictionary contains paths to sound files and a key to play them
-    sound_data = sound_class.obj_wrapper(xml_stream)[1]
-    sound = dict()
-    music = dict()
-    for s in sound_data.sound:
-        sound[s.ident[0].value] = s.filename[0].value
-    for m in sound_data.music:
-         music[m.ident[0].value] = m.filename[0].value
-    return sound, music
+
+def make_sound():
+    with open('sound.yaml') as sound:
+        sound_data = yaml.load(sound)
+        return sound_data['sound'], sound_data['music']
 
 def set_binds():
     binds = {

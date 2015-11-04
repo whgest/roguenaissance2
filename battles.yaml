@@ -1,0 +1,168 @@
+1:
+  intro: battle1
+  map: tunnel
+  music:
+    -battle1a
+    -battle1b
+
+  actors:
+    -
+      ident: Freezefrog
+      loc: 30,20
+    -
+      ident: Rabid duckbunny
+      loc: 30,19
+    -
+      ident: Origami golem
+      loc: 44,15
+    -
+      ident: Dire roach
+      loc: 18,17
+    -
+      ident: Rabid duckbunny
+      loc: 44,15
+    -
+      ident: Dire roach
+      loc: 18,17
+    -
+      ident: Evil begonia
+      loc: 31,0
+    -
+      ident: Evil begonia
+      loc: 32,0
+
+  events:
+    - condition:
+        trigger_type: start
+      effect:
+        type: add_mobs
+        ids:
+          - 0
+          - 1
+
+    - condition:
+        trigger_type: turn
+        trigger_condition: 3
+      effect:
+        type: add_mobs
+        ids:
+          - 2
+          - 3
+
+    - condition:
+        trigger_type: playeryLesser
+        trigger_condition: 15
+      effect:
+        type: add_mobs
+        ids:
+          - 4
+          - 5
+          - 6
+          - 7
+
+    - condition:
+        trigger_type: playeryIs
+        trigger_condition: 0
+      effect:
+        type: victory
+
+  tips:
+    - Summoning friendly monsters is the best way to even the odds. Summoning will cost more MP the more active summons you have.
+    - Forced movement spells that Push or Pull foes can keep enemies off your back for as long you have the MP to use them.
+    - Haste and Slow effects change how far units can move each turn. Use these to maneuver around enemies. Rooted units can not move at all, but can attack.
+    - All classes have some way to heal. Astromancers can regenerate health over time with Soothing Starlight, Pyromancers can Drain Life, and Terramancers can summon a Spring Breeze to heal them.
+
+
+2:
+    intro: battle2
+    map: water
+    music:
+      - battle2a
+      - battle2b
+      
+    actors:
+      - ident: Fungal clubber
+        loc: 41,11
+      - ident: Fungal clubber
+        loc: 45,11
+      - ident: Fungal sporemage
+        loc: 43,9
+      - ident: Fungal blowgunner
+        loc: 42,10
+      - ident: Fungal clubber
+        loc: 49,8
+      - ident: Fungal sporemage
+        loc: 49,9
+      - ident: Fungal blowgunner
+        loc: 49,10
+      - ident: Fungal clubber
+        loc: 5,24
+      - ident: Fungal sporemage
+        loc: 6,24
+      - ident: Fungal blowgunner
+        loc: 7,24
+
+    events:
+      - condition:
+          trigger_type: start
+        effect:
+          type: add_mobs
+          ids:
+            - 0
+            - 1
+            - 2
+            - 3
+
+      - condition:
+          trigger_type: playerxLesser
+          trigger_condition: 24
+        effect:
+          type: add_mobs
+          ids:
+            - 4
+            - 5
+            - 6
+            - 7
+            - 8
+            - 9
+    
+      - condition:
+          trigger_type: playeryIs
+          trigger_condition: 24
+        effect:
+          type: victory
+
+    
+    tips:
+      - Clustered enemies can be crushed with a spell featuring a wide area of effect.
+      - Your strongest spell can only be cast with full MP, but devastates all enemy units.
+      - Summoned monsters have skills too, but they usually need a turn or two to charge up enough MP to use them.
+      - All classes have a defensively oriented summon. Pyromancers and Astromancers also have an offensive summon, and Terramancers a healing summon.
+
+3:
+    intro: battle3
+    map: lava
+    music:
+      - battle3
+
+    actors:
+      - ident: Belshazzar
+        loc: 25,5
+
+    events:
+      - condition:
+          trigger_type: start
+        effect:
+          type: add_mobs
+          ids:
+            - 0
+
+      - condition:
+          trigger_type: bosskill
+        effect:
+          type: victory
+
+    tips:
+      - Belshazzar's minions can be pushed or pulled into lava for an instant kill, but Belshazzar himself will not be felled so easily.
+      - Belshazzar's MP are used and regenerated just like yours... if you let him fully charge, he will unleash a devastating spell.
+      - Forcing Belshazzar to drain life from his minions instead of attacking or summoning is one way to turn the fight against him.

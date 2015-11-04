@@ -558,34 +558,45 @@ class RN_UI_Class():
         pass
 
     def display_title(self, title):
-        map_lines = title.layout[0].value
+        map_lines = title['layout']
         map_lines = map_lines.splitlines()
         for m in map_lines:
             list(m)
         rmap = []
-        for x in range(63):
+
+        x_size = len(map_lines[0])
+        y_size = len(map_lines)
+
+        x_offset = 5
+        y_offset = 8
+
+        for x in range(x_size):
             rmap.append([])
-            for y in range(10):
-                rmap[x].append(map_lines[y][x])
-        for x in range(63):
-            for y in range(10):
+            for y in range(y_size):
+                try:
+                    rmap[x].append(map_lines[y][x])
+                except IndexError:
+                    rmap[x].append(' ')
+
+        for x in range(x_size):
+            for y in range(y_size):
                 text_color = pygame.Color(100+y*10, 0+y*7, 0+y*7)
                 line_color = pygame.Color(70-x, 170-x*2, 250-x*2)
                 if rmap[x][y][0] not in [" ", ".", "7", "6", "9", "8"]:
-                    self.title_text(x+5, y+8, " ")
+                    self.title_text(x+x_offset, y+y_offset, " ")
                 elif rmap[x][y][0] in ["7"]:
-                    self.title_text(x+5, y+8, u'∑', fgcolor=line_color)
+                    self.title_text(x+x_offset, y+y_offset, u'∑', fgcolor=line_color)
                 elif rmap[x][y][0] in ["6"]:
-                    self.title_text(x+5, y+8, u'☼', fgcolor="yellow")
+                    self.title_text(x+x_offset, y+y_offset, u'☼', fgcolor="yellow")
                 elif rmap[x][y][0] in ["9", "8"]:
-                    self.title_text(x+5, y+8, " ", bgcolor=text_color)
+                    self.title_text(x+x_offset, y+y_offset, " ", bgcolor=text_color)
                 else:
-                    self.title_text(x+5, y+8, " ")
+                    self.title_text(x+x_offset, y+y_offset, " ")
 
     def display_game_over(self, title, tips, input, sound):
         self.clear_screen_tint()
         self.draw_border()
-        map_lines = title.layout[0].value
+        map_lines = title['layout']
         map_lines = map_lines.splitlines()
         for m in map_lines:
             list(m)

@@ -1,0 +1,50 @@
+
+sound:
+  starstorm: starstorm.wav
+  bigboom: bigboom.wav
+  slash: slash.wav
+  arrow: arrow.wav
+  heal: heal.wav
+  slow: slow.wav
+  gamma: gamma.wav
+  quake: quake.wav
+  burn3: burn3.wav
+  fall: fall.wav
+  gravity: gravity.wav
+  beep2: beep2.wav
+  beep: beep.wav
+  fire: fire.wav
+  fireball: fireball.wav
+  ice: ice.wav
+  dark: dark.wav
+  drain: drain.wav
+  zero: zero2.wav
+  bighit: bighit.wav
+  buff: buff.wav
+  shock: shock.wav
+  surge: powersurge.wav
+  worldbreak: groundbreaking.wav
+  annihilate: annihilate.wav
+  gg: gg.wav
+  singularity: singularity.wav
+  error: error.wav
+  summon: summon.wav
+  death: death.wav
+  impact: projectileimpact.wav
+
+music:
+  silence: silence.ogg
+  gameover: wind.ogg
+  wind: wind.ogg
+  title: title.ogg
+  battle3: battle3.ogg
+  battle1a: battle1a.ogg
+  battle1b: battle1b.ogg
+  battle2a: battle2a.ogg
+  battle2b: battle2b.ogg
+  ending: ending.ogg
+  feld3: feld3.ogg
+  victory: victory.ogg
+  trans: trans.ogg
+  test1: groundbreaking.wav
+  test2: annihilate.wav
