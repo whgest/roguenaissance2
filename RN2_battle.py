@@ -29,11 +29,14 @@ DEFAULT_STATUS_EFFECTS = {
     "Poison": StatusEffectData("Poison", [("hp", -1)], continuous=True),
     "Burning": StatusEffectData("Burning", [("hp", -1)], continuous=True),
     "Frostbite": StatusEffectData("Frostbite", [("hp", -1)], continuous=True),
+    "Radiation": StatusEffectData("Radiation", [("hp", -1)], continuous=True),
+    "Swarm": StatusEffectData("Swarm", [("hp", -1)], continuous=True),
     "Regen": StatusEffectData("Regen", [("hp", 1)], continuous=True),
     "Dark": StatusEffectData("Dark", [("attack", -1)]),
+    "Confound": StatusEffectData("Confound", [("magic", -1)]),
     "Slow": StatusEffectData("Slow", [("move", -1)]),
     "Haste": StatusEffectData("Haste", [("move", 1)]),
-    "Armored": StatusEffectData("Armored", [("defense", 1)]),
+    "Armored": StatusEffectData("Armored", [("defense", 1), ("resistance", 1)]),
     "Root": StatusEffectData("Root", [("rooted", 1)], impairing=True),
     "Stun": StatusEffectData("Stun", [("stunned", 1)], impairing=True)
 }

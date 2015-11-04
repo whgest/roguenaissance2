@@ -51,7 +51,7 @@
         <agility>15</agility>
         <move>6</move>
         <immunities>Poison</immunities>
-        <skills>Obsidian sword,Whirlwind,Stone Armor,Rock Toss,Thunderbolt,Venom Slash,Vine Grasp,Avalanche Strike,Tectonic Break,Ascendance,Summon Spring Wind,Summon Stegosaur</skills>
+        <skills>Obsidian sword,Whirlwind,Stone Armor,Rock Toss,Hornet Swarm,Thunderbolt,Venom Slash,Vine Grasp,Avalanche Strike,Tectonic Break,Ascendance,Summon Spring Wind,Summon Stegosaur</skills>
         <descr>A wizard mastering the powers of the earth and her creatures.</descr>
     </heroclass>
     <!--Summoned monsters -->

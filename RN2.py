@@ -131,7 +131,7 @@ class Game():
 def main():
     #test mode
     game = Game()
-    game.init_hero("Astromancer", "StrongoDragonlord")
+    game.init_hero("Terramancer", "StrongoDragonlord")
     game.hero.mp = 99
     game.hero.hp = 999
     game.hero.attribute_modifiers['move'] = [10]

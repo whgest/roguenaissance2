@@ -70,12 +70,12 @@
         <effect>
             <type>Dark</type>
             <magnitude>2</magnitude>
-            <duration>3</duration>
+            <duration>2</duration>
         </effect>
         <effect>
             <type>Slow</type>
             <magnitude>2</magnitude>
-            <duration>3</duration>
+            <duration>2</duration>
         </effect>
         <mp>0</mp>
         <prompt>Damages enemy and inflicts minor darkness and slow. Range 7.</prompt>
@@ -146,7 +146,7 @@
         <damage>2,8</damage>
         <effect>
             <type>Burning</type>
-            <magnitude>4</magnitude>
+            <magnitude>3</magnitude>
             <duration>3</duration>
         </effect>
         <mp>3</mp>
@@ -160,9 +160,14 @@
         <narration>fires a gamma ray at</narration>
         <range>1</range>
         <aoe>777</aoe>
-        <damage>2,12</damage>
+        <damage>1,12</damage>
         <mp>2</mp>
-        <prompt>Damages all units. Fires in a line.</prompt>
+        <effect>
+            <type>Radiation</type>
+            <magnitude>2</magnitude>
+            <duration>3</duration>
+        </effect>
+        <prompt>Damages all units and inflicts radiation. Fires in a line.</prompt>
         <animation>gamma</animation>
     </skill>
 
@@ -337,7 +342,7 @@
         <aoe>666</aoe>
         <damage>3,8</damage>
         <effect>
-            <type>Poison</type>
+            <type>Radiation</type>
             <magnitude>3</magnitude>
             <duration>5</duration>
         </effect>
@@ -346,7 +351,7 @@
             <magnitude>3</magnitude>
         </effect>
         <mp>9</mp>
-        <prompt>Nuclear fire sears all enemies. Causes heavy damage and poison.</prompt>
+        <prompt>Nuclear fire sears all enemies. Causes heavy damage and radiation.</prompt>
         <animation>splitatom</animation>
     </skill>
 
@@ -389,7 +394,7 @@
         <narration>slashes mercilessly at</narration>
         <range>2</range>
         <aoe>0</aoe>
-        <damage>1,12</damage>
+        <damage>2,6</damage>
         <mp>0</mp>
         <prompt>Basic attack.</prompt>
         <animation>basic</animation>
@@ -420,7 +425,7 @@
             <duration>4</duration>
         </effect>
         <mp>0</mp>
-        <prompt>You are protected by swirling stones. Raises defense.</prompt>
+        <prompt>You are protected by swirling stones. Raises defense and resistance.</prompt>
         <animation>armor</animation>
     </skill>
 
@@ -437,6 +442,28 @@
         </effect>
         <mp>1</mp>
         <prompt>Telekinetically toss a large rock for damage and push. Range 5.</prompt>
+        <animation>rock toss</animation>
+    </skill>
+
+    <skill ident = "Hornet Swarm">
+        <target>enemy</target>
+        <stat>magic</stat>
+        <narration></narration>
+        <range>9</range>
+        <aoe>0</aoe>
+        <damage>1,1</damage>
+        <effect>
+            <type>Confound</type>
+            <magnitude>4</magnitude>
+            <duration>4</duration>
+        </effect>
+        <effect>
+            <type>Swarm</type>
+            <magnitude>2</magnitude>
+            <duration>4</duration>
+        </effect>
+        <mp>1</mp>
+        <prompt>Send angry hornets to injure and lower magic attack. Range 9.</prompt>
         <animation>rock toss</animation>
     </skill>
 

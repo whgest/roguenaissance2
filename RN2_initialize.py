@@ -214,7 +214,7 @@ class Skill(object):
 
     @property
     def is_beneficial(self):
-        return self.damage != 0 and self.damage[1] < 0
+        return self.damage == 0 or self.damage[1] < 0
 
     def get_damage_range(self, attacker):
         """
