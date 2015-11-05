@@ -1,0 +1,417 @@
+classes:
+  Astromancer:
+    character: "@"
+    color: white
+    ai: player
+    maxhp: 52
+    maxmp: 9
+    weapon: white sword
+    armor: astral regalia
+    attack: 17
+    defense: 19
+    magic: 20
+    resistance: 19
+    agility: 14
+    move: 6
+    immunities:
+      - Slow
+    skillset:
+      - White sword
+      - Gravity Surge
+      - Zodiac Curse
+      - Time Distortion
+      - Soothing Starlight
+      - Singularity
+      - Meteor
+      - Gamma Ray
+      - Skycaller
+      - Summon Meteorman
+      - Summon 4DHypercube
+    descr: A wizard mastering the powers of the cosmos.
+
+  Pyromancer:
+    character: "@"
+    color: white
+    ai: player
+    maxhp: 45
+    maxmp: 10
+    weapon: focusing staff
+    armor: flaming cloak
+    attack: 15
+    defense: 17
+    magic: 19
+    resistance: 20
+    agility: 11
+    move: 6
+    immunities:
+      - Burning
+    skillset:
+      - Focusing staff
+      - Flash Freeze
+      - Ice Spear
+      - Pyrokinesis
+      - Icy Prison
+      - Life Drain
+      - Frostburn
+      - Absolute Zero
+      - Fuse Atom
+      - Smn. Flaming Crows
+      - Summon Snowball
+    descr: A wizard mastering the powers of fire and ice.
+
+  Terramancer:
+    character: "@"
+    color: white
+    ai: player
+    maxhp: 60
+    maxmp: 10
+    weapon: obsidian sword
+    armor: brigandine
+    attack: 19
+    defense: 20
+    magic: 19
+    resistance: 18
+    agility: 15
+    move: 6
+    immunities:
+      - Poison
+    skillset:
+      - Obsidian sword
+      - Whirlwind
+      - Stone Armor
+      - Rock Toss
+      - Hornet Swarm
+      - Thunderbolt
+      - Venom Slash
+      - Vine Grasp
+      - Avalanche Strike
+      - Tectonic Break
+      - Ascendance
+      - Summon Spring Wind
+      - Summon Stegosaur
+    descr: A wizard mastering the powers of the earth and her creatures.
+
+actors:
+  #Summoned monsters --:
+  Meteorman:
+    character: M
+    color: lime
+    ai: player
+    maxhp: 50
+    maxmp: 2
+    attack: 19
+    defense: 16
+    magic: 0
+    resistance: 13
+    agility: 2
+    move: 4
+    skillset:
+      - Meteor Punch
+      - Magnetize
+    descr: A golem constructed of unyielding asteroid.
+
+  4D Hypercube:
+    character: H
+    color: lime
+    ai: player
+    maxhp: 40
+    maxmp: 3
+    attack: 19
+    defense: 13
+    magic: 19
+    resistance: 13
+    agility: 11
+    move: 6
+    skillset:
+      - Starshards
+      - Cosmic Barrage
+    descr: A mind-shredding shard of extradimensional geometry.
+
+  Snowball:
+    character: S
+    color: lime
+    ai: player
+    maxhp: 50
+    maxmp: 2
+    attack: 19
+    defense: 16
+    magic: 0
+    resistance: 13
+    agility: 2
+    move: 4
+    skillset:
+      - Snowball Crush
+      - Snowball Slam
+    descr: A rolling snowball.
+
+  Flaming Crows:
+    character: C
+    color: lime
+    ai: player
+    maxhp: 45
+    maxmp: 3
+    attack: 20
+    defense: 11
+    magic: 20
+    resistance: 10
+    agility: 20
+    move: 6
+    always:
+      - Burning
+    skillset:
+      - Swarm
+      - Talon Frenzy
+    descr: A flock of burning crows.
+
+
+  Spring Wind:
+    character: w
+    color: lime
+    ai: player
+    maxhp: 20
+    maxmp: 4
+    attack: 1
+    defense: 10
+    magic: 12
+    resistance: 16
+    agility: 25
+    move: 9
+    skillset:
+      - Breeze Blow
+      - Soothing Breeze
+      - Healstorm
+    descr: A pleasant breeze.
+
+
+  Stegosaur:
+    character: S
+    color: lime
+    ai: player
+    maxhp: 50
+    maxmp: 3
+    attack: 20
+    defense: 17
+    magic: 0
+    resistance: 10
+    agility: 2
+    move: 4
+    skillset:
+      - Tail Swipe
+      - Megastomp
+    descr: A rampaging dinosaur.
+
+
+  Skelesaur:
+    character: K
+    color: red
+    ai: damage
+    maxhp: 50
+    maxmp: 3
+    attack: 20
+    defense: 17
+    magic: 0
+    resistance: 10
+    agility: 2
+    move: 4
+    skillset:
+      - Tail Slam
+      - Skelestomp
+    descr: A long-dead dinosaur.
+
+
+  Lichdrake:
+    character: L
+    color: red
+    ai: damage
+    maxhp: 40
+    maxmp: 3
+    attack: 19
+    defense: 13
+    magic: 19
+    resistance: 13
+    agility: 11
+    move: 6
+    skillset:
+      - Bone Toss
+      - Poison Breath
+    descr: An undead wyrmling.
+
+
+  # Monsters --:
+  Rabid duckbunny:
+    character: d
+    color: red
+    ai: weakest
+    maxhp: 40
+    maxmp: 0
+    attack: 18
+    defense: 14
+    magic: 0
+    resistance: 11
+    agility: 15
+    move: 5
+    skillset:
+      - Bite
+    descr: A snarling razor-beaked rodent.
+
+  Origami golem:
+    character: G
+    color: red
+    ai: damage
+    maxhp: 50
+    maxmp: 0
+    attack: 20
+    defense: 16
+    magic: 0
+    resistance: 9
+    agility: 15
+    move: 4
+    skillset:
+      - Paper cut
+      - Paper slam
+    descr: An animated paper construct. Weak against magic.
+
+  Dire roach:
+    character: r
+    color: red
+    ai: weakest
+    maxhp: 30
+    maxmp: 0
+    attack: 18
+    defense: 13
+    magic: 0
+    resistance: 11
+    agility: 20
+    move: 6
+    immunities:
+      - Radiation
+    skillset:
+      - Bite
+    descr: A gigantic cockroach with a taste for wizard blood.
+
+  Freezefrog:
+    character: f
+    color: red
+    ai: weakest
+    maxhp: 35
+    maxmp: 0
+    attack: 13
+    defense: 12
+    magic: 18
+    resistance: 14
+    agility: 17
+    move: 5
+    immunities:
+      - Frostbite
+    skillset:
+      - Spit ice
+    descr: A grotesquely colored frog that spits ice. Somewhat magic resistant.
+
+  Evil begonia:
+    character: b
+    color: red
+    ai: weakest
+    maxhp: 30
+    maxmp: 0
+    attack: 13
+    defense: 12
+    magic: 18
+    resistance: 10
+    agility: 17
+    move: 0
+    skillset:
+      - Spit poison
+    descr: A carnivorous flower. Cannot move.
+
+  #Map 2 Monsters--:
+  Fungal blowgunner:
+    character: b
+    color: red
+    ai: weakest
+    maxhp: 38
+    maxmp: 3
+    attack: 17
+    defense: 12
+    magic: 10
+    resistance: 14
+    agility: 17
+    move: 5
+    skillset:
+      - Blowgun
+    descr: A myconid ranged attacker.
+
+  Fungal clubber:
+    character: c
+    color: red
+    ai: weakest
+    maxhp: 47
+    maxmp: 3
+    attack: 17
+    defense: 14
+    magic: 0
+    resistance: 11
+    agility: 13
+    move: 5
+    skillset:
+      - Club
+    descr: A club-wielding myconid.
+
+  Fungal sporemage:
+    character: m
+    color: red
+    ai: support
+    maxhp: 30
+    maxmp: 3
+    attack: 11
+    defense: 11
+    magic: 17
+    resistance: 15
+    agility: 17
+    move: 5
+    skillset:
+      - Spore Cloud
+      - Fungeneration
+    descr: A myconid shaman. Somewhat magic resistant. Heals.
+
+#  Piranha school:
+#    character: p
+#    color: red
+#    ai: aquatic
+#    maxhp: 15
+#    maxmp: 0
+#    attack: 25
+#    defense: 7
+#    magic: 0
+#    resistance: 7
+#    agility: 25
+#    move: 7
+#    immunities: Aquatic
+#    skillset:
+#      - Frenzy
+#    descr: A school of vicious piranha.
+
+  Belshazzar:
+    character: "%"
+    color: black
+    ai: boss
+    maxhp: 55
+    maxmp: 10
+    attack: 25
+    defense: 12
+    magic: 21
+    resistance: 12
+    agility: 11
+    move: 6
+    immunities:
+      - Terrain
+    deathanim: beldeath
+    skillset:
+      - Shadow Curse
+      - Necrodrain
+      - Cloudkill
+      - Poisonbolt
+      - Annihilate
+      - Summon Skelesaur
+      - Summon Lichdrake
+    descr: An insane necromancer.
+

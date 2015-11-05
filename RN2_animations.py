@@ -212,6 +212,12 @@ class RN_Animation_Class():
             self.hit(self.tiles, ["*", "o", "O"], ["olive"])
             return
 
+        elif self.anim_id == "venom":
+            self.game.play_sound("slash")
+            self.hit(self.tiles, ["\\", "/", "X", u"♦"], ["lime"])
+            self.game.play_sound("dark")
+            return
+
         elif self.anim_id == "ice toss":
             self.game.play_sound("ice")
             self.projectile(self.attacker, self.tiles, [u"♦"], ["aqua"])

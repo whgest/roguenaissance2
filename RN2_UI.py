@@ -656,7 +656,7 @@ class RN_UI_Class():
     def display_intro(self, text):
         self.clear_screen_tint()
         self.draw_border()
-        lines = 1
+        lines = 3
         for t in text.splitlines():
             if "$s" in t:
                 #self.play_sound(p.split()[1])
@@ -774,7 +774,7 @@ class RN_UI_Class():
         return True, selection + ".sav"
 
 
-    def display_ending(self, input, hero):
+    def display_ending(self, input, hero, ending_text):
         self.draw_border()
         self.clear_screen_tint()
         self.screen._autoupdate = True
@@ -812,7 +812,7 @@ class RN_UI_Class():
         fin.close()
 
         sleep(1)
-        self.text_wrapper("Congratulations! The faculty of Aldebaran Academy are pleased to present you with a full wizarding degree... and a hefty tuition bill. You are a true wizard!", 3, 30, fgcolor="yellow")
+        self.text_wrapper(ending_text, 3, 30, fgcolor="yellow")
 
         while 1:
             self.screen.update()

@@ -15,7 +15,7 @@ import logging
 import RN2_AI
 
 
-class StatusEffectData():
+class StatusEffectData:
     def __init__(self, name, effects, continuous=False, impairing=False):
         self.name = name
         self.effects = effects
@@ -26,19 +26,19 @@ class StatusEffectData():
         return self.name
 
 DEFAULT_STATUS_EFFECTS = {
-    "Poison": StatusEffectData("Poison", [("hp", -1)], continuous=True),
-    "Burning": StatusEffectData("Burning", [("hp", -1)], continuous=True),
-    "Frostbite": StatusEffectData("Frostbite", [("hp", -1)], continuous=True),
-    "Radiation": StatusEffectData("Radiation", [("hp", -1)], continuous=True),
-    "Swarm": StatusEffectData("Swarm", [("hp", -1)], continuous=True),
-    "Regen": StatusEffectData("Regen", [("hp", 1)], continuous=True),
-    "Dark": StatusEffectData("Dark", [("attack", -1)]),
-    "Confound": StatusEffectData("Confound", [("magic", -1)]),
-    "Slow": StatusEffectData("Slow", [("move", -1)]),
-    "Haste": StatusEffectData("Haste", [("move", 1)]),
-    "Armored": StatusEffectData("Armored", [("defense", 1), ("resistance", 1)]),
-    "Root": StatusEffectData("Root", [("rooted", 1)], impairing=True),
-    "Stun": StatusEffectData("Stun", [("stunned", 1)], impairing=True)
+    "Poison": StatusEffectData("Poison", [{'stat': "hp", 'value': -1}], continuous=True),
+    "Burning": StatusEffectData("Burning", [{'stat': "hp", 'value': -1}], continuous=True),
+    "Frostbite": StatusEffectData("Frostbite", [{'stat': "hp", 'value': -1}], continuous=True),
+    "Radiation": StatusEffectData("Radiation", [{'stat': "hp", 'value': -1}], continuous=True),
+    "Swarm": StatusEffectData("Swarm", [{'stat': "hp", 'value': -1}], continuous=True),
+    "Regen": StatusEffectData("Regen", [{'stat': "hp", 'value': 1}], continuous=True),
+    "Dark": StatusEffectData("Dark", [{'stat': "attack", 'value': -1}]),
+    "Confound": StatusEffectData("Confound", [{'stat': "magic", 'value': -1}]),
+    "Slow": StatusEffectData("Slow", [{'stat': "move", 'value': -1}]),
+    "Haste": StatusEffectData("Haste", [{'stat': "move", 'value':  1}]),
+    "Armored": StatusEffectData("Armored", [{'stat': "defense", 'value':  1}, {'stat': "resistance", 'value' :1}]),
+    "Root": StatusEffectData("Root", [{'stat': "rooted", 'value': 1}], impairing=True),
+    "Stun": StatusEffectData("Stun", [{'stat': "stunned", 'value': 1}], impairing=True)
 }
 
 
@@ -55,7 +55,7 @@ class AppliedStatusEffect(StatusEffectData):
         positive_count = 0
         negative_count = 0
         for stat_change in self.effects:
-            if stat_change[1] > 0:
+            if stat_change['value'] > 0:
                 positive_count += 1
             else:
                 negative_count += 1
@@ -64,11 +64,9 @@ class AppliedStatusEffect(StatusEffectData):
     def tick_status(self, actor):
         if self.continuous:
             for effect in self.effects:
-                attribute = effect[0]
-                multiplier = effect[1]
+                attribute = effect['stat']
+                multiplier = effect['value']
                 effect = multiplier * self.magnitude
-                print getattr(actor, attribute)
-                print effect
                 new_value = getattr(actor, attribute) + effect
                 setattr(actor, attribute, new_value)
                 if self.is_beneficial:
@@ -81,10 +79,9 @@ class AppliedStatusEffect(StatusEffectData):
     def apply_status(self, actor):
         if not self.continuous:
             for effect in self.effects:
-                attribute = effect[0]
-                multiplier = effect[1]
+                attribute = effect['stat']
+                multiplier = effect['value']
                 actor.attribute_modifiers[attribute].append(multiplier * self.magnitude)
-                print self.name, 'applied to', actor.name, [actor.attribute_modifiers]
 
         if self.is_beneficial:
             self.report.add_entry("good_status", actor, cause=self.name)
@@ -99,8 +96,8 @@ class AppliedStatusEffect(StatusEffectData):
     def end_status(self, actor):
         for effect in self.effects:
             if not self.continuous:
-                attribute = effect[0]
-                multiplier = effect[1]
+                attribute = effect['stat']
+                multiplier = effect['value']
                 actor.attribute_modifiers[attribute].remove(multiplier * self.magnitude)
 
         for s in actor.status:
@@ -114,7 +111,7 @@ class AppliedStatusEffect(StatusEffectData):
             self.report.add_entry("status_ends", actor, cause=self.name)
 
 
-class TurnTracker():
+class TurnTracker:
     def __init__(self, heroes, enemies):
         self.heroes = heroes
         self.enemies = enemies
@@ -187,7 +184,7 @@ class Battle:
 
     def get_range(self, origin, arange, pathfind=False, is_move=False):
         targetable_tiles = []
-        if arange == 777: #line attack
+        if arange == 'line': #line attack
             if origin[0] == self.hero.coords[0] and origin[1] > self.hero.coords[1]: #down
                 for i in range(self.map_size[1] - origin[1]):
                     if self.bmap[origin[0]][origin[1]+i].terrain.targetable == 0:
@@ -218,7 +215,7 @@ class Battle:
             if len(targetable_tiles) > 12:
                 targetable_tiles = targetable_tiles[:13]
 
-        elif arange == 666: #global attack
+        elif arange == 'global': #global attack
             for x in range(self.map_size[0]+1):
                 for y in range(self.map_size[1]+1):
                    targetable_tiles.append((x,y))
@@ -329,7 +326,7 @@ class Battle:
                 elif effect["type"] in ["Capture", "Pushto"]:
                     self.forced_move(attacker, t, effect["type"], effect["magnitude"], affected_tiles[0])
                 elif effect["type"] == "Summon":
-                    self.summon(attacker, effect["magnitude"], targets[0])
+                    self.summon(attacker, effect["to_summon"], targets[0])
                 else:  # status effect
                     if t.hp <= 0:   #check if target is dead first
                         continue
@@ -384,7 +381,7 @@ class Battle:
         return
 
     def attack_roll(self, attacker, defender, skill):
-        if skill.aoe == 666:
+        if skill.aoe == 'global':
             return True
         if skill.stat == "attack":
             random_roll = random.randint(0, attacker.attack)
@@ -404,8 +401,8 @@ class Battle:
         return
 
     def attack_resolution(self, attacker, defender, skill, damage):
-        num_dice = int(damage[0])
-        dice_size = int(damage[1])
+        num_dice = skill.damage['num_dice']
+        dice_size = skill.damage['dice_size']
         roll = 0
         for i in range(num_dice):
             randoms = [1*(dice_size/abs(dice_size)), dice_size]  #1 or - 1

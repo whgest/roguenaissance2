@@ -188,10 +188,8 @@ def load_map(map_data):
         battle_map.append([])
         for y in range(25):
             tile = Tile(x, y)
-            print x, y
             tile, map_list = analyze_data(map_lines[y][x], battle_map, tile)
             battle_map[x].append(tile)
-    print battle_map
     return battle_map, startpos
 
 

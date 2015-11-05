@@ -177,15 +177,14 @@ class Battle_Controller:
     def add_actors(self, battle):
         b_actors = []
         for e in battle["actors"]:
+            name = e['ident']
+            stats = self.actors[name]  #pull stats from database
 
-            stats = self.actors[e['ident']]  #pull stats from database
-
-            if stats.ai[0].value == "boss":
-                enemy = RN2_initialize.Boss(stats)
+            if stats['ai'] == "boss":
+                enemy = RN2_initialize.Boss(stats, name)
             else:
-                enemy = RN2_initialize.Actor(stats)
+                enemy = RN2_initialize.Actor(stats, name)
             enemy.coords = [int(c) for c in e['loc'].split(",")]
-            enemy.name = e['ident']
             b_actors.append(enemy)
         return b_actors
 
@@ -379,17 +378,21 @@ class Battle_Controller:
                         return True #game over
 
     def add_summon(self, data, battle, RN_UI):
-        stats = self.actors[data[1]]
-        if data[3] == "enemy":
-            summon = RN2_initialize.Actor(stats)
+        name = data[1]
+        loc = data[2]
+        side = data[3]
+
+        stats = self.actors[name]
+        if side == "enemy":
+            summon = RN2_initialize.Actor(stats, name)
             battle.enemies.append(summon)
         else:
-            summon = RN2_initialize.Ally(stats)
+            summon = RN2_initialize.Ally(stats, name)
             battle.heroes.append(summon)
 
-        summon.coords = data[2]
+        summon.coords = loc
         battle.bmap[summon.coords[0]][summon.coords[1]].actor = summon
-        summon.name = data[1]
+        summon.name = name
 
         battle.turn_tracker.add_unit(summon)
         RN_UI.update_map("new", summon.coords, summon, battle.bmap)

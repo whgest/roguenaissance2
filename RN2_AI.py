@@ -89,8 +89,8 @@ class RN_AI_Class():
     def heal_allies(self):
         heal_skill = ""
         for s in self.e.skillset:
-            if self.skills[s].damage == -1:
-                heal_skill =self.skills[s]
+            if self.skills[s].damage['dice_size'] < 0:
+                heal_skill = self.skills[s]
                 if heal_skill.mp > self.e.mp:
                     logging.debug(self.e.name + ": Not enough MP for heal. MP:" + repr(self.e.mp))
                     return self.possible_attacks()
@@ -99,7 +99,7 @@ class RN_AI_Class():
         for f in self.friendly_list:
             if f[1].hp < f[1].maxhp/3:
                 if self.grid_distance(self.e.coords, f[1].coords) <= heal_skill.range:
-                    logging.debug(self.e.name + ": Heal target " + f[1] + "in range. Healing with skill" + repr(heal_skill.name))
+                    logging.debug(self.e.name + ": Heal target " + f[1].name + "in range. Healing with skill" + repr(heal_skill.name))
                     return heal_skill.name, f[1], f[2]
                 else:
                     count = 0
@@ -108,7 +108,7 @@ class RN_AI_Class():
                         if count > self.e.move:
                             break
                         if self.grid_distance(p, f[1].coords) <= heal_skill.range:
-                            logging.debug(self.e.name + ": Heal target " + f[1] + "not in range. Moving to heal with skill" + repr(heal_skill.name))
+                            logging.debug(self.e.name + ": Heal target " + f[1].name + "not in range. Moving to heal with skill" + repr(heal_skill.name))
                             return heal_skill.name, f[1], f[2]
             else:
                 continue
@@ -122,7 +122,7 @@ class RN_AI_Class():
                 continue
             if self.skills[s].damage == 0:
                 continue
-            average = (getattr(self.e, self.skills[s].stat)/3) + (self.skills[s].damage[0] * (self.skills[s].damage[1]/2)) #average damage of skill
+            average = self.skills[s].get_average_damage(self.e)
             for t in self.target_list:
                 if self.grid_distance(self.e.coords, t["unit"].coords) > 20:
                     continue
@@ -275,7 +275,7 @@ class RN_AI_Class():
                 continue
             if self.skills[s].damage == 0:
                 continue
-            average = (getattr(self.e, self.skills[s].stat)/3) + (self.skills[s].damage[0] * (self.skills[s].damage[1]/2)) #average damage of skill
+            average = self.skills[s].get_average_damage(self.e)
             for t in self.target_list:
                 if nohero == False and t['unit'] != self.battle.hero:
                     continue

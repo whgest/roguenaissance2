@@ -1,15 +1,6 @@
 """
 Roguenaissance 2.0 Game Initializer
 """
-
-
-import os
-import actors
-import battles
-import skills
-import sound as sound_class
-import maps
-import text
 import math
 import yaml
 
@@ -52,6 +43,7 @@ F9 = 290
 F10 = 291
 F11 = 292
 F12 = 293
+
 
 class ModifiableAttribute(object):
     def __init__(self, name):
@@ -105,36 +97,38 @@ class Actor(object):
     stunned = ModifiableAttribute("stunned")
     rooted = ModifiableAttribute("rooted")
 
-    def __init__(self, stats):
+    def __init__(self, stats, name):
+        self.character = ''
+        self.immunities = []
+        self.always = []
+
+        for key in stats:
+            if key not in self.MODIFIABLE_ATTRIBUTES:
+                setattr(self, key, stats[key])
 
         self.status = []
         self.attribute_modifiers = {}
 
         for attribute in self.MODIFIABLE_ATTRIBUTES:
             try:
-                base_value = int(getattr(stats, attribute)[0].value)
-            except AttributeError:
+                base_value = stats[attribute]
+            except KeyError:
                 base_value = 0
-            setattr(self, "base_" + attribute, int(base_value))
+            setattr(self, "base_" + attribute, base_value)
             setattr(self, attribute, (base_value, self.attribute_modifiers))
             self.attribute_modifiers[attribute] = []
 
         self.hp = self.maxhp
         self.set_base_mp()
-
-        self.ai = stats.ai[0].value
-        self.immunities = stats.immunities[0].value.split(",")
-        self.skillset = stats.skills[0].value.split(",")
-        self.character = stats.character[0].value
         self.coords = 0
         self.enemy = True
-        self.descr = stats.descr[0].value
         self.color = "red"
         self.is_boss = False
         self.death_animation = 'deathanim'
+        self.name = name
 
     def __str__(self):
-        return self.character
+        return self.name
 
     def display(self):
         return self.character, self.color
@@ -165,21 +159,17 @@ class Actor(object):
 
 
 class Ally(Actor):
-    def __init__(self, stats):
-        Actor.__init__(self, stats)
+    def __init__(self, stats, name):
+        Actor.__init__(self, stats, name)
         self.enemy = False
         self.color = "lime"
 
 
 class Hero(Actor):
     def __init__(self, stats, name):
-        Actor.__init__(self, stats)
-        self.hclass = ""
+        Actor.__init__(self, stats, name)
+        self.hclass = ''
         self.enemy = False
-        self.weapon = stats.weapon[0].value
-        self.armor = stats.armor[0].value
-        self.color = stats.color[0].value
-        self.name = name
         self.ai = "player"
         self.score = {"killed": 0,
                       "turns": 0,
@@ -187,14 +177,16 @@ class Hero(Actor):
         self.current_battle = 1
         self.class_name = "Mage"
         self.death_animation = 'playerdeath'
+        self.color = stats['color']
 
 
 class Boss(Actor):
-    def __init__(self, stats):
-        Actor.__init__(self, stats)
-        self.death_animation = stats.deathanim[0].value
-        self.color = stats.color[0].value
+    def __init__(self, stats, name):
+        Actor.__init__(self, stats, name)
+        self.death_animation = stats['deathanim']
+        self.color = stats.color
         self.is_boss = True
+        self.color = stats['color']
 
 
 class Skill(object):
@@ -205,7 +197,7 @@ class Skill(object):
         self.range = 0
         self.aoe = 0
         self.damage = 0
-        self.effect = []
+        self.effects = []
         self.mp = 0
         self.prompt = ""
         self.animation = ""
@@ -215,7 +207,7 @@ class Skill(object):
 
     @property
     def is_beneficial(self):
-        return self.damage == 0 or self.damage[1] < 0
+        return self.damage == 0 or self.damage['dice_size'] < 0
 
     def get_damage_range(self, attacker):
         """
@@ -223,12 +215,11 @@ class Skill(object):
         cumulative result of 2 separate six sided dice rolls)
         """
         damage = self.damage
-        print damage
         if not damage:
             return
 
-        num_dice = damage[0]
-        dice_size = abs(damage[1])
+        num_dice = damage['num_dice']
+        dice_size = abs(damage['dice_size'])
         return (getattr(attacker, self.stat)/3) + num_dice, (getattr(attacker, self.stat)/3) + (num_dice * dice_size)
 
     def get_hit_chance(self, attacker, defender):
@@ -249,88 +240,53 @@ class Skill(object):
 
         return hit_chance
 
+    def get_average_damage(self, attacker):
+        """
+        For use in AI attack evaluation
+        """
+        attacker_stat = getattr(attacker, self.stat)
+        return (attacker_stat/3) + (self.damage['num_dice'] * (self.damage['dice_size']/2))
 
-def open_xml(filename):
-    try:
-        fin = open(filename + '.xml')
-    except:
-        print filename + ".xml missing from working directory."
-        exit()
-    xml_stream = fin.read()
-    fin.close()
-    return xml_stream
 
-def make_actor(xml_stream):
-    actors_dict = dict()
-    hero_dict = dict()
-    actor_data = actors.obj_wrapper(xml_stream)[1]
-    for a in actor_data.actor:
-        actors_dict[a.attrs[u'ident']] = a
-    for h in actor_data.heroclass:
-        hero_dict[h.attrs[u'ident']] = h
-    return hero_dict, actors_dict
+def make_actor():
+    with open('actors.yaml') as actors:
+        actors_data = yaml.load(actors)
+
+    return actors_data['classes'], actors_data['actors']
 
 def make_maps():
     with open('maps.yaml') as maps:
         map_data = yaml.load(maps)
         return map_data
 
-def make_text(xml_stream):
-    text_dict = dict()
-    text_data = text.obj_wrapper(xml_stream)[1]
-    for m in text_data.text:
-        text_dict[m.attrs[u'ident']] = m
-    return text_dict
+def make_text():
+    with open('text.yaml') as text:
+        text_data = yaml.load(text)
+        return text_data
 
 def make_battle():
     with open('battles.yaml') as battles:
         battle_data = yaml.load(battles)
         return battle_data
 
-def make_skills(xml_stream):
-    skills_dict = dict()
-    skills_data = skills.obj_wrapper(xml_stream)[1]
-    for a in skills_data.skill:
-        skill = Skill()
-        skill.target = a.target[0].value
-        skill.stat = a.stat[0].value
-        skill.range = int(a.range[0].value)
-        skill.aoe = int(a.aoe[0].value)
-        skill.prompt = a.prompt[0].value
-        skill.animation = a.animation[0].value
-        skill.ident = a.attrs[u'ident']
-        skill.name = a.attrs[u'ident']
-        if a.damage[0].value == "0":
-            skill.damage = 0
-        else:
-            skill.damage = (int(a.damage[0].value.split(",")[0]), int(a.damage[0].value.split(",")[1])) #number of "dice", size of "dice"
-        skill.effects = []
-        if hasattr(a, "effect"):
-            for e in a.effect:
-                effect_attrs = {}
-                effect_attrs["magnitude"] = 1
-                effect_attrs["duration"] = None
-                effect_attrs["modifiers"] = []
-                effect_attrs["continuous"] = None
-                effect_attrs["type"] = e.type[0].value
-                if e.magnitude != []:
-                    #TODO: Stop using magnitude for summon spells and delete this crap
-                    try:
-                        effect_attrs["magnitude"] = int(e.magnitude[0].value)
-                    except ValueError:
-                        effect_attrs["magnitude"] = e.magnitude[0].value
-                if e.duration != []:
-                    effect_attrs["duration"] = int(e.duration[0].value)
-                if e.continuous != []:
-                    effect_attrs["continuous"] = int(e.continuous[0].value)
-                if e.modifier != []:
-                    for modifier in e.modifier:
-                        custom_modifier = modifier.value.split(',')
-                        custom_modifier[1] = int(custom_modifier[1])
-                        effect_attrs["modifiers"].append(custom_modifier)
-                skill.effects.append(effect_attrs)
-        skill.mp = int(a.mp[0].value)
-        skills_dict[a.attrs[u'ident']] = skill
+def make_skills():
+    skills_dict = {}
+    with open('skills.yaml') as skills:
+        skills_data = yaml.load(skills)
+
+    for skill_key in skills_data:
+        skill_raw = skills_data[skill_key]
+        skill_object = Skill()
+        for key in skill_raw:
+            setattr(skill_object, key, skill_raw[key])
+
+        skill_object.name = skill_key
+        for effect in skill_object.effects:
+            if not effect.get('duration'):
+                effect['duration'] = 0
+            if not effect.get('magnitude'):
+                effect['magnitude'] = 0
+        skills_dict[skill_object.name] = skill_object
     return skills_dict
 
 
