@@ -173,7 +173,8 @@ class Tile():
         elif self.terrain != None:
             return [self.terrain.character, self.terrain.fgcolor, self.terrain.bgcolor]
         else:
-            pass #empty tile error
+            raise ValueError
+
 
 def load_map(map_data):
     startpos = []

@@ -201,13 +201,10 @@ class Skill(object):
         self.mp = 0
         self.prompt = ""
         self.animation = ""
+        self.is_beneficial = 0
 
     def __str__(self):
         return self.ident
-
-    @property
-    def is_beneficial(self):
-        return self.damage == 0 or self.damage['dice_size'] < 0
 
     def get_damage_range(self, attacker):
         """
@@ -217,6 +214,9 @@ class Skill(object):
         damage = self.damage
         if not damage:
             return
+
+        if damage.get('fixed_damage'):
+            return abs(damage.get('fixed_damage')), abs(damage.get('fixed_damage'))
 
         num_dice = damage['num_dice']
         dice_size = abs(damage['dice_size'])

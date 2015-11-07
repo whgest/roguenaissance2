@@ -436,7 +436,11 @@ class RN_UI_Class():
             color = 'lime' if skill.is_beneficial else 'darkred'
             noun = 'Healing: ' if skill.is_beneficial else 'Damage: '
             dmg_range = skill.get_damage_range(attacker)
-            self.menutext(51, 16, noun + str(dmg_range[0]) + " - " + str(dmg_range[1]), fgcolor=color)
+
+            if dmg_range[0] != dmg_range[1]:
+                self.menutext(51, 16, noun + str(dmg_range[0]) + " - " + str(dmg_range[1]), fgcolor=color)
+            else:
+                self.menutext(51, 16, noun + str(dmg_range[0]), fgcolor=color)
 
         self.print_additional_effects(skill, starting_line=18)
         self.screen.update()
@@ -479,7 +483,10 @@ class RN_UI_Class():
             color = 'lime' if skill.is_beneficial else 'darkred'
             noun = 'Healing: ' if skill.is_beneficial else 'Damage: '
             dmg_range = skill.get_damage_range(attacker)
-            self.menutext(51, 16, noun + str(dmg_range[0]) + " - " + str(dmg_range[1]), fgcolor=color)
+            if dmg_range[0] != dmg_range[1]:
+                self.menutext(51, 16, noun + str(dmg_range[0]) + " - " + str(dmg_range[1]), fgcolor=color)
+            else:
+                self.menutext(51, 16, noun + str(dmg_range[0]), fgcolor=color)
 
         self.print_additional_effects(skill, starting_line=19)
 

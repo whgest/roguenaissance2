@@ -315,7 +315,7 @@ class Battle:
     def skill_effect(self, attacker, skill, targets, affected_tiles):
         for t in targets:
             if skill.damage != 0:
-                damage = self.attack_resolution(attacker, t, skill, skill.damage)
+                damage = self.damage_roll(attacker, t, skill)
             for effect in skill.effects:
                 if effect["type"] in ["Drain"]:
                     attacker.hp += damage
@@ -400,27 +400,29 @@ class Battle:
                 return False
         return
 
-    def attack_resolution(self, attacker, defender, skill, damage):
-        num_dice = skill.damage['num_dice']
-        dice_size = skill.damage['dice_size']
-        roll = 0
-        for i in range(num_dice):
-            randoms = [1*(dice_size/abs(dice_size)), dice_size]  #1 or - 1
-            randoms.sort()
-            roll = roll + random.randint(*randoms)
-        if skill.stat == "attack":
-            inflicted_damage = roll + (attacker.attack/3)*(roll/abs(roll))
-        elif skill.stat == "magic":
-            inflicted_damage = roll + (attacker.magic/3)*(roll/abs(roll))
+    def damage_roll(self, attacker, defender, skill):
+        inflicted_damage = 0
+
+        if skill.damage.get('fixed_damage'):
+            inflicted_damage = skill.damage['fixed_damage']
         else:
-            inflicted_damage = 0
+            num_dice = skill.damage['num_dice']
+            dice_size = skill.damage['dice_size']
+            roll = 0
+            for i in range(num_dice):
+                randoms = [1*(dice_size/abs(dice_size)), dice_size]  #1 or - 1
+                randoms.sort()
+                roll = roll + random.randint(*randoms)
+                inflicted_damage = roll + (getattr(attacker, skill.stat)/3)*(roll/abs(roll))
+
         defender.hp -= inflicted_damage
         if defender.hp > defender.maxhp:
             defender.hp = defender.maxhp
-        if dice_size < 0:
+        if inflicted_damage < 0:
             self.report.add_entry("heal", defender, cause=skill.name, effect=str(abs(inflicted_damage)))
         else:
             self.report.add_entry("damage", defender, cause=skill.name, effect=str(abs(inflicted_damage)))
+
         if defender == self.hero and inflicted_damage > 0:
             self.hero.score['damage'] += inflicted_damage
         return inflicted_damage
