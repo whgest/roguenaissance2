@@ -795,19 +795,19 @@ class RN_UI_Class():
         self.title_text(10, 10, "ENEMIES SLAIN:                       " + str(hero.score['killed']), fgcolor='aqua')
         sleep(3)
         print hero.score
-        score = 500 - (hero.score['turns'] * 3.5) - hero.score['damage'] + (hero.score['killed'] * 8)
+        score = 500 - (hero.score['turns'] * 4.5) - (hero.score['damage'] * 2) + (hero.score['killed'] * 10)
         self.title_text(10, 18, "FINAL SCORE:                         " + str(score))
         sleep(3)
         grade = "F"
-        if score < 100:
+        if score < 200:
             grade = "D"
-        if score > 100:
-            grade = "C"
         if score > 200:
-            grade = "B"
+            grade = "C"
         if score > 300:
-            grade = "A"
+            grade = "B"
         if score > 400:
+            grade = "A"
+        if score > 450:
             grade = "S"
         self.title_text(10, 20, "GRADE:                                 " + grade, fgcolor="lime")
         try:

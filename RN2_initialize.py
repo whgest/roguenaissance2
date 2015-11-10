@@ -184,7 +184,6 @@ class Boss(Actor):
     def __init__(self, stats, name):
         Actor.__init__(self, stats, name)
         self.death_animation = stats['deathanim']
-        self.color = stats.color
         self.is_boss = True
         self.color = stats['color']
 

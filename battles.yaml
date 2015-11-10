@@ -2,8 +2,8 @@
   intro: battle1
   map: tunnel
   music:
-    -battle1a
-    -battle1b
+    - battle1a
+    - battle1b
 
   actors:
     -

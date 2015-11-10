@@ -335,10 +335,10 @@ class Battle_Controller:
     def make_unit_list(self, battle):
         unit_list = []
         for h in battle.heroes:
-            if (h.character, h.name) not in unit_list:
+            if (h.character, h.name, h.color) not in unit_list:
                 unit_list.append((h.character, h.name, h.color))
         for e in battle.enemies:
-            if (e.character, e.name) not in unit_list:
+            if (e.character, e.name, e.color) not in unit_list:
                 unit_list.append((e.character, e.name, e.color))
         return unit_list
 

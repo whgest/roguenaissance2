@@ -203,7 +203,7 @@ class Battle:
                         break
                     else:
                         targetable_tiles.append((origin[0]+i, origin[1]))
-            if origin[1] == self.hero.coords[1] and origin [0] < self.hero.coords[0]: #left
+            if origin[1] == self.hero.coords[1] and origin[0] < self.hero.coords[0]: #left
                 for i in range(origin[0]+1):
                     if self.bmap[origin[0]-i][origin[1]].terrain.targetable == 0:
                         break
@@ -218,7 +218,7 @@ class Battle:
         elif arange == 'global': #global attack
             for x in range(self.map_size[0]+1):
                 for y in range(self.map_size[1]+1):
-                   targetable_tiles.append((x,y))
+                   targetable_tiles.append((x, y))
 
         else:
             targetable_tiles = [tuple(origin)]       #list of tuple coordinates of tiles that are in attack range

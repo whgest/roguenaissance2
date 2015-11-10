@@ -32,7 +32,7 @@ Summon 4DHypercube:
   damage: 0
   effects:
     - type: Summon
-      magnitude: 4D Hypercube
+      to_summon: 4D Hypercube
   mp: -1
   prompt: Summon a ravenous beast from a more advanced dimension.
   animation: summon
