@@ -141,9 +141,9 @@ class TerrainMod():
     def __init__(self):
         self.name = ""
         self.fgcolor = ""
+        self.bgcolor = ""
         self.character = ""
         self.movecost = ""
-        self.targetable = 1
 
 class BMap():
     def __init__(self):

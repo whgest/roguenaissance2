@@ -189,6 +189,15 @@ class Boss(Actor):
 
 
 class Skill(object):
+    AFFECTS_TEXT = {
+        "enemy": "Enemies",
+        "friendly": "Allies",
+        "tile": "All",
+        "empty": "",
+        "self": "Self"
+    }
+
+
     def __init__(self):
         self.ident = ""
         self.target = ""
@@ -246,6 +255,15 @@ class Skill(object):
         attacker_stat = getattr(attacker, self.stat)
         return (attacker_stat/3) + (self.damage['num_dice'] * (self.damage['dice_size']/2))
 
+    def get_skill_prompt(self):
+        prompt = self.prompt
+        prompt += " Range: %s" % str(self.range)
+        if self.aoe > 1:
+            prompt += " Area: %s" % str(self.aoe).capitalize()
+        if self.AFFECTS_TEXT.get(self.target):
+            prompt += " Affects: %s" % self.AFFECTS_TEXT.get(self.target)
+
+        return prompt
 
 def make_actor():
     with open('actors.yaml') as actors:

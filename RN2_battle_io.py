@@ -235,6 +235,7 @@ class Battle_Controller:
                     battle.move_range = 0
                     battle.move_range = battle.get_range(tuple(battle.active.coords), battle.active.move, pathfind=True, is_move=True)
                     RN_UI.highlight_area(True, battle.move_range, battle.bmap, "teal")
+                    RN_UI.print_prompt("arrows = move. a = attack. s = use skills. space = end turn. h = help")
                     turn_ended = False
                     while not turn_ended:
                         RN_UI.print_status(battle.active, battle.bmap[battle.active.coords[0]][battle.active.coords[1]].terrain)
@@ -249,6 +250,7 @@ class Battle_Controller:
                             self.prep_state(battle, RN_UI)
 
                     if battle.state == "confirmed":
+                        RN_UI.print_prompt()
                         self.report.add_entry("use_skill", battle.active, battle.selected_skill.name)
                         RN_UI.print_narration(self.report.process_report())
                         RN2_animations.RN_Animation_Class(battle.affected_tiles, self.RN_sound, RN_UI, battle.selected_skill.animation, battle.bmap, battle.active.coords)
@@ -424,13 +426,15 @@ class Battle_Controller:
             battle.targetable_tiles = None
             RN_UI.print_legend(battle.bmap.legend_list, battle.unit_list)
             RN_UI.highlight_area(True, battle.move_range, battle.bmap, "teal")
+            RN_UI.print_prompt("arrows = move. a = attack. s = use skills. space = end turn. h = help")
         elif battle.state == "target":
             battle.attack_target = None
             battle.affected_tiles = None
             x = battle.active.coords[0]
             y = battle.active.coords[1]
             RN_UI.cursor.move_cursor(x, y, battle.bmap[x][y])
-            RN_UI.print_prompt(battle.selected_skill.name + " --- " + "Choose target tile. (Range: " + str(battle.selected_skill.range) + ")")
+            noun = "tile" if battle.selected_skill.aoe == 0 else "area"
+            RN_UI.print_prompt(battle.selected_skill.name + " --- " + "Choose target %s." % noun)
             targeted_aoe = battle.get_range((x, y), battle.selected_skill.aoe)
             self.highlight_targetable_area(battle, targeted_aoe, (x, y), RN_UI)
             self.print_target_display(targeted_aoe, RN_UI)

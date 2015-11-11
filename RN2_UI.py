@@ -16,7 +16,7 @@ import os
 from time import sleep
 import random
 import math
-
+from threading import Timer, Thread, Event
 
 class RN_Cursor():
     def __init__(self, UI):
@@ -42,11 +42,94 @@ class RN_Cursor():
 
         self.UI.screen.update()
 
+
+class IntervalTimer(Thread):
+    def __init__(self, stopEvent, interval, func):
+        Thread.__init__(self)
+        self.stopped = stopEvent
+        self.interval = interval
+        self.func = func
+
+    def run(self):
+        while not self.stopped.wait(self.interval):
+            self.func()
+
+
+class RNScrollablePrompt:
+    def __init__(self, UI):
+        self.UI = UI
+        self.coords = (1, 28, 73, 1)
+        self.length = 72
+        self.current_index = 0
+        self.initial_delay = 1.0
+        self.tick_delay = 0.2
+        self.prompt_text = ''
+        self.stop_timer = Event()
+        self.loop_spacer = 5
+        self.init = None
+        self.prompt_length = 0
+
+    def reset(self):
+        self.current_index = 0
+        try:
+            self.init.cancel()
+        except:
+            pass
+        self.UI.blank(self.coords)
+        self.stop_timer.set()
+
+    def slice_prompt(self):
+        prompt = self.prompt_text + (self.loop_spacer * " ")
+        prompt_slice = prompt[self.current_index:self.current_index + self.length]
+
+        if len(prompt_slice) < self.length:
+            #loop text
+            prompt_slice2_size = (self.length - len(prompt_slice))
+
+            prompt_slice +=prompt[0:prompt_slice2_size]
+
+        return prompt_slice
+
+    def start_tick(self):
+        tick = IntervalTimer(self.stop_timer, self.tick_delay, self.display_tick)
+        #un-stop timer
+        self.stop_timer.clear()
+        tick.start()
+
+    def display_tick(self):
+        self.UI.menutext(self.coords[0], self.coords[1], self.slice_prompt())
+        self.UI.screen.update()
+        self.current_index += 1
+        if self.current_index >= self.prompt_length + self.loop_spacer:
+            self.current_index = 0
+
+    def print_skill_description(self, skill, get_adjusted_mp):
+        self.prompt_text = "(MP: " + str(get_adjusted_mp(skill)) + ") " + skill.get_skill_prompt()
+        self.draw_prompt()
+
+    def print_prompt(self, text):
+        if self.prompt_text != text:
+            self.prompt_text = text
+            self.draw_prompt()
+
+    def draw_prompt(self):
+        self.reset()
+
+        self.prompt_length = len(self.prompt_text)
+        if self.prompt_length > self.length:
+            self.display_tick()
+            self.init = Timer(self.initial_delay, self.start_tick)
+            self.init.start()
+        else:
+            self.UI.menutext(self.coords[0], self.coords[1], self.prompt_text)
+
+
 class RN_UI_Class():
     def __init__(self):
         self.grid_size = (75, 45)
         self.screen = pygcurse.PygcurseWindow(self.grid_size[0], self.grid_size[1])
         self.cursor = RN_Cursor(self)
+        self.scrolling_prompt = RNScrollablePrompt(self)
         self.screen._autoupdate = False
         self.screen.update()
         pygame.display.set_caption("ASCIIMANCER")
@@ -223,11 +306,11 @@ class RN_UI_Class():
             self.menutext(55, (3+i), skill)
 
         self.text(55, 3+skill_index, skills[skill_index], bgcolor=self.select_color)
-        self.print_skill_prompt(prompt, skill_data[skills[skill_index]], get_adjusted_mp)
+        self.scrolling_prompt.print_skill_description(skill_data[skills[skill_index]], get_adjusted_mp)
         self.screen.update()
 
     def print_turn(self, a, hero=True):
-        self.blank((51,24,23,1))
+        self.blank((51, 24, 23, 1))
         if hero:
             color = "lime"
         else:
@@ -236,13 +319,10 @@ class RN_UI_Class():
         return
 
     def print_prompt(self, s=""):
-        self.blank((1, 28, 73, 1))
-        self.menutext(1, 28, s)
-
-    def print_skill_prompt(self, prompt, skill, get_adjusted_mp):
-        self.blank((1,28,73,1))
-        self.menutext(1,28,"(MP: " + str(get_adjusted_mp(skill)) + ")")
-        self.menutext(9, 28, prompt)
+        if s:
+            self.scrolling_prompt.print_prompt(s)
+        else:
+            self.scrolling_prompt.reset()
 
     def print_map(self, battle_map):
         for x in range (50):

@@ -49,7 +49,7 @@ Gravity Surge:
     - type: Push
       magnitude: 3
   mp: 0
-  prompt: Damage enemies and pushes 3 spaces. Range 5, area 1.
+  prompt: Damage enemies and pushes 3 spaces.
   animation: surge
 
 Zodiac Curse:
@@ -70,7 +70,7 @@ Zodiac Curse:
       magnitude: 2
       duration: 2
   mp: 0
-  prompt: Damages enemy and inflicts minor darkness and slow. Range 7.
+  prompt: Damages enemy and inflicts minor darkness and slow.
   animation: push
 
 Soothing Starlight:
@@ -86,7 +86,7 @@ Soothing Starlight:
       magnitude: 4
       duration: 4
   mp: 2
-  prompt: Regenerates lost health. Range 4, area 1.
+  prompt: Heals and bestows Regen.
   animation: heal
 
 
@@ -101,7 +101,7 @@ Time Distortion:
       magnitude: 3
       duration: 4
   mp: 2
-  prompt: Hastens allies, slows enemies. Range 7, area 3.
+  prompt: Bestows Haste on allies, inflicts Slow on enemies.
   animation: heal
 
 
@@ -120,7 +120,7 @@ Singularity:
     - type: Capture
       magnitude: 5
   mp: 3
-  prompt: Pulls in and roots all enemies in area. Range 10, area 5.
+  prompt: Pulls in and roots all enemies in area.
   animation: singularity
 
 
@@ -137,7 +137,7 @@ Meteor:
       magnitude: 3
       duration: 3
   mp: 3
-  prompt: Damages all units and inflicts Burn. Range 5, area 3.
+  prompt: Damages all units and inflicts Burn.
   animation: meteor
 
 
@@ -154,7 +154,7 @@ Gamma Ray:
     - type: Radiation
       magnitude: 2
       duration: 3
-  prompt: Damages all units and inflicts radiation. Fires in a line.
+  prompt: Damages all units in a line and inflicts radiation.
   animation: gamma
 
 
@@ -205,7 +205,7 @@ Flash Freeze:
       magnitude: 2
       duration: 3
   mp: 0
-  prompt: Damages enemy and inflicts slow. Range 7.
+  prompt: Damages enemy and inflicts slow.
   animation: freeze
 
 
@@ -221,7 +221,7 @@ Ice Spear:
     - type: Push
       magnitude: 3
   mp: 1
-  prompt: Skewer enemy for damage and push. Range 5.
+  prompt: Skewer enemy for damage and push.
   animation: ice toss
 
 Pyrokinesis:
@@ -237,7 +237,7 @@ Pyrokinesis:
       magnitude: 2
       duration: 3
   mp: 1
-  prompt: Damages units and inflicts Burning. Range 6, area 2.
+  prompt: Damages units and inflicts Burning.
   animation: fire ball
 
 
@@ -253,7 +253,7 @@ Life Drain:
     - type: Drain
       magnitude: 1
   mp: 1
-  prompt: Absorbs HP from an enemy. Range 7.
+  prompt: Absorbs HP from an enemy.
   animation: drain
 
 
@@ -273,7 +273,7 @@ Frostburn:
       magnitude: 2
       duration: 4
   mp: 2
-  prompt: Damages enemy and inflicts Burning and Frostbite. Range 9.
+  prompt: Damages enemy and inflicts Burning and Frostbite.
   animation: frostfire
 
 
@@ -290,7 +290,7 @@ Icy Prison:
       duration: 3
       magnitude: 1
   mp: 1
-  prompt: Damages enemy and inflicts Root. Range 7.
+  prompt: Damages enemy and inflicts Root.
   animation: freeze
 
 
@@ -310,7 +310,7 @@ Absolute Zero:
       magnitude: 3
       duration: 3
   mp: 5
-  prompt: Damages all units and inflicts Frostbite, Stun. Range 3, area 4.
+  prompt: Damage in a wide area and inflicts Frostbite, Stun.
   animation: zero
 
 Fuse Atom:
@@ -413,7 +413,7 @@ Rock Toss:
     - type: Push
       magnitude: 4
   mp: 1
-  prompt: Telekinetically toss a large rock for damage and push. Range 5.
+  prompt: Telekinetically toss a large rock for damage and push.
   animation: rock toss
 
 
@@ -432,7 +432,7 @@ Hornet Swarm:
       magnitude: 2
       duration: 4
   mp: 1
-  prompt: Send angry hornets to injure and lower magic attack. Range 9.
+  prompt: Send angry hornets to injure and lower magic attack.
   animation: rock toss
 
 
@@ -451,7 +451,7 @@ Venom Slash:
     - type: Push
       magnitude: 1
   mp: 2
-  prompt: An empowered melee strike that poisons. Area 1.
+  prompt: An empowered melee strike that poisons.
   animation: venom
 
 
@@ -467,7 +467,7 @@ Thunderbolt:
     - type: Root
       duration: 3
   mp: 2
-  prompt: Damages enemy and inflicts Root. Range 7.
+  prompt: Damages enemy and inflicts Root.
   animation: tbolt
 
 
@@ -483,7 +483,7 @@ Vine Grasp:
     - type: Pull
       magnitude: 9
   mp: 1
-  prompt: Damage and pull a distant enemy to you. Range 9.
+  prompt: Damage and pull a distant enemy to you.
   animation: vine
 
 
@@ -542,7 +542,7 @@ Ascendance:
       continuous: 0
       duration: 4
   mp: 7
-  prompt: Massively increase physical attack and defenses for 3 turns.
+  prompt: Massively increase physical attack, move, and defenses.
   animation: ascend
 
 Summon Spring Wind:
@@ -633,7 +633,7 @@ Cosmic Barrage:
       magnitude: 2
       duration: 4
   mp: 3
-  prompt: Highly damaging cosmic projectiles. Range 5, area 2.
+  prompt: Highly damaging cosmic projectiles.
   animation: fire ball
 
 Snowball Crush:
@@ -727,7 +727,7 @@ Megastomp:
       magnitude: 2
       duration: 3
   mp: 3
-  prompt: Damage and slow nearby enemies. Area 2.
+  prompt: Damage and slow nearby enemies.
   animation: punch
 
 Skelestomp:
@@ -743,7 +743,7 @@ Skelestomp:
       magnitude: 2
       duration: 3
   mp: 3
-  prompt: Damage and slow nearby enemies. Area 2.
+  prompt: Damage and slow nearby enemies.
   animation: punch
 
 
@@ -781,7 +781,7 @@ Soothing Breeze:
   damage:
     fixed_damage: -5
   mp: 0
-  prompt: Heal a friendly target. Range 2.
+  prompt: Heal a friendly target.
   animation: heal
 
 Healstorm:
