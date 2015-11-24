@@ -131,12 +131,12 @@ class Game():
 def main():
     #test mode
     game = Game()
-    game.init_hero("Astromancer", "StrongoDragonlord")
+    game.init_hero("Pyromancer", "StrongoDragonlord")
     game.hero.mp = 99
     game.hero.hp = 100
     game.hero.attribute_modifiers['move'] = [10]
     game.RN_sound.mute_switch = True
-    game.init_battle(1)
+    game.init_battle(2)
     exit()
 
     while 1:

@@ -527,6 +527,7 @@ class Battle:
                 path.append([defender.coords[0], defender.coords[1]+(1*direction)])
             defender.coords = path[-1]
 
+            #TODO: CRASHES ON FORCED MOVE OUT OF BOUNDS
             defender_on_tile = self.bmap[defender.coords[0]][defender.coords[1]]
 
             if self.check_bounds(defender.coords) == True or defender_on_tile.actor is not None or defender_on_tile.terrain.blocking == 1:

@@ -152,7 +152,11 @@ class BMap():
         self.terrain_types = [(".", Grass()), (",", Stone()), ("~", Water()), ("L", Lava()), ("X", Pit()), ("G", Goal()), ("*", Wall()), ("|", Wood())]
 
     def __getitem__(self, item):
-        return self.contents[item]
+        try:
+            return self.contents[item]
+        except:
+            print item
+            raise IndexError
 
     def append(self, obj):
         self.contents.append(obj)
