@@ -16,7 +16,7 @@ import os
 from time import sleep
 import random
 import math
-from threading import Timer, Thread, Event
+from threading import Timer, Thread, Event, Lock
 
 class RN_Cursor():
     def __init__(self, UI):
@@ -98,8 +98,11 @@ class RNScrollablePrompt:
 
     def display_tick(self):
         self.UI.menutext(self.coords[0], self.coords[1], self.slice_prompt())
-        self.UI.screen.update()
+
+        #try pygame events/time instead i guess
+        #self.UI.screen.update()
         self.current_index += 1
+
         if self.current_index >= self.prompt_length + self.loop_spacer:
             self.current_index = 0
 

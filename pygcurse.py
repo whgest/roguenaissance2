@@ -57,6 +57,7 @@ import sys
 import textwrap
 import pygame
 from pygame.locals import *
+from threading import Lock
 
 """
 Some nomenclature in this module's comments explained:
@@ -153,6 +154,7 @@ class PygcurseSurface(object):
         self._cursorstack = []
         self._width = width
         self._height = height
+        self.lock = Lock()
 
         # The self._screen* members are 2D lists that store data for each cell of the PygcurseSurface object. _screenchar[x][y] holds the character at cell x, y. _screenfgcolor and _screenbgcolor  stores the foreground/background color of the cell, etc.
         self._screenchar = [[None] * height for i in range(width)]
@@ -346,6 +348,9 @@ def pygprint(self, obj='', *objs, sep=' ', end='\n', fgcolor=None, bgcolor=None,
         return spaces % self._width, y + int(spaces / self._width)
 
 
+
+
+
     def update(self):
         """
         Update the encapsulated pygame.Surface object to match the state of this PygcurseSurface object. This needs to be done before the pygame.Surface object is blitted to the screen if you want the most up-to-date state displayed.
@@ -360,7 +365,9 @@ def pygprint(self, obj='', *objs, sep=' ', end='\n', fgcolor=None, bgcolor=None,
         """
 
         # TODO - None of this code is optimized yet.
+        self.lock.acquire()
         all_dirty_cells = []
+
 
         # "Dirty" means that the cell's state has been altered on the backend and it needs to be redrawn on pygame.Surface object (which will make the cell "clean").
         for x in range(self._width):
@@ -382,7 +389,7 @@ def pygprint(self, obj='', *objs, sep=' ', end='\n', fgcolor=None, bgcolor=None,
                     self._surfaceobj.fill(cellbgcolor, cellrect)
 
                     if self._screenchar[x][y] == ' ':
-                        continue # don't need to render anything if it is just a space character.
+                        continue
 
                     # render the character and draw it to the surface
                     charsurf = self._font.render(self._screenchar[x][y], 1, cellfgcolor, cellbgcolor)
@@ -395,15 +402,13 @@ def pygprint(self, obj='', *objs, sep=' ', end='\n', fgcolor=None, bgcolor=None,
 
         # automatically blit to "window surface" pygame.Surface object if it was set.
         if self._windowsurface is not None and self._autoblit:
-            starttime = time.time()
-            #print "BLITTING"
             self._windowsurface.blit(self._surfaceobj, self._surfaceobj.get_rect())
             if self._autodisplayupdate:
-                #print time.time()-starttime, "UPDATING", len(all_dirty_cells), "CELLS"
                 pygame.display.update(all_dirty_cells)
-                #pygame.display.update()
-                #print time.time()-starttime, "DONE"
 
+
+
+        self.lock.release()
 
     def _drawinputcursor(self):
         """Draws the input cursor directly onto the self._surfaceobj Surface object, if self._inputcursormode is not None."""
