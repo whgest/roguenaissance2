@@ -183,37 +183,23 @@ class Battle:
             return False, active_actor
 
     def get_range(self, origin, arange, pathfind=False, is_move=False):
-        targetable_tiles = []
-        if arange == 'line': #line attack
-            if origin[0] == self.hero.coords[0] and origin[1] > self.hero.coords[1]: #down
-                for i in range(self.map_size[1] - origin[1]):
-                    if self.bmap[origin[0]][origin[1]+i].terrain.targetable == 0:
-                        break
-                    else:
-                        targetable_tiles.append((origin[0], origin[1]+i))
-            if origin[0] == self.hero.coords[0] and origin [1] < self.hero.coords[1]: #up
-                for i in range(origin[1]+1):
-                    if self.bmap[origin[0]][origin[1]-i].terrain.targetable == 0:
-                        break
-                    else:
-                        targetable_tiles.append((origin[0], origin[1]-i))
-            if origin[1] == self.hero.coords[1] and origin [0] > self.hero.coords[0]: #right
-                for i in range(self.map_size[0]-origin[0]):
-                    if self.bmap[origin[0]+i][origin[1]].terrain.targetable == 0:
-                        break
-                    else:
-                        targetable_tiles.append((origin[0]+i, origin[1]))
-            if origin[1] == self.hero.coords[1] and origin[0] < self.hero.coords[0]: #left
-                for i in range(origin[0]+1):
-                    if self.bmap[origin[0]-i][origin[1]].terrain.targetable == 0:
-                        break
-                    else:
-                        targetable_tiles.append((origin[0]-i, origin[1]))
-            else:
-                targetable_tiles.append((origin[0], origin[1]))
 
-            if len(targetable_tiles) > 12:
-                targetable_tiles = targetable_tiles[:13]
+        #TODO: un-hardcode this
+        LINE_ATTACK_RANGE = 12
+        targetable_tiles = []
+
+        if arange == 'line': #line attack
+            line_dir = []
+            for i in range(2):
+                diff = origin[i] - self.hero.coords[i]
+                line_dir.append(0 if not diff else diff / abs(diff))
+
+            for i in range(LINE_ATTACK_RANGE):
+                next_tile_coords = (origin[0] + (i * line_dir[0]), origin[1] + (i * line_dir[1]))
+                if self.bmap.get_tile_at(next_tile_coords) and self.bmap.get_tile_at(next_tile_coords).terrain.targetable:
+                    targetable_tiles.append(next_tile_coords)
+                else:
+                    break
 
         elif arange == 'global': #global attack
             for x in range(self.map_size[0]+1):
@@ -237,6 +223,9 @@ class Battle:
                     if t not in targetable_tiles and 0 <= t[0] <= 49 and 0 <= t[1] <= 24:
                         targetable_tiles.append(t)
         remove_list = []
+
+
+
 
         for t in targetable_tiles:
             if (is_move and self.bmap[t[0]][t[1]].terrain.movable == 0) or (not is_move and self.bmap[t[0]][t[1]].terrain.targetable == 0):

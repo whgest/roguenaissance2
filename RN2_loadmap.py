@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
-import time
+import random
 
 #logging.basicConfig(filename="logs/rn_debug(" + time.asctime() + ").log", filemode="w", level=logging.DEBUG)
 
@@ -16,6 +16,7 @@ class Terrain():
         self.blocking = 0
         self.moveable = 1
         self.fatal = 0
+        self.flammable = 1
 
 #Terrain types:
 
@@ -137,15 +138,73 @@ class Wood(Terrain):
     def terrain_effect(self):
         pass   #death
 
-class TerrainMod():
+
+class TerrainMod:
     def __init__(self):
         self.name = ""
-        self.fgcolor = ""
-        self.bgcolor = ""
-        self.character = ""
-        self.movecost = ""
+        self.fgcolor = None
+        self.bgcolor = None
+        self.character = None
+        self.movecost = 0
+        self.damage = 0
+        self.total_duration = 0
+        self.current_duration = self.total_duration
+        self.removed = False
+        self.priority = 0
 
-class BMap():
+    def apply(self, tile, apply_chance=100):
+        tile.terrainmod = self
+
+    def tick_duration(self):
+        self.current_duration -= 1
+        if self.current_duration == 0:
+            self.remove_mod()
+
+    def remove_mod(self):
+        self.removed = True
+
+
+class Flaming(TerrainMod):
+    def __init__(self):
+        TerrainMod.__init__(self)
+        self.name = 'flaming'
+        self.fgcolor = 'orange'
+        self.bgcolor = None
+        self.character = u'ψ'
+        self.movecost = 0
+        self.damage = 5
+        self.total_duration = 3
+        self.current_duration = self.total_duration
+        self.removed = False
+        self.priority = 7
+
+    def apply(self, tile, apply_chance=100):
+        if tile.flammable:
+            rand = random.randint(0, 100)
+            if rand > apply_chance:
+                tile.terrainmod = Flaming()
+
+    def remove_mod(self):
+        self.removed = True
+        #change mod to "burned"
+
+
+class Burned(TerrainMod):
+    def __init__(self):
+        TerrainMod.__init__(self)
+        self.name = 'burned'
+        self.fgcolor = 'gray'
+        self.bgcolor = None
+        self.character = None
+        self.movecost = 0
+        self.damage = 0
+        self.total_duration = 0
+        self.current_duration = self.total_duration
+        self.removed = False
+        self.priority = 1
+
+
+class BMap:
     def __init__(self):
         self.contents = []
         self.legend_list = []
@@ -157,7 +216,14 @@ class BMap():
     def append(self, obj):
         self.contents.append(obj)
 
-class Tile():
+    def get_tile_at(self, coords):
+        try:
+            return self.contents[coords[0]][coords[1]]
+        except IndexError:
+            return False
+
+
+class Tile:
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -165,15 +231,28 @@ class Tile():
         self.terrain = None
         self.terrainmod = None
 
-    def display(self):
-        if self.actor != None:
-            return [self.actor.character, self.actor.color, self.terrain.bgcolor]
-        elif self.terrainmod != None:
-            return [self.terrainmod.character, self.terrainmod.color, self.terrain.bgcolor]
-        elif self.terrain != None:
-            return [self.terrain.character, self.terrain.fgcolor, self.terrain.bgcolor]
+    def __getattr__(self, name):
+        if self.terrainmod and getattr(self.terrainmod, name):
+            return getattr(self.terrainmod, name)
+        elif self.terrain and getattr(self.terrain, name):
+            return getattr(self.terrain, name)
         else:
-            raise ValueError
+            return getattr(self, name)
+
+    def display(self):
+        to_display = {}
+        for attr in ('character', 'fgcolor', 'color', 'bgcolor'):
+            if getattr(self.actor, attr, None):
+                if attr == 'color':
+                    to_display['fgcolor'] = self.actor.color
+                else:
+                    to_display[attr] = getattr(self.actor, attr)
+            elif getattr(self.terrainmod, attr, None):
+                to_display[attr] = getattr(self.terrainmod, attr)
+            elif getattr(self.terrain, attr, None):
+                to_display[attr] = getattr(self.terrain, attr)
+
+        return [to_display['character'], to_display['fgcolor'], to_display['bgcolor']]
 
 
 def load_map(map_data):

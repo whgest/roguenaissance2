@@ -123,6 +123,29 @@ class BattleReport:
         self.RN_UI.print_narration(self.narration_q)
 
 
+class Player_Controlled_Turn:
+    def __init__(self, hero, battle_data, bmap, UI, RN_sound, skills, actors, input):
+        self.hero = hero
+        self.heroname = hero.name
+        self.heroclass = hero.hclass
+        self.battle_data = battle_data
+        self.bmap = bmap
+        self.input = input
+        self.skills = skills
+        self.actors = actors
+        self.UI = UI
+        self.RN_sound = RN_sound
+        self.mute_switch = False
+        self.states = {
+            "move": self.movestate,
+            "target": self.targetstate,
+            "skills": self.skillmenu,
+            "battle": self.battlemenu,
+            "confirm": self.confirmstate
+        }
+        self.heroes = []
+
+
 class Battle_Controller:
     def __init__(self, hero, battle_data, bmap, UI, RN_sound, skills, actors, input):
 
