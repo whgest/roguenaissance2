@@ -136,7 +136,7 @@ def main():
     game.hero.hp = 100
     game.hero.attribute_modifiers['move'] = [10]
     game.RN_sound.mute_switch = True
-    game.init_battle(2)
+    game.init_battle(1)
     exit()
 
     while 1:

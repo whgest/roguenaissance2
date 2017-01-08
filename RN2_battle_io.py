@@ -40,18 +40,14 @@ class BattleReportWord:
 
 
 class BattleReport:
-    def __init__(self, heroes, enemies, RN_UI):
+    def __init__(self, RN_UI):
         self.RN_UI = RN_UI
         self.narration_q_length = 13
         self.strip_string = string_module.punctuation.replace("%", "")
         self.narration_q = []
         for i in range(self.narration_q_length):
             self.narration_q.append('')
-        self.ally_names = []
-        self.enemy_names = []
         self.turn_report = []
-        self.ally_names = [h.name for h in heroes]
-        self.enemy_names = [e.name for e in enemies]
         self.report_formats = {
             "use_skill": BattleReportLine("%unit: --%cause--", cause_color='skill'),
             "damage": BattleReportLine("%unit: Suffers %effect damage from %cause.", cause_color='skill', effect_color='damage'),
@@ -74,14 +70,7 @@ class BattleReport:
         }
 
     def colorize_unit_name(self, unit):
-        if isinstance(unit, RN2_initialize.Hero):
-            return "hero_name"
-        elif isinstance(unit, RN2_initialize.Ally):
-            return "ally_name"
-        elif isinstance(unit, RN2_initialize.Actor):
-            return "enemy_name"
-        else:
-            return ""
+        return "hero_name"
 
     def add_entry(self, _format, unit, cause=None, effect=None):
         report_obj = self.report_formats[_format]
@@ -123,29 +112,6 @@ class BattleReport:
         self.RN_UI.print_narration(self.narration_q)
 
 
-class Player_Controlled_Turn:
-    def __init__(self, hero, battle_data, bmap, UI, RN_sound, skills, actors, input):
-        self.hero = hero
-        self.heroname = hero.name
-        self.heroclass = hero.hclass
-        self.battle_data = battle_data
-        self.bmap = bmap
-        self.input = input
-        self.skills = skills
-        self.actors = actors
-        self.UI = UI
-        self.RN_sound = RN_sound
-        self.mute_switch = False
-        self.states = {
-            "move": self.movestate,
-            "target": self.targetstate,
-            "skills": self.skillmenu,
-            "battle": self.battlemenu,
-            "confirm": self.confirmstate
-        }
-        self.heroes = []
-
-
 class Battle_Controller:
     def __init__(self, hero, battle_data, bmap, UI, RN_sound, skills, actors, input):
 
@@ -172,7 +138,7 @@ class Battle_Controller:
 
     def init_battle(self):
         self.battle = RN2_battle.Battle(self.hero, self.battle_data, self.add_actors(self.battle_data), self.bmap)
-        self.report = BattleReport(self.battle.heroes, self.battle.enemies, self.UI)
+        self.report = BattleReport(self.UI)
         self.battle.report = self.report
         startpos = self.battle.startpos
         self.battle.bmap[startpos[0]][startpos[1]].actor = self.hero
@@ -190,10 +156,6 @@ class Battle_Controller:
 
         try:
             self.RN_sound.play_music(self.battle_data['music'][0])
-            # if len(self.battle_data['music']) > 1:
-            #     for i, track in enumerate(self.battle_data['music']):
-            #         if i > 0:
-            #             self.RN_sound.play_music(track, queue=True)
         except KeyError: #no music defined
             pass
 
@@ -213,12 +175,13 @@ class Battle_Controller:
 
     def battle_manager(self, battle, RN_UI):
         self.battle_events(start=True)
-        battle.unit_list = self.make_unit_list(battle)
-        self.battle.turn_tracker = RN2_battle.TurnTracker(battle.heroes, battle.enemies)
+        self.battle.unit_list = self.make_unit_list()
         self.battle.turn_tracker.roll_initiative()
+        print battle.turn_tracker.initiative_list
+
         RN_UI.print_map(battle.bmap)
         while 1:
-            battle.unit_list = self.make_unit_list(battle)
+            battle.unit_list = self.make_unit_list()
             RN_UI.print_legend(battle.bmap.legend_list, battle.unit_list)
             victory = self.battle_events()
             if victory:
@@ -236,11 +199,9 @@ class Battle_Controller:
                 RN_UI.wait_for_keypress()
                 RN_UI.fade_to_black()
                 return True
+
             player, battle.active = battle.turn_manager()
-            hero = False
-            if battle.active in battle.heroes:
-                hero = True
-            RN_UI.print_turn(battle.active.name, hero)
+            RN_UI.print_turn(battle.active.name)
 
             terrain_ok = battle.resolve_terrain(battle.active)
             active_can_act = battle.resolve_status(battle.active)
@@ -284,7 +245,7 @@ class Battle_Controller:
                 battle.bmap[battle.active.coords[0]][battle.active.coords[1]].actor = None
                 RN_AI = RN2_AI.RN_AI_Class(battle, battle.active, self.skills)
                 RN_UI.turn_indication(battle.active)
-                skill, target, path = RN_AI.enemy_turn()
+                skill, target, path = RN_AI.get_action()
 
                 if skill is not None:
                     self.report.add_entry("use_skill", battle.active, skill)
@@ -334,7 +295,7 @@ class Battle_Controller:
                 event_trigger = True
             elif trigger_type == "playerxIs" and self.battle.hero.coords[0] == condition:
                 event_trigger = True
-            elif trigger_type == "bosskill" and (not self.battle.enemies or not self.battle.enemies[0].is_boss):
+            elif trigger_type == "bosskill" and not [u for u in self.battle.all_living_units if u.is_boss]:
                 event_trigger = True
 
             if event_trigger:
@@ -348,8 +309,7 @@ class Battle_Controller:
         elif effect_type == "add_mobs":
             for mob_id in event['effect']['ids']:
                 enemy = self.battle.actors[mob_id]
-                self.battle.enemies.append(enemy)
-                self.battle.turn_tracker.add_unit(enemy)
+                self.battle.all_living_units.append(enemy)
                 self.battle.bmap[enemy.coords[0]][enemy.coords[1]].actor = enemy
                 self.UI.update_map("new", enemy.coords, enemy, self.battle.bmap)
         elif effect_type == "pass":
@@ -357,14 +317,11 @@ class Battle_Controller:
         self.battle.events.remove(event)
         return
 
-    def make_unit_list(self, battle):
+    def make_unit_list(self):
         unit_list = []
-        for h in battle.heroes:
-            if (h.character, h.name, h.color) not in unit_list:
-                unit_list.append((h.character, h.name, h.color))
-        for e in battle.enemies:
-            if (e.character, e.name, e.color) not in unit_list:
-                unit_list.append((e.character, e.name, e.color))
+        for unit in self.battle.all_living_units:
+            if (unit.character, unit.name, unit.color) not in unit_list:
+                unit_list.append((unit.character, unit.name, unit.color))
         return unit_list
 
     def update_game(self, battle, RN_UI):  #summons, forced movement
@@ -385,35 +342,31 @@ class Battle_Controller:
         return
 
     def clear_board(self, battle, RN_UI):
-        unit_list = battle.enemies + battle.heroes
+        unit_list = battle.all_living_units
         for unit in unit_list:
-            if unit.hp <= 0 or unit.status == [{"type": "Dead"}]:
+            if unit.hp <= 0:
                 self.report.add_entry("death", unit)
                 if unit.death_animation:
                     RN2_animations.RN_Animation_Class([tuple(unit.coords)], self.RN_sound, RN_UI, unit.death_animation, battle.bmap, battle.active.coords)
                 battle.bmap[unit.coords[0]][unit.coords[1]].actor = None
                 RN_UI.update_map(unit.coords, "dead", unit, battle.bmap)
                 self.battle.turn_tracker.remove_unit(unit)
-                try:
-                    battle.enemies.remove(unit)
+                if unit in battle.get_enemies_of(battle.hero):
                     self.battle.hero.score['killed'] += 1
-                except ValueError:
-                    battle.heroes.remove(unit)
-                    if unit == self.battle.hero:
-                        return True #game over
+                elif unit == self.battle.hero:
+                    return True #game over
 
     def add_summon(self, data, battle, RN_UI):
         name = data[1]
         loc = data[2]
-        side = data[3]
+        team_id = data[3]
 
         stats = self.actors[name]
-        if side == "enemy":
-            summon = RN2_initialize.Actor(stats, name)
-            battle.enemies.append(summon)
-        else:
-            summon = RN2_initialize.Ally(stats, name)
-            battle.heroes.append(summon)
+        summon = RN2_initialize.Actor(stats, name)
+        summon.team_id = team_id
+
+        #todo: this is a hack
+        summon.color = battle.get_allies_of(summon)[0].color
 
         summon.coords = loc
         battle.bmap[summon.coords[0]][summon.coords[1]].actor = summon
@@ -646,10 +599,11 @@ class Battle_Controller:
         elif command == "down":
             battle.skill_index += 1
         elif command == "activate" or command[0] == "F":
+
             if command[0] == "F":
                 f_key = int(command[1:])
                 battle.skill_index = f_key - 1
-            if battle.active.mp < battle.get_adjusted_mp(self.skills[selectable_skills[battle.skill_index]]):
+            if battle.active.mp < battle.get_adjusted_mp(self.skills[selectable_skills[battle.skill_index]], battle.active):
                 self.RN_sound.play_sound("error")
                 RN_UI.draw_skills_menu(selectable_skills, battle.skill_index, "Insufficient MP.", battle.get_adjusted_mp, self.skills)
                 return False, False

@@ -119,13 +119,13 @@ class Actor(object):
             self.attribute_modifiers[attribute] = []
 
         self.hp = self.maxhp
-        self.set_base_mp()
+        self.mp = self.set_base_mp()
         self.coords = 0
-        self.enemy = True
         self.color = "red"
         self.is_boss = False
         self.death_animation = 'deathanim'
         self.name = name
+        self.team_id = 0
 
     def __str__(self):
         return self.name
@@ -134,7 +134,7 @@ class Actor(object):
         return self.character, self.color
 
     def is_hostile(self, attacker):
-        return not attacker.enemy == self.enemy
+        return not attacker.team_id == self.team_id
 
     def clear_attribute_modifiers(self):
         for attr in self.MODIFIABLE_ATTRIBUTES:
@@ -144,25 +144,22 @@ class Actor(object):
         self.status = []
 
     def set_base_mp(self):
-        self.mp = int(math.floor(self.maxmp / 2) - 1)
+        return int(math.floor(self.maxmp / 2) - 1)
+
+    def increment_mp(self):
+        if self.mp < self.maxmp:
+            self.mp += 1
 
     def reset_actor(self):
         self.clear_attribute_modifiers()
         self.clear_status()
         self.hp = self.maxhp
-        self.set_base_mp()
+        self.mp = self.set_base_mp()
 
     def kill_actor(self):
         self.clear_attribute_modifiers()
         self.clear_status()
         self.hp = 0
-
-
-class Ally(Actor):
-    def __init__(self, stats, name):
-        Actor.__init__(self, stats, name)
-        self.enemy = False
-        self.color = "lime"
 
 
 class Hero(Actor):

@@ -13,6 +13,7 @@ import random
 import time
 import logging
 import RN2_AI
+import itertools
 
 
 class StatusEffectData:
@@ -112,25 +113,28 @@ class AppliedStatusEffect(StatusEffectData):
 
 
 class TurnTracker:
-    def __init__(self, heroes, enemies):
-        self.heroes = heroes
-        self.enemies = enemies
+    def __init__(self, units):
         self.initiative_list = []
         self.turn_count = 0
+        self.units = units
+        self.top_of_the_order = None
+        self.has_rolled_initiative = False
 
     def roll_initiative(self):
         initiative_list = []
-        for h in self.heroes:
-            initiative = (h.agility*2 + random.randint(1, 20))
-            initiative_list.append((initiative, h))
-        for e in self.enemies:
-            initiative = (e.agility*2 + random.randint(1, 20))
-            initiative_list.append((initiative, e))
+        for actor in self.units:
+            initiative = (actor.agility*2 + random.randint(1, 20))
+            initiative_list.append((initiative, actor))
+
         initiative_list.sort()
         self.initiative_list = [x[1] for x in initiative_list]
+        self.top_of_the_order = initiative_list[0]
+        self.has_rolled_initiative = True
 
     def add_unit(self, unit):
-        self.initiative_list.insert(0, unit)
+        self.units.append(unit)
+        if self.has_rolled_initiative:
+            self.initiative_list.insert(0, unit)
 
     def remove_unit(self, unit):
         self.initiative_list.remove(unit)
@@ -138,19 +142,17 @@ class TurnTracker:
     def get_next_unit(self):
         active_actor = self.initiative_list.pop()
         self.initiative_list.insert(0, active_actor)
-        if active_actor == self.heroes[0]:
+        if active_actor == self.top_of_the_order:
             self.turn_count += 1
-            self.heroes[0].score['turns'] += 1
         return active_actor
 
 
 class Battle:
     def __init__(self, hero, battle, actors, bmap):
-        self.heroes = [hero]
+        #todo: color data should not be in here
+
         self.actors = actors
-        self.enemies = []
-        self.hero = self.heroes[0]
-        self.turn_tracker = TurnTracker(self.heroes, self.enemies)
+        self.hero = hero
         self.events = battle["events"]
         self.active = None
         self.selected_skill = None
@@ -169,11 +171,31 @@ class Battle:
         self.map_size = (49, 24)
         self.unit_list = []
 
+        #todo: update when refactoring battle initiation to allow for something other than one vs many battles
+        self.assign_units_to_teams()
+
+        self.all_living_units = [self.hero]
+
+        self.turn_tracker = TurnTracker(self.all_living_units)
+
+
+
+
+
+    def assign_units_to_teams(self):
+        self.hero.team_id = 1
+        for a in self.actors:
+            a.team_id = 2
+
+    def get_allies_of(self, actor):
+        return list([x for x in self.all_living_units if x.team_id == actor.team_id])
+
+    def get_enemies_of(self, actor):
+        return list([x for x in self.all_living_units if x.team_id != actor.team_id])
+
     def turn_manager(self):
         while 1:
             active_actor = self.turn_tracker.get_next_unit()
-            if active_actor.mp < active_actor.maxmp:
-                 active_actor.mp += 1
             if active_actor.hp > 0:
                 break
 
@@ -246,26 +268,16 @@ class Battle:
             return True
         return False
 
-    def get_adjusted_mp(self, skill, actor=False): #each summon costs an additional mp for each existing summon
+    def get_adjusted_mp(self, skill, actor): #each summon costs an additional mp for each existing summon
         if skill.mp != -1:
             return skill.mp
         else:
-            if not actor or actor == self.hero:
-                return 1 + (len(self.heroes) - 1) * 2
-            else:
-                return 1 + (len(self.enemies) - 1) * 2
+            return 1 + (len(self.get_allies_of(actor)) - 1) * 2
 
     def get_targets_for_area(self, attacker, skill, affected_tiles):
         targets = []
-        if attacker in self.heroes:
-            friendlies = self.heroes
-            enemies = self.enemies
-        elif attacker in self.enemies:
-            friendlies = self.enemies
-            enemies = self.heroes
-        else:
-            enemies = self.heroes
-            friendlies = self.heroes
+        friendlies = self.get_allies_of(attacker)
+        enemies = self.get_enemies_of(attacker)
 
         if skill.target == "enemy":
             for e in enemies:
@@ -305,6 +317,9 @@ class Battle:
         for t in targets:
             if skill.damage != 0:
                 damage = self.damage_roll(attacker, t, skill)
+            else:
+                damage = 0
+
             for effect in skill.effects:
                 if effect["type"] in ["Drain"]:
                     attacker.hp += damage
@@ -323,7 +338,7 @@ class Battle:
                     effect_type = effect['type']
                     #resolve dual status skills
                     if "|" in effect["type"]:
-                        if (t in self.enemies and attacker in self.enemies) or (t in self.heroes and attacker in self.heroes):
+                        if t in self.get_allies_of(attacker):
                             effect_type = effect["type"].split("|")[0]
                         else:
                             effect_type = effect["type"].split("|")[1]
@@ -363,10 +378,7 @@ class Battle:
 
     def summon(self, caster, monster, tile):
         tile = [tile[0], tile[1]]
-        if caster in self.heroes:
-            self.state_changes.append(("summon", monster, tile, "hero"))
-        else:
-            self.state_changes.append(("summon", monster, tile, "enemy"))
+        self.state_changes.append(("summon", monster, tile, caster.team_id))
         return
 
     def attack_roll(self, attacker, defender, skill):

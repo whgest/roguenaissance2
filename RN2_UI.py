@@ -17,6 +17,7 @@ from time import sleep
 import random
 import math
 from threading import Timer, Thread, Event, Lock
+import logging
 
 class RN_Cursor():
     def __init__(self, UI):
@@ -106,8 +107,8 @@ class RNScrollablePrompt:
         if self.current_index >= self.prompt_length + self.loop_spacer:
             self.current_index = 0
 
-    def print_skill_description(self, skill, get_adjusted_mp):
-        self.prompt_text = "(MP: " + str(get_adjusted_mp(skill)) + ") " + skill.get_skill_prompt()
+    def print_skill_description(self, skill, adjusted_mp):
+        self.prompt_text = "(MP: " + str(adjusted_mp) + ") " + skill.get_skill_prompt()
         self.draw_prompt()
 
     def print_prompt(self, text):
@@ -145,6 +146,7 @@ class RN_UI_Class():
         self.select_color = "fuchsia"
         self.highlight_tint = (125,-120,47)
         self.highlighted_tiles = []
+        self.battle_team_colors = {1: "lime", 2: "red", 3: "yellow"}
         self.textcolors = {
             "damage": "darkred",
             "heal":  "lime",
@@ -309,16 +311,12 @@ class RN_UI_Class():
             self.menutext(55, (3+i), skill)
 
         self.text(55, 3+skill_index, skills[skill_index], bgcolor=self.select_color)
-        self.scrolling_prompt.print_skill_description(skill_data[skills[skill_index]], get_adjusted_mp)
+        self.scrolling_prompt.print_skill_description(skill_data[skills[skill_index]], "?")
         self.screen.update()
 
-    def print_turn(self, a, hero=True):
+    def print_turn(self, a):
         self.blank((51, 24, 23, 1))
-        if hero:
-            color = "lime"
-        else:
-            color = "red"
-        self.menutext(51, 24, "ACT: " + a, fgcolor=color)
+        self.menutext(51, 24, "ACT: " + a, fgcolor="white")
         return
 
     def print_prompt(self, s=""):
@@ -454,9 +452,13 @@ class RN_UI_Class():
             bgcolor = None
             if i == visible_index:
                 bgcolor = "fuchsia"
-            self.menutext(51, 3+(i*2), actor[0], fgcolor= fgcolor, bgcolor = bgcolor)
-            self.menutext(51, 4+(i*2), actor[1], fgcolor = fgcolor, bgcolor = bgcolor)
-        self.highlight_active(battle_menu_list[battle_index][2], True)
+            self.menutext(51, 3+(i*2), actor[0], fgcolor=fgcolor, bgcolor=bgcolor)
+            self.menutext(51, 4+(i*2), actor[1], fgcolor=fgcolor, bgcolor=bgcolor)
+        try:
+            self.highlight_active(battle_menu_list[battle_index][2], True)
+        except IndexError:
+            logging.error("BATTLE MENU GLITCH: " + repr(battle_menu_list))
+            print "SEE LOGS FOR ERROR."
         return v_top
 
 

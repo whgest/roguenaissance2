@@ -4,6 +4,7 @@ import random
 import logging
 
 
+
 def check_bounds(coords):
     if coords[1] > 49 or coords[0] > 24 or coords[0] < 0 or coords[1] < 0:
         return True
@@ -35,34 +36,34 @@ def pathfind(start, end, map):   #return true distance, path
 
 
 class RN_AI_Class():
-    def __init__(self, battle, e, skills):
+    def __init__(self, battle, actor, skills):
         self.skills = skills
         self.battle = battle
         self.map = self.battle.bmap
-        self.e = e
-        self.target_list = []
+        self.actor = actor
+        self.enemy_list = []
         self.friendly_list = []
 
-    def enemy_turn(self):
-        logging.debug("AI turn: " + self.e.name)
-        self.target_list, self.friendly_list = self.get_targets()
-        if not self.target_list:
-            return
-        if self.e.ai == "damage":
+    def get_action(self):
+        logging.debug("AI turn: {0} using script '{1}'".format(self.actor.name, self.actor.ai))
+        self.enemy_list, self.friendly_list = self.get_targets()
+        if not self.enemy_list:
+            raise IndexError
+        if self.actor.ai == "damage":
             skill, target, path = self.possible_attacks()
-        elif self.e.ai == "weakest":
+        elif self.actor.ai == "weakest":
             skill, target, path = self.possible_attacks()
-        elif self.e.ai == "support":
+        elif self.actor.ai == "support":
             skill, target, path = self.heal_allies()
-        elif self.e.ai == "aquatic":
+        elif self.actor.ai == "aquatic":
             skill, target, path = self.possible_attacks()
-        elif self.e.ai == "boss":
+        elif self.actor.ai == "boss":
             skill, target, path = self.boss_logic()
         else:
-            logging.debug(self.e.ai + ": invalid AI.")
+            logging.debug(self.actor.ai + ": invalid AI.")
             return None, None, []
 
-        logging.debug("Function: enemy_turn returns: " + str([self.e.name, skill, target, path]) + " MP:" + repr(self.e.mp))
+        logging.debug("Function: enemy_turn returns: " + str([self.actor.name, skill, target, path]) + " MP:" + repr(self.actor.mp))
         if target is None:
             return skill, None, path
         elif type(target) is tuple:
@@ -70,73 +71,71 @@ class RN_AI_Class():
         else:
             return skill, target.coords, path
 
-
     def get_targets(self):
         friendly_list = []
-        target_list = []
-        aqua = 0
-        if self.e.ai == "aquatic":
-            aqua = True
-        if self.e.ai in ["support", "boss"]:
-            for n in self.battle.enemies:
-                distance, path = pathfind((self.e.coords[1], self.e.coords[0]), (n.coords[1], n.coords[0]), self.map)
-                friendly_list.append((distance, n, path))
-        for h in self.battle.heroes:
-            distance, path = pathfind((self.e.coords[1], self.e.coords[0]), (h.coords[1], h.coords[0]), self.map)
-            target_list.append({"distance": distance, "unit": h, "path": path})
-        return target_list, friendly_list
+        enemy_list = []
+
+        for enemy in self.battle.get_enemies_of(self.actor):
+            distance, path = pathfind((self.actor.coords[1], self.actor.coords[0]), (enemy.coords[1], enemy.coords[0]), self.map)
+            enemy_list.append({"distance": distance, "unit": enemy, "path": path})
+
+        for ally in self.battle.get_allies_of(self.actor):
+            distance, path = pathfind((self.actor.coords[1], self.actor.coords[0]), (ally.coords[1], ally.coords[0]), self.map)
+            friendly_list.append({"distance": distance, "unit": ally, "path": path})
+
+        return enemy_list, friendly_list
 
     def heal_allies(self):
         heal_skill = ""
-        for s in self.e.skillset:
+        for s in self.actor.skillset:
             if self.skills[s].damage['dice_size'] < 0:
                 heal_skill = self.skills[s]
-                if heal_skill.mp > self.e.mp:
-                    logging.debug(self.e.name + ": Not enough MP for heal. MP:" + repr(self.e.mp))
+                if heal_skill.mp > self.actor.mp:
+                    logging.debug(self.actor.name + ": Not enough MP for heal. MP:" + repr(self.actor.mp))
                     return self.possible_attacks()
         if heal_skill == "":
             return self.possible_attacks()
         for f in self.friendly_list:
             if f[1].hp < f[1].maxhp/3:
-                if self.grid_distance(self.e.coords, f[1].coords) <= heal_skill.range:
-                    logging.debug(self.e.name + ": Heal target " + f[1].name + "in range. Healing with skill" + repr(heal_skill.name))
+                if self.grid_distance(self.actor.coords, f[1].coords) <= heal_skill.range:
+                    logging.debug(self.actor.name + ": Heal target " + f[1].name + "in range. Healing with skill" + repr(heal_skill.name))
                     return heal_skill.name, f[1], f[2]
                 else:
                     count = 0
                     for p in f[2]:
                         count += 1
-                        if count > self.e.move:
+                        if count > self.actor.move:
                             break
                         if self.grid_distance(p, f[1].coords) <= heal_skill.range:
-                            logging.debug(self.e.name + ": Heal target " + f[1].name + "not in range. Moving to heal with skill" + repr(heal_skill.name))
+                            logging.debug(self.actor.name + ": Heal target " + f[1].name + "not in range. Moving to heal with skill" + repr(heal_skill.name))
                             return heal_skill.name, f[1], f[2]
             else:
                 continue
-        logging.debug(self.e.name + ": Heal targets out of range or healing unneeded.")
+        logging.debug(self.actor.name + ": Heal targets out of range or healing unneeded.")
         return self.possible_attacks()
 
     def possible_attacks(self):
         possible_moves = []
-        for s in self.e.skillset:
-            if self.skills[s].mp > self.e.mp:
+        for s in self.actor.skillset:
+            if self.skills[s].mp > self.actor.mp:
                 continue
             if self.skills[s].damage == 0:
                 continue
-            average = self.skills[s].get_average_damage(self.e)
-            for t in self.target_list:
-                if self.grid_distance(self.e.coords, t["unit"].coords) > 20:
+            average = self.skills[s].get_average_damage(self.actor)
+            for t in self.enemy_list:
+                if self.grid_distance(self.actor.coords, t["unit"].coords) > 20:
                     continue
                 est_damage = 0
                 units_affected = 1
                 count = 0
                 for path_step in t["path"]:
                     count += 1
-                    if count > self.e.move+1:
+                    if count > self.actor.move+1:
                         break
                     if self.grid_distance(path_step, t["unit"].coords) <= self.skills[s].range:
-                        logging.debug(self.e.name + ": Possible attack: " + s + " on " + t["unit"].name)
+                        logging.debug(self.actor.name + ": Possible attack: " + s + " on " + t["unit"].name)
                         est_damage = est_damage + average
-                        for r in self.target_list:  #check for aoe damage
+                        for r in self.enemy_list:  #check for aoe damage
                             if r == t:  #prevent primary target from being counted twice
                                 continue
                             if self.grid_distance(t["unit"].coords, r["unit"].coords) <= self.skills[s].aoe:
@@ -147,34 +146,34 @@ class RN_AI_Class():
                 if est_damage > 0:
                     possible_moves.append((est_damage, s, t["unit"], t["path"]))
         if not possible_moves:
-            logging.debug(self.e.name + ": No possible attacks. Advancing.")
+            logging.debug(self.actor.name + ": No possible attacks. Advancing.")
             return self.advance()
         else:
             return self.prioritize_targets(possible_moves)
 
     def prioritize_targets(self, possible_moves):
-        if self.e.ai == "weakest":
+        if self.actor.ai == "weakest":
             weak_list = []
             for p in possible_moves:
                 weak_list.append((p[2].hp, p[2], p[0], p[1], p[3])) #reorganize the list to select based on target hp, not total damage
             weak_list.sort(reverse=True)
-            logging.debug(self.e.name + "with AI: " + self.e.ai + " move list: " + repr(weak_list))
+            logging.debug(self.actor.name + "with AI: " + self.actor.ai + " move list: " + repr(weak_list))
             return weak_list[0][3], weak_list[0][1], weak_list[0][4]
         else:
             possible_moves.sort(reverse=True)
-            logging.debug(self.e.name + " with AI: " + self.e.ai + " move list: " + repr(possible_moves))
+            logging.debug(self.actor.name + " with AI: " + self.actor.ai + " move list: " + repr(possible_moves))
             return possible_moves[0][1], possible_moves[0][2], possible_moves[0][3]
 
     def advance(self):
         path = []
-        self.target_list.sort()  #advance to closest accessible target
-        for t in self.target_list:
+        self.enemy_list.sort()  #advance to closest accessible target
+        for t in self.enemy_list:
             path = t["path"]
             if path:
-                logging.debug(self.e.name + " advancing towards " + t["unit"].name)
+                logging.debug(self.actor.name + " advancing towards " + t["unit"].name)
                 break
         if not path:
-            logging.debug(self.e.name + " no accessible targets, moving towards hero 1.")
+            logging.debug(self.actor.name + " no accessible targets, moving towards hero 1.")
             path = self.general_move()
         skill = None
         target = None
@@ -183,40 +182,37 @@ class RN_AI_Class():
     def general_move(self):
         path = []
         for i in range(5):
-            dist, path = pathfind((self.e.coords[1], self.e.coords[0]), (self.battle.hero.coords[1]+(i+1), self.battle.hero.coords[0]), self.map)
+            dist, path = pathfind((self.actor.coords[1], self.actor.coords[0]), (self.battle.hero.coords[1] + (i + 1), self.battle.hero.coords[0]), self.map)
             if path != []:
                 break
-            dist, path = pathfind((self.e.coords[1], self.e.coords[0]), (self.battle.hero.coords[1], self.battle.hero.coords[0]+(i+1)), self.map)
+            dist, path = pathfind((self.actor.coords[1], self.actor.coords[0]), (self.battle.hero.coords[1], self.battle.hero.coords[0] + (i + 1)), self.map)
             if path != []:
                 break
-            dist, path = pathfind((self.e.coords[1], self.e.coords[0]), (self.battle.hero.coords[1]-(i+1), self.battle.hero.coords[0]), self.map)
+            dist, path = pathfind((self.actor.coords[1], self.actor.coords[0]), (self.battle.hero.coords[1] - (i + 1), self.battle.hero.coords[0]), self.map)
             if path != []:
                 break
-            dist, path = pathfind((self.e.coords[1], self.e.coords[0]), (self.battle.hero.coords[1]+1, self.battle.hero.coords[0]-(i+1)), self.map)
+            dist, path = pathfind((self.actor.coords[1], self.actor.coords[0]), (self.battle.hero.coords[1] + 1, self.battle.hero.coords[0] - (i + 1)), self.map)
             if path != []:
                 break
         return path
 
-
-
     def grid_distance(self, actor1, actor2):
         return abs(actor1[0] - actor2[0]) + abs(actor1[1] - actor2[1])
 
-
-
     def boss_logic(self):
-        if self.e.hp < 20:
+        allies_of_boss = self.battle.get_allies_of(self.actor)
+        if self.actor.hp < 20:
             draintry = self.drain()
             if draintry:
                 return draintry
-        if self.e.mp >= 8:
-            return "Annihilate", self.e, []
+        if self.actor.mp >= 8:
+            return "Annihilate", self.actor, []
         if self.battle.hero.hp < 15:
             return self.choose_skill_boss()
-        if len(self.battle.enemies) < 3 and self.e.mp > 2 or len(self.battle.enemies) < 2 and self.e.mp > 0:
-            if len(self.battle.enemies) == 2 and self.battle.enemies[1].name == "Lichdrake":
+        if len(allies_of_boss) < 3 and self.actor.mp > 2 or len(allies_of_boss) < 2 and self.actor.mp > 0:
+            if len(allies_of_boss) == 2 and allies_of_boss[1].name == "Lichdrake":
                 skill = "Summon Skelesaur"
-            elif len(self.battle.enemies) == 2 and self.battle.enemies[1].name == "Skelesaur":
+            elif len(allies_of_boss) == 2 and allies_of_boss[1].name == "Skelesaur":
                 skill = "Summon Lichdrake"
             else:
                 skill = random.choice(["Summon Skelesaur", "Summon Lichdrake"])
@@ -231,36 +227,36 @@ class RN_AI_Class():
 
         bmap = self.battle.bmap
         for i in range(5):
-            if test_tile(bmap[self.e.coords[0]+1+i][self.e.coords[1]]):
-                return (self.e.coords[0]+1+i, self.e.coords[1])
-            if test_tile(bmap[self.e.coords[0]-1-i][self.e.coords[1]]):
-                return (self.e.coords[0]-1-i, self.e.coords[1])
-            if test_tile(bmap[self.e.coords[0]][self.e.coords[1]+1+i]):
-                return (self.e.coords[0], self.e.coords[1]+1+i)
-            if test_tile(bmap[self.e.coords[0]][self.e.coords[1]-1-i]):
-                return (self.e.coords[0], self.e.coords[1]-1-i)
+            if test_tile(bmap[self.actor.coords[0]+1+i][self.actor.coords[1]]):
+                return (self.actor.coords[0] + 1 + i, self.actor.coords[1])
+            if test_tile(bmap[self.actor.coords[0]-1-i][self.actor.coords[1]]):
+                return (self.actor.coords[0] - 1 - i, self.actor.coords[1])
+            if test_tile(bmap[self.actor.coords[0]][self.actor.coords[1]+1+i]):
+                return (self.actor.coords[0], self.actor.coords[1] + 1 + i)
+            if test_tile(bmap[self.actor.coords[0]][self.actor.coords[1]-1-i]):
+                return (self.actor.coords[0], self.actor.coords[1] - 1 - i)
         return False
 
     def drain(self):
         heal_skill = ""
-        for s in self.e.skillset:
+        for s in self.actor.skillset:
             if self.skills[s].effects[0]["type"] == "Drain":
                 skill_name = s
                 heal_skill = self.skills[s]
-                if heal_skill.mp > self.e.mp:
+                if heal_skill.mp > self.actor.mp:
                    return False
         if heal_skill == "":
             return False
         for f in self.friendly_list:
-            if f[1] == self.e:
+            if f[1] == self.actor:
                 continue
-            if self.grid_distance(self.e.coords, f[1].coords) <= heal_skill.range:
+            if self.grid_distance(self.actor.coords, f[1].coords) <= heal_skill.range:
                 return skill_name, f[1], f[2]
             else:
                 count = 0
                 for p in f[2]:
                     count += 1
-                    if count > self.e.move:
+                    if count > self.actor.move:
                         continue
                     if self.grid_distance(p, f[1].coords) <= heal_skill.range:
                         return skill_name, f[1], f[2]
@@ -268,26 +264,26 @@ class RN_AI_Class():
 
     def choose_skill_boss(self, nohero=False):
         possible_moves = []
-        for s in self.e.skillset:
-            if self.skills[s].mp > self.e.mp:
+        for s in self.actor.skillset:
+            if self.skills[s].mp > self.actor.mp:
                 continue
             if nohero == True and self.skills[s].mp > 0:
                 continue
             if self.skills[s].damage == 0:
                 continue
-            average = self.skills[s].get_average_damage(self.e)
-            for t in self.target_list:
+            average = self.skills[s].get_average_damage(self.actor)
+            for t in self.enemy_list:
                 if nohero == False and t['unit'] != self.battle.hero:
                     continue
                 est_damage = 0
                 count = 0
                 for p in t['path']:
                     count += 1
-                    if count > self.e.move:
+                    if count > self.actor.move:
                         break
                     if self.grid_distance(p, t['unit'].coords) <=self.skills[s].range:
                         est_damage = average
-                        for r in self.target_list:  #check for aoe damage
+                        for r in self.enemy_list:  #check for aoe damage
                             if r == t:  #prevent primary target from being counted twice
                                 continue
                             if self.grid_distance(t['unit'].coords, r['unit'].coords) <=self.skills[s].aoe:
