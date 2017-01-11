@@ -1,8 +1,7 @@
 classes:
   Astromancer:
     character: "@"
-    color: white
-    ai: player
+    ai: pyromancer
     maxhp: 52
     maxmp: 9
     weapon: white sword
@@ -23,7 +22,7 @@ classes:
       - Soothing Starlight
       - Singularity
       - Meteor
-      - Gamma Ray
+#      - Gamma Ray
       - Skycaller
       - Summon Meteorman
       - Summon 4DHypercube
@@ -31,8 +30,7 @@ classes:
 
   Pyromancer:
     character: "@"
-    color: white
-    ai: player
+    ai: pyromancer
     maxhp: 45
     maxmp: 10
     weapon: focusing staff
@@ -41,7 +39,7 @@ classes:
     defense: 17
     magic: 19
     resistance: 20
-    agility: 11
+    agility: 99
     move: 6
     immunities:
       - Burning
@@ -61,8 +59,7 @@ classes:
 
   Terramancer:
     character: "@"
-    color: white
-    ai: player
+    ai: pyromancer
     maxhp: 60
     maxmp: 10
     weapon: obsidian sword
@@ -95,7 +92,6 @@ actors:
   #Summoned monsters --:
   Meteorman:
     character: M
-    color: lime
     ai: player
     maxhp: 50
     maxmp: 2
@@ -112,7 +108,6 @@ actors:
 
   4D Hypercube:
     character: H
-    color: lime
     ai: player
     maxhp: 40
     maxmp: 3
@@ -129,8 +124,7 @@ actors:
 
   Snowball:
     character: S
-    color: lime
-    ai: player
+    ai: damage
     maxhp: 50
     maxmp: 2
     attack: 19
@@ -146,8 +140,7 @@ actors:
 
   Flaming Crows:
     character: C
-    color: lime
-    ai: player
+    ai: damage
     maxhp: 45
     maxmp: 3
     attack: 20

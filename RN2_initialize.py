@@ -121,7 +121,6 @@ class Actor(object):
         self.hp = self.maxhp
         self.mp = self.set_base_mp()
         self.coords = 0
-        self.color = "red"
         self.is_boss = False
         self.death_animation = 'deathanim'
         self.name = name
@@ -144,7 +143,7 @@ class Actor(object):
         self.status = []
 
     def set_base_mp(self):
-        return int(math.floor(self.maxmp / 2) - 1)
+        return max(0, int(math.floor(self.maxmp / 2) - 1))
 
     def increment_mp(self):
         if self.mp < self.maxmp:
@@ -167,14 +166,12 @@ class Hero(Actor):
         Actor.__init__(self, stats, name)
         self.hclass = ''
         self.enemy = False
-        self.ai = "player"
         self.score = {"killed": 0,
                       "turns": 0,
                       "damage": 0}
         self.current_battle = 1
         self.class_name = "Mage"
         self.death_animation = 'playerdeath'
-        self.color = stats['color']
 
 
 class Boss(Actor):
@@ -182,7 +179,6 @@ class Boss(Actor):
         Actor.__init__(self, stats, name)
         self.death_animation = stats['deathanim']
         self.is_boss = True
-        self.color = stats['color']
 
 
 class Skill(object):
@@ -210,6 +206,14 @@ class Skill(object):
 
     def __str__(self):
         return self.ident
+
+    @property
+    def affects_enemies(self):
+        return self.target in ['tile', 'enemy']
+
+    @property
+    def affects_friendlies(self):
+        return self.target in ['tile', 'friendly']
 
     def get_damage_range(self, attacker):
         """
@@ -249,8 +253,11 @@ class Skill(object):
         """
         For use in AI attack evaluation
         """
+        damage = self.damage
+        if not damage:
+            return 0
         attacker_stat = getattr(attacker, self.stat)
-        return (attacker_stat/3) + (self.damage['num_dice'] * (self.damage['dice_size']/2))
+        return (attacker_stat/3) + (damage['num_dice'] * (damage['dice_size']/2))
 
     def get_skill_prompt(self):
         prompt = self.prompt

@@ -35,35 +35,45 @@ def pathfind(start, end, map):   #return true distance, path
     return len(adjusted_path), adjusted_path
 
 
+
+
 class RN_AI_Class():
     def __init__(self, battle, actor, skills):
         self.skills = skills
         self.battle = battle
         self.map = self.battle.bmap
         self.actor = actor
-        self.enemy_list = []
-        self.friendly_list = []
+        self.enemy_list, self.friendly_list = self.get_targets()
 
     def get_action(self):
         logging.debug("AI turn: {0} using script '{1}'".format(self.actor.name, self.actor.ai))
-        self.enemy_list, self.friendly_list = self.get_targets()
+
         if not self.enemy_list:
-            raise IndexError
-        if self.actor.ai == "damage":
-            skill, target, path = self.possible_attacks()
+            skill, target, path = None, None, None
+        elif self.actor.ai == "damage":
+            possible_moves = self.possible_attacks()
+            if not possible_moves:
+                logging.debug(self.actor.name + ": No possible attacks. Advancing.")
+                return self.advance()
+            else:
+                return self.prioritize_targets(possible_moves)
         elif self.actor.ai == "weakest":
-            skill, target, path = self.possible_attacks()
+            possible_moves = self.possible_attacks()
+            if not possible_moves:
+                logging.debug(self.actor.name + ": No possible attacks. Advancing.")
+                skill, target, path = self.advance()
+            else:
+                skill, target, path = self.prioritize_targets(possible_moves)
         elif self.actor.ai == "support":
             skill, target, path = self.heal_allies()
-        elif self.actor.ai == "aquatic":
-            skill, target, path = self.possible_attacks()
+
         elif self.actor.ai == "boss":
             skill, target, path = self.boss_logic()
         else:
             logging.debug(self.actor.ai + ": invalid AI.")
             return None, None, []
 
-        logging.debug("Function: enemy_turn returns: " + str([self.actor.name, skill, target, path]) + " MP:" + repr(self.actor.mp))
+        logging.debug("Function: get_action returns: " + str([self.actor.name, skill, target, path]) + " MP:" + repr(self.actor.mp))
         if target is None:
             return skill, None, path
         elif type(target) is tuple:
@@ -114,16 +124,19 @@ class RN_AI_Class():
         logging.debug(self.actor.name + ": Heal targets out of range or healing unneeded.")
         return self.possible_attacks()
 
-    def possible_attacks(self):
+
+    def possible_attacks(self, origin=None):
         possible_moves = []
+        if not origin:
+            origin = self.actor.coords
         for s in self.actor.skillset:
-            if self.skills[s].mp > self.actor.mp:
+            if self.skills[s].mp > 0 and self.skills[s].mp > self.actor.mp:
                 continue
             if self.skills[s].damage == 0:
                 continue
             average = self.skills[s].get_average_damage(self.actor)
             for t in self.enemy_list:
-                if self.grid_distance(self.actor.coords, t["unit"].coords) > 20:
+                if self.grid_distance(origin, t["unit"].coords) > 20:
                     continue
                 est_damage = 0
                 units_affected = 1
@@ -144,12 +157,9 @@ class RN_AI_Class():
                         logging.debug("Estimated damage: " + str(est_damage) + " split between " + str(units_affected) + " units.")
                         break
                 if est_damage > 0:
-                    possible_moves.append((est_damage, s, t["unit"], t["path"]))
-        if not possible_moves:
-            logging.debug(self.actor.name + ": No possible attacks. Advancing.")
-            return self.advance()
-        else:
-            return self.prioritize_targets(possible_moves)
+                    possible_moves.append((est_damage, s, t["unit"], t["path"][:-1]))
+        return possible_moves
+
 
     def prioritize_targets(self, possible_moves):
         if self.actor.ai == "weakest":
@@ -168,7 +178,7 @@ class RN_AI_Class():
         path = []
         self.enemy_list.sort()  #advance to closest accessible target
         for t in self.enemy_list:
-            path = t["path"]
+            path = t["path"][0:t['unit'].move]
             if path:
                 logging.debug(self.actor.name + " advancing towards " + t["unit"].name)
                 break
@@ -221,7 +231,7 @@ class RN_AI_Class():
                 return skill, target, []
         return self.choose_skill_boss()
 
-    def find_empty_tile(self):
+    def find_empty_tile(self, from_tile):
         def test_tile(tile):
             return tile.actor is None and tile.terrain.movable == 1
 
@@ -300,3 +310,8 @@ class RN_AI_Class():
             return self.choose_skill_boss(True)
         logging.debug("Boss selected:" + possible_moves[0][2] + " on " + repr(possible_moves[0][3]) + "from possible moves: \n" + repr(possible_moves))
         return possible_moves[0][2], possible_moves[0][3], possible_moves[0][4]       #skill and target and path
+
+
+
+
+

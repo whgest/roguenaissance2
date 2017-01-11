@@ -111,7 +111,7 @@ class AppliedStatusEffect(StatusEffectData):
         else:
             self.report.add_entry("status_ends", actor, cause=self.name)
 
-
+TURN_MARKER = 'turn_marker'
 class TurnTracker:
     def __init__(self, units):
         self.initiative_list = []
@@ -128,23 +128,25 @@ class TurnTracker:
 
         initiative_list.sort()
         self.initiative_list = [x[1] for x in initiative_list]
-        self.top_of_the_order = initiative_list[0]
+        self.initiative_list.insert(0, TURN_MARKER)
+
         self.has_rolled_initiative = True
 
     def add_unit(self, unit):
-        self.units.append(unit)
         if self.has_rolled_initiative:
             self.initiative_list.insert(0, unit)
 
-    def remove_unit(self, unit):
-        self.initiative_list.remove(unit)
-
     def get_next_unit(self):
         active_actor = self.initiative_list.pop()
-        self.initiative_list.insert(0, active_actor)
-        if active_actor == self.top_of_the_order:
+        if active_actor == TURN_MARKER:
+            self.initiative_list.insert(0, TURN_MARKER)
             self.turn_count += 1
-        return active_actor
+            return self.get_next_unit()
+        if active_actor.hp > 0:
+            self.initiative_list.insert(0, active_actor)
+            return active_actor
+        else:
+            return self.get_next_unit()
 
 
 class Battle:
@@ -178,14 +180,8 @@ class Battle:
 
         self.turn_tracker = TurnTracker(self.all_living_units)
 
-
-
-
-
     def assign_units_to_teams(self):
         self.hero.team_id = 1
-        for a in self.actors:
-            a.team_id = 2
 
     def get_allies_of(self, actor):
         return list([x for x in self.all_living_units if x.team_id == actor.team_id])
@@ -429,32 +425,45 @@ class Battle:
         return inflicted_damage
 
     def execute_ai_turn(self, e, skill, target, path):
-        aipath = [(e.coords[0], e.coords[1])]
-        if target is not None:
-            x = target[0]
-            y = target[1]
-        if skill is not None and self.grid_distance(e.coords, (x, y)) <= skill.range:  #can attack before or after moving, so checks twice
-                self.enemy_skill(e, skill, target)
-                return aipath, target, skill
-        # if skill is not None and skill.range == 0: code for PBAOE use doesnt work
-        #         self.enemy_skill(e, skill, e)
-        #         return
-        for i in range(e.move):
-            if path and len(path) > 1:
-                if i >= len(path)-1:
-                    break
-                if self.bmap[path[i+1][0]][path[i+1][1]].actor is not None:
-                    break
-                e.coords[0] = path[i+1][0]
-                e.coords[1] = path[i+1][1]
-                aipath.append((e.coords[0], e.coords[1]))
-                if skill is not None and self.grid_distance(e.coords, (x, y)) <= skill.range:
-                    self.enemy_skill(e, skill, target)
-                    return aipath, target, skill
-        if skill is not None and self.grid_distance(e.coords, (x, y)) <= skill.range:
+        print e, skill, target, path
+        if target:
+            target_tile = self.bmap[target[0]][target[1]]
+
+        def move_is_legal():
+            for tile in path:
+                if self.bmap[tile[0]][tile[1]].is_movable():
+                    continue
+                else:
+                    print "Actor {0} returned illegal move. Tile ({1}, {2}) is blocked.".format(e.name, tile[0], tile[1])
+                    return False
+            return True
+
+        def skill_is_legal():
+            if e.mp >= skill.mp:
+                return True
+            else:
+                print "Actor {0} does not have the MP to cast {1}. MP: {2} Needed: {3}".format(e.name, skill.name, e.mp, skill.mp)
+                return False
+
+        def target_is_legal():
+            if skill and skill.target == "empty" and not target_tile.is_movable():
+                print "Actor {0} can not use skill {1} on tile ({2}, {3}): Blocked".format(e.name, skill.name, target[0], target[1])
+                return False
+
+            return True
+            #todo: check range
+
+        if skill and not skill_is_legal():
+            return None, None, None
+
+        if path and not move_is_legal():
+            return None, None, None
+
+        if target and not target_is_legal():
+            return None, None, None
+        if skill:
             self.enemy_skill(e, skill, target)
-            return aipath, target, skill
-        return aipath, target, skill
+        return path, target, skill
 
     def grid_distance(self, actor1, actor2):
         return abs(actor1[0] - actor2[0]) + abs(actor1[1] - actor2[1])

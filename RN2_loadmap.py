@@ -14,7 +14,7 @@ class Terrain():
         self.aquatic = 0
         self.targetable = 0
         self.blocking = 0
-        self.moveable = 1
+        self.movable = 1
         self.fatal = 0
         self.flammable = 1
 
@@ -138,6 +138,21 @@ class Wood(Terrain):
     def terrain_effect(self):
         pass   #death
 
+class Bridge(Terrain):
+    def __init__(self):
+        Terrain.__init__(self)
+        self.name = "Bridge"
+        self.fgcolor = "black"
+        self.bgcolor = "gray"
+        self.character = u"+"
+        self.movecost = 1
+        self.aquatic = 0
+        self.targetable = 1
+        self.movable = 1
+
+    def terrain_effect(self):
+        pass   #death
+
 
 class TerrainMod:
     def __init__(self):
@@ -151,6 +166,7 @@ class TerrainMod:
         self.current_duration = self.total_duration
         self.removed = False
         self.priority = 0
+        self.movable = 1
 
     def apply(self, tile, apply_chance=100):
         tile.terrainmod = self
@@ -208,7 +224,8 @@ class BMap:
     def __init__(self):
         self.contents = []
         self.legend_list = []
-        self.terrain_types = [(".", Grass()), (",", Stone()), ("~", Water()), ("L", Lava()), ("X", Pit()), ("G", Goal()), ("*", Wall()), ("|", Wood())]
+        self.terrain_types = [(".", Grass()), (",", Stone()), ("~", Water()), ("L", Lava()), ("X", Pit()), ("G", Goal()), ("*", Wall()), ("|", Wood()), ("+", Bridge())]
+        self.map_size = (49, 24)
 
     def __getitem__(self, item):
         try:
@@ -224,7 +241,11 @@ class BMap:
         try:
             return self.contents[coords[0]][coords[1]]
         except IndexError:
+            print "Invalid coords", coords
             return False
+
+    def find_goal_tiles(self):
+        pass
 
 
 class Tile:
@@ -243,20 +264,16 @@ class Tile:
         else:
             return getattr(self, name)
 
-    def display(self):
-        to_display = {}
-        for attr in ('character', 'fgcolor', 'color', 'bgcolor'):
-            if getattr(self.actor, attr, None):
-                if attr == 'color':
-                    to_display['fgcolor'] = self.actor.color
-                else:
-                    to_display[attr] = getattr(self.actor, attr)
-            elif getattr(self.terrainmod, attr, None):
-                to_display[attr] = getattr(self.terrainmod, attr)
-            elif getattr(self.terrain, attr, None):
-                to_display[attr] = getattr(self.terrain, attr)
+    def is_movable(self):
+        return self.terrain.movable and not self.actor
 
-        return [to_display['character'], to_display['fgcolor'], to_display['bgcolor']]
+    def is_targetable(self):
+        return self.terrain.targetable and not self.terrain.blocking
+
+
+
+
+
 
 
 def load_map(map_data):

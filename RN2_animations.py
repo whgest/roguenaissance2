@@ -21,8 +21,8 @@ class RN_Animation_Class():
             tiles = [tiles]
         for t in tiles:
             if clean_tint is True:
-                self.UI.tint(tint[0], tint[1], tint[2], (t[0],t[1],1,1))
-            display = self.bmap[t[0]][t[1]].display()
+                self.UI.tint(tint[0], tint[1], tint[2], (t[0], t[1], 1, 1))
+            display = self.UI.display_tile(self.bmap[t[0]][t[1]])
             self.UI.text(t[0], t[1], display[0], fgcolor=display[1], bgcolor=display[2])
         return
 

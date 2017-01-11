@@ -74,13 +74,14 @@ Zodiac Curse:
   animation: push
 
 Soothing Starlight:
-  target: friendly
+  target: tile
   stat: magic
   range: 4
   aoe: 1
   is_beneficial: 1
   damage:
-    fixed_damage: -4
+    num_dice: 2
+    dice_size: 2
   effects: 
     - type: Regen
       magnitude: 4
@@ -423,7 +424,8 @@ Hornet Swarm:
   range: 9
   aoe: 0
   damage:
-    fixed_damage: 2
+    num_dice: 1
+    dice_size: 2
   effects:
     - type: Confound
       magnitude: 4

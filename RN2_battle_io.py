@@ -170,6 +170,7 @@ class Battle_Controller:
             else:
                 enemy = RN2_initialize.Actor(stats, name)
             enemy.coords = [int(c) for c in e['loc'].split(",")]
+            enemy.team_id = e['team_id']
             b_actors.append(enemy)
         return b_actors
 
@@ -177,7 +178,6 @@ class Battle_Controller:
         self.battle_events(start=True)
         self.battle.unit_list = self.make_unit_list()
         self.battle.turn_tracker.roll_initiative()
-        print battle.turn_tracker.initiative_list
 
         RN_UI.print_map(battle.bmap)
         while 1:
@@ -205,15 +205,18 @@ class Battle_Controller:
 
             terrain_ok = battle.resolve_terrain(battle.active)
             active_can_act = battle.resolve_status(battle.active)
+            battle.active.increment_mp()
+
             if not active_can_act or not terrain_ok:
                 self.clear_board(battle, RN_UI)
                 continue
 
             RN_UI.print_narration(self.report.process_report())
+            RN_UI.print_status(battle.active, battle.bmap[battle.active.coords[0]][battle.active.coords[1]].terrain)
+            #control logic to be split out vvvv
             if player:
                     self.RN_sound.play_sound("beep2")
                     RN_UI.turn_indication(battle.active)
-                    RN_UI.print_status(battle.active, battle.bmap[battle.active.coords[0]][battle.active.coords[1]].terrain)
                     battle.state = "move"
                     battle.prevstate = "move"
                     battle.move_range = 0
@@ -243,21 +246,31 @@ class Battle_Controller:
 
             else:
                 battle.bmap[battle.active.coords[0]][battle.active.coords[1]].actor = None
-                RN_AI = RN2_AI.RN_AI_Class(battle, battle.active, self.skills)
+
+                #todo: replace this with using an AI class stored on the actor itself
+                if battle.active.ai == "pyromancer":
+                    import pyromancer_tree
+                    RN_AI = pyromancer_tree.PyromancerDecisionTree(battle, battle.active, self.skills)
+                    skill, target, path = RN_AI.get_action()
+                else:
+                    RN_AI = RN2_AI.RN_AI_Class(battle, battle.active, self.skills)
+                    skill, target, path = RN_AI.get_action()
+                    #skill, target, path = None, None, None
                 RN_UI.turn_indication(battle.active)
-                skill, target, path = RN_AI.get_action()
 
                 if skill is not None:
                     self.report.add_entry("use_skill", battle.active, skill)
                     RN_UI.print_narration(self.report.process_report())
                     path, target, skill = battle.execute_ai_turn(battle.active, self.skills[skill], target, path)
-
                 else:
                     path, target, skill = battle.execute_ai_turn(battle.active, None, target, path)
+
                 if path:
                     battle.bmap[path[-1][0]][path[-1][1]].actor = battle.active  #update map data
+                    battle.active.coords = (path[-1][0], path[-1][1])
                 else:
-                    battle.bmap[[battle.active][0]][battle.active[1]].actor = battle.active
+                    battle.bmap[battle.active.coords[0]][battle.active.coords[1]].actor = battle.active
+
                 self.show_ai_turn(battle.active, path, target, skill, RN_UI, battle)
 
                 if skill is not None:
@@ -297,6 +310,8 @@ class Battle_Controller:
                 event_trigger = True
             elif trigger_type == "bosskill" and not [u for u in self.battle.all_living_units if u.is_boss]:
                 event_trigger = True
+            elif trigger_type == "kill_team_2" and not [u for u in self.battle.all_living_units if u.team_id == 2]:
+                event_trigger = True
 
             if event_trigger:
                 if self.activate_event(e):
@@ -310,6 +325,7 @@ class Battle_Controller:
             for mob_id in event['effect']['ids']:
                 enemy = self.battle.actors[mob_id]
                 self.battle.all_living_units.append(enemy)
+                self.battle.turn_tracker.add_unit(enemy)
                 self.battle.bmap[enemy.coords[0]][enemy.coords[1]].actor = enemy
                 self.UI.update_map("new", enemy.coords, enemy, self.battle.bmap)
         elif effect_type == "pass":
@@ -320,8 +336,8 @@ class Battle_Controller:
     def make_unit_list(self):
         unit_list = []
         for unit in self.battle.all_living_units:
-            if (unit.character, unit.name, unit.color) not in unit_list:
-                unit_list.append((unit.character, unit.name, unit.color))
+            if (unit.character, unit.name, "white") not in unit_list:
+                unit_list.append((unit.character, unit.name, "white"))
         return unit_list
 
     def update_game(self, battle, RN_UI):  #summons, forced movement
@@ -350,7 +366,7 @@ class Battle_Controller:
                     RN2_animations.RN_Animation_Class([tuple(unit.coords)], self.RN_sound, RN_UI, unit.death_animation, battle.bmap, battle.active.coords)
                 battle.bmap[unit.coords[0]][unit.coords[1]].actor = None
                 RN_UI.update_map(unit.coords, "dead", unit, battle.bmap)
-                self.battle.turn_tracker.remove_unit(unit)
+                self.battle.all_living_units.remove(unit)
                 if unit in battle.get_enemies_of(battle.hero):
                     self.battle.hero.score['killed'] += 1
                 elif unit == self.battle.hero:
@@ -365,14 +381,12 @@ class Battle_Controller:
         summon = RN2_initialize.Actor(stats, name)
         summon.team_id = team_id
 
-        #todo: this is a hack
-        summon.color = battle.get_allies_of(summon)[0].color
-
         summon.coords = loc
         battle.bmap[summon.coords[0]][summon.coords[1]].actor = summon
         summon.name = name
 
         battle.turn_tracker.add_unit(summon)
+        battle.all_living_units.append(summon)
         RN_UI.update_map("new", summon.coords, summon, battle.bmap)
 
     def RN_output(self, command, battle, RN_UI):
@@ -426,7 +440,8 @@ class Battle_Controller:
         elif battle.state == "battle":
             battle.battle_menu_list = []
             for actor in battle.turn_tracker.initiative_list:
-                battle.battle_menu_list.append((actor.name, " HP " + str(actor.hp) + "/" + str(actor.maxhp) + " (" + RN_UI.get_status(actor)[0] + ")", actor))
+                if type(actor) is not str:
+                    battle.battle_menu_list.append((actor.name, " HP " + str(actor.hp) + "/" + str(actor.maxhp) + " (" + RN_UI.get_status(actor)[0] + ")", actor))
             battle.battle_menu_list.reverse()
             battle.battle_menu_list.insert(0, battle.battle_menu_list.pop()) #put active unit at top
             battle.v_top = RN_UI.print_battle_menu(battle.battle_menu_list, battle.turn_tracker.turn_count, battle.battle_index, battle.v_top)
@@ -626,10 +641,11 @@ class Battle_Controller:
         return False, False
 
     def show_ai_turn(self, e, path, target, skill, RN_UI, battle):
-        for i in range(len(path)-1):
-            RN_UI.update_map(path[i], path[i+1], e, battle.bmap)
-            time.sleep(0.02)
-        return
+        if path:
+            for i in range(len(path)-1):
+                RN_UI.update_map(path[i], path[i+1], e, battle.bmap)
+                time.sleep(0.02)
+            return
 
 
 # def main():

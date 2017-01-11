@@ -31,7 +31,7 @@ class RN_Cursor():
 
     def cleanup(self):
         if self.tile:
-            self.UI.text(self.x, self.y, self.tile.display()[0], fgcolor=self.tile.display()[1], bgcolor=self.tile.display()[2])
+            self.UI.text(self.x, self.y,self.display_tile(self.tile)[0], fgcolor=self.display_tile(self.tile)[1], bgcolor=self.display_tile(self.tile)[2])
         return
 
     def move_cursor(self, x, y, tile):
@@ -39,10 +39,24 @@ class RN_Cursor():
         self.x = x
         self.y = y
         self.tile = tile
-        self.UI.text(x, y, tile.display()[0], fgcolor=self.fgcolor, bgcolor=self.bgcolor)
+        self.UI.text(x, y, self.display_tile(tile)[0], fgcolor=self.fgcolor, bgcolor=self.bgcolor)
 
         self.UI.screen.update()
 
+    def display_tile(self, tile):
+        to_display = {}
+        for attr in ('character', 'fgcolor', 'color', 'bgcolor'):
+            if getattr(tile.actor, attr, None):
+                if attr == 'color':
+                    to_display['fgcolor'] = "black"
+                else:
+                    to_display[attr] = getattr(tile.actor, attr)
+            elif getattr(tile.terrainmod, attr, None):
+                to_display[attr] = getattr(tile.terrainmod, attr)
+            elif getattr(tile.terrain, attr, None):
+                to_display[attr] = getattr(tile.terrain, attr)
+
+        return (to_display['character'], to_display['fgcolor'], to_display['bgcolor'])
 
 class IntervalTimer(Thread):
     def __init__(self, stopEvent, interval, func):
@@ -146,7 +160,6 @@ class RN_UI_Class():
         self.select_color = "fuchsia"
         self.highlight_tint = (125,-120,47)
         self.highlighted_tiles = []
-        self.battle_team_colors = {1: "lime", 2: "red", 3: "yellow"}
         self.textcolors = {
             "damage": "darkred",
             "heal":  "lime",
@@ -159,6 +172,12 @@ class RN_UI_Class():
             "enemy_name": "red",
             "text": "silver"
         }
+        self.team_colors = {
+            1: "lime",
+            2: "red",
+            3: "yellow"
+        }
+
 
     @staticmethod
     def wait_for_keypress():
@@ -316,7 +335,7 @@ class RN_UI_Class():
 
     def print_turn(self, a):
         self.blank((51, 24, 23, 1))
-        self.menutext(51, 24, "ACT: " + a, fgcolor="white")
+        self.menutext(51, 24, "ACT: " + a, fgcolor='white')
         return
 
     def print_prompt(self, s=""):
@@ -326,15 +345,30 @@ class RN_UI_Class():
             self.scrolling_prompt.reset()
 
     def print_map(self, battle_map):
-        for x in range (50):
-            for y in range (25):
+        for x in range(50):
+            for y in range(25):
                 if battle_map[x][y].actor != None:
-                    self.text(x, y, battle_map[x][y].actor.character, fgcolor=battle_map[x][y].actor.color, bgcolor=battle_map[x][y].terrain.bgcolor)
+                    self.text(x, y, battle_map[x][y].actor.character, fgcolor=self.team_colors[battle_map[x][y].actor.team_id], bgcolor=battle_map[x][y].terrain.bgcolor)
                 elif battle_map[x][y].terrainmod != None:
                     self.text(x, y, battle_map[x][y].terrainmod.character, fgcolor=battle_map[x][y].terrainmod.fgcolor, bgcolor=battle_map[x][y].terrainmod.bgcolor)
                 else:
                     self.text(x, y, battle_map[x][y].terrain.character, fgcolor=battle_map[x][y].terrain.fgcolor, bgcolor=battle_map[x][y].terrain.bgcolor)
         self.screen.update()
+
+    def display_tile(self, tile):
+        to_display = {}
+        for attr in ('character', 'fgcolor', 'color', 'bgcolor'):
+            if getattr(tile.actor, attr, None):
+                if attr == 'color':
+                    to_display['fgcolor'] = self.team_colors[tile.actor.team_id]
+                else:
+                    to_display[attr] = getattr(tile.actor, attr)
+            elif getattr(tile.terrainmod, attr, None):
+                to_display[attr] = getattr(tile.terrainmod, attr)
+            elif getattr(tile.terrain, attr, None):
+                to_display[attr] = getattr(tile.terrain, attr)
+
+        return (to_display['character'], to_display['fgcolor'], to_display['bgcolor'])
 
     def highlight_area(self, highlight, tiles, battle_map, color="teal", is_target=False):
         for t in tiles:
@@ -344,12 +378,12 @@ class RN_UI_Class():
             if (not tile.terrain.movable and not is_target) or (is_target and not tile.terrain.targetable):
                 pass
             if highlight:
-                fgcolor = tile.display()[1] if tile.display()[1] != color else 'black'
-                self.text(x, y, tile.display()[0], fgcolor=fgcolor, bgcolor=color)
+                fgcolor = self.display_tile(tile)[1] if self.display_tile(tile)[1] != color else 'black'
+                self.text(x, y, self.display_tile(tile)[0], fgcolor=fgcolor, bgcolor=color)
                 self.highlighted_tiles.append((x, y))
             else:
                 #clear highlight
-                self.text(x, y, tile.display()[0], tile.display()[1], tile.display()[2])
+                self.text(x, y, self.display_tile(tile)[0], self.display_tile(tile)[1], self.display_tile(tile)[2])
                 if (x, y) in self.highlighted_tiles:
                     self.highlighted_tiles.remove((x, y))
         self.screen.update()
@@ -360,7 +394,7 @@ class RN_UI_Class():
             y = t[1]
             tile = battle_map[x][y]
             #clear highlight
-            self.text(x, y, tile.display()[0], tile.display()[1], tile.display()[2])
+            self.text(x, y, self.display_tile(tile)[0], self.display_tile(tile)[1], self.display_tile(tile)[2])
 
         self.highlighted_tiles = []
         self.screen.update()
@@ -371,7 +405,7 @@ class RN_UI_Class():
         if prev_c != "new":
             self.text(prev_c[0], prev_c[1], rmap[prev_c[0]][prev_c[1]].terrain.character, fgcolor = rmap[prev_c[0]][prev_c[1]].terrain.fgcolor, bgcolor = rmap[prev_c[0]][prev_c[1]].terrain.bgcolor)
         if new_c != "dead":
-            self.text(new_c[0], new_c[1], actor.character, fgcolor=actor.color, bgcolor=rmap[new_c[0]][new_c[1]].terrain.bgcolor)
+            self.text(new_c[0], new_c[1], actor.character, fgcolor=self.team_colors[actor.team_id], bgcolor=rmap[new_c[0]][new_c[1]].terrain.bgcolor)
         self.screen.update()
         return
 
