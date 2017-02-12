@@ -3,7 +3,7 @@ Project Roguenaissance 2.0 - Pygame/Pygcurses
 by William Hardy Gest
 """
 
-import RN2_battle_io
+import RN2_battle
 import RN2_initialize
 import RN2_UI
 import pygame.event
@@ -63,10 +63,13 @@ class Game():
         self.num_battles = 3
 
     def init_battle(self, ident):
-        battle = copy.deepcopy(self.battles[ident])
-        battle_controller = RN2_battle_io.Battle_Controller(self.hero, battle, self.maps[battle["map"]], self.RN_UI,
-                                                            self.RN_sound, self.skills, self.actors, self.RN_input)
-        victory = battle_controller.init_battle()
+        battle_data = copy.deepcopy(self.battles[ident])
+        # battle_controller = RN2_battle_io.Battle_Controller(self.hero, battle, self.maps[battle["map"]], self.RN_UI,
+        #                                                     self.RN_sound, self.skills, self.actors, self.RN_input)
+        # victory = battle_controller.init_battle()
+
+        victory = RN2_battle.Battle(battle_data)
+
         if victory:
             return True
         else:

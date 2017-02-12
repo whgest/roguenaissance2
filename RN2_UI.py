@@ -399,7 +399,13 @@ class RN_UI_Class():
         self.highlighted_tiles = []
         self.screen.update()
 
-
+    def move_unit(self, prev_c, new_c, actor, rmap):
+        if prev_c != "new":
+            self.text(prev_c[0], prev_c[1], rmap[prev_c[0]][prev_c[1]].terrain.character, fgcolor = rmap[prev_c[0]][prev_c[1]].terrain.fgcolor, bgcolor = rmap[prev_c[0]][prev_c[1]].terrain.bgcolor)
+        if new_c != "dead":
+            self.text(new_c[0], new_c[1], actor.character, fgcolor=self.team_colors[actor.team_id], bgcolor=rmap[new_c[0]][new_c[1]].terrain.bgcolor)
+        self.screen.update()
+        return
 
     def update_map(self, prev_c, new_c, actor, rmap):
         if prev_c != "new":
@@ -432,16 +438,16 @@ class RN_UI_Class():
         return
 
     def get_status(self, active):
-        if active.status == []:
+        if not active.active_status_effects:
             return "Normal", "lime"
-        if len(active.status) == 1:
+        if len(active.active_status_effects) == 1:
             try:
-                return active.status[0].name, "yellow"
+                return active.active_status_effects[0].name, "yellow"
             except TypeError:
-                print "ERROR INVALID STATUS", active.status
+                print "ERROR INVALID STATUS", active.active_status_effects
         else:
             res = ""
-            for s in active.status:
+            for s in active.active_status_effects:
                 res = res + s.name[0] + "/"
             return res[:-1], "yellow"
 

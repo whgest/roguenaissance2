@@ -135,9 +135,33 @@ class Battle_Controller:
         }
         self.heroes = []
 
+    def init_music(self):
+        self.RN_sound.cut_music()
+
+        try:
+            self.RN_sound.play_music(self.battle_data['music'][0])
+        except KeyError: #no music defined
+            pass
+
+    # def update_game(self, battle, RN_UI):  #summons, forced movement
+    #     for change in battle.state_changes:
+    #         if change[0] == "summon":
+    #             self.add_summon(change, battle, RN_UI)
+    #         elif change[0] == "forcedmove":
+    #             for i in range(len(change[1])-1):
+    #                 RN_UI.update_map(change[1][i], change[1][i+1], change[2], battle.bmap)
+    #                 battle.bmap[change[1][0][0]][change[1][0][1]].actor = None
+    #                 battle.bmap[change[1][-1][0]][change[1][-1][1]].actor = change[2]
+    #                 time.sleep(0.05)
+    #         elif change[0] == "terrainmod":
+    #             pass
+    #         else:
+    #             pass
+    #     battle.state_changes = []
+    #     return
 
     def init_battle(self):
-        self.battle = RN2_battle.Battle(self.hero, self.battle_data, self.add_actors(self.battle_data), self.bmap)
+        #self.battle = RN2_battle.Battle(self.hero, self.battle_data, self.add_actors(self.battle_data), self.bmap)
         self.report = BattleReport(self.UI)
         self.battle.report = self.report
         startpos = self.battle.startpos
@@ -148,214 +172,45 @@ class Battle_Controller:
         self.UI.print_legend(self.battle.bmap.legend_list, self.battle.unit_list)
         self.init_music()
 
-        victory = self.battle_manager(self.battle, self.UI)
-        return victory
+        # victory = self.battle_manager(self.battle, self.UI)
+        # return victory
 
-    def init_music(self):
-        self.RN_sound.cut_music()
 
-        try:
-            self.RN_sound.play_music(self.battle_data['music'][0])
-        except KeyError: #no music defined
-            pass
+    def player_turn(self):
+        if player:
+            self.RN_sound.play_sound("beep2")
+            RN_UI.turn_indication(battle.active)
+            battle.state = "move"
+            battle.prevstate = "move"
+            battle.move_range = 0
+            battle.move_range = battle.get_range(tuple(battle.active.coords), battle.active.move, pathfind=True,
+                                                 is_move=True)
+            RN_UI.highlight_area(True, battle.move_range, battle.bmap, "teal")
+            RN_UI.print_prompt("arrows = move. a = attack. s = use skills. space = end turn. h = help")
+            turn_ended = False
+            while not turn_ended:
+                RN_UI.print_status(battle.active,
+                                   battle.bmap[battle.active.coords[0]][battle.active.coords[1]].terrain)
+                command = self.input()
+                if command == "invalid":
+                    RN_UI.print_prompt("Invalid command.")
+                    self.RN_sound.play_sound("error")
+                    continue
+                turn_ended, newstate = self.RN_output(command, battle, RN_UI)
+                if newstate != battle.state and newstate is not False:
+                    self.change_state(battle.state, newstate, battle)
+                    self.prep_state(battle, RN_UI)
 
-    def add_actors(self, battle):
-        b_actors = []
-        for e in battle["actors"]:
-            name = e['ident']
-            stats = self.actors[name]  #pull stats from database
-
-            if stats['ai'] == "boss":
-                enemy = RN2_initialize.Boss(stats, name)
-            else:
-                enemy = RN2_initialize.Actor(stats, name)
-            enemy.coords = [int(c) for c in e['loc'].split(",")]
-            enemy.team_id = e['team_id']
-            b_actors.append(enemy)
-        return b_actors
-
-    def battle_manager(self, battle, RN_UI):
-        self.battle_events(start=True)
-        self.battle.unit_list = self.make_unit_list()
-        self.battle.turn_tracker.roll_initiative()
-
-        RN_UI.print_map(battle.bmap)
-        while 1:
-            battle.unit_list = self.make_unit_list()
-            RN_UI.print_legend(battle.bmap.legend_list, battle.unit_list)
-            victory = self.battle_events()
-            if victory:
-                self.report.add_entry("victory", self.hero)
-                self.RN_sound.cut_music()
-                self.RN_sound.play_music('victory')
-                time.sleep(1)
-                self.report.add_raw_entry("")
-                self.report.add_raw_entry("Total Turns Taken: " + str(self.hero.score['turns']), color="bad_status")
-                time.sleep(1)
-                self.report.add_raw_entry("Total Damage Taken: " + str(self.hero.score['damage']), color="bad_status")
-                time.sleep(1)
-                self.report.add_raw_entry("Total Enemies Killed: " + str(self.hero.score['killed']), color="good_status")
-                time.sleep(1)
-                RN_UI.wait_for_keypress()
-                RN_UI.fade_to_black()
-                return True
-
-            player, battle.active = battle.turn_manager()
-            RN_UI.print_turn(battle.active.name)
-
-            terrain_ok = battle.resolve_terrain(battle.active)
-            active_can_act = battle.resolve_status(battle.active)
-            battle.active.increment_mp()
-
-            if not active_can_act or not terrain_ok:
-                self.clear_board(battle, RN_UI)
-                continue
-
-            RN_UI.print_narration(self.report.process_report())
-            RN_UI.print_status(battle.active, battle.bmap[battle.active.coords[0]][battle.active.coords[1]].terrain)
-            #control logic to be split out vvvv
-            if player:
-                    self.RN_sound.play_sound("beep2")
-                    RN_UI.turn_indication(battle.active)
-                    battle.state = "move"
-                    battle.prevstate = "move"
-                    battle.move_range = 0
-                    battle.move_range = battle.get_range(tuple(battle.active.coords), battle.active.move, pathfind=True, is_move=True)
-                    RN_UI.highlight_area(True, battle.move_range, battle.bmap, "teal")
-                    RN_UI.print_prompt("arrows = move. a = attack. s = use skills. space = end turn. h = help")
-                    turn_ended = False
-                    while not turn_ended:
-                        RN_UI.print_status(battle.active, battle.bmap[battle.active.coords[0]][battle.active.coords[1]].terrain)
-                        command = self.input()
-                        if command == "invalid":
-                            RN_UI.print_prompt("Invalid command.")
-                            self.RN_sound.play_sound("error")
-                            continue
-                        turn_ended, newstate = self.RN_output(command, battle, RN_UI)
-                        if newstate != battle.state and newstate is not False:
-                            self.change_state(battle.state, newstate, battle)
-                            self.prep_state(battle, RN_UI)
-
-                    if battle.state == "confirmed":
-                        RN_UI.print_prompt()
-                        self.report.add_entry("use_skill", battle.active, battle.selected_skill.name)
-                        RN_UI.print_narration(self.report.process_report())
-                        RN2_animations.RN_Animation_Class(battle.affected_tiles, self.RN_sound, RN_UI, battle.selected_skill.animation, battle.bmap, battle.active.coords)
-                        battle.skill_target(battle.active, battle.selected_skill, battle.affected_tiles)
-                        RN_UI.print_status(battle.active, battle.bmap[battle.active.coords[0]][battle.active.coords[1]].terrain)
-
-            else:
-                battle.bmap[battle.active.coords[0]][battle.active.coords[1]].actor = None
-
-                #todo: replace this with using an AI class stored on the actor itself
-                if battle.active.ai == "pyromancer":
-                    import pyromancer_tree
-                    RN_AI = pyromancer_tree.PyromancerDecisionTree(battle, battle.active, self.skills)
-                    skill, target, path = RN_AI.get_action()
-                else:
-                    RN_AI = RN2_AI.RN_AI_Class(battle, battle.active, self.skills)
-                    skill, target, path = RN_AI.get_action()
-                    #skill, target, path = None, None, None
-                RN_UI.turn_indication(battle.active)
-
-                if skill is not None:
-                    self.report.add_entry("use_skill", battle.active, skill)
-                    RN_UI.print_narration(self.report.process_report())
-                    path, target, skill = battle.execute_ai_turn(battle.active, self.skills[skill], target, path)
-                else:
-                    path, target, skill = battle.execute_ai_turn(battle.active, None, target, path)
-
-                if path:
-                    battle.bmap[path[-1][0]][path[-1][1]].actor = battle.active  #update map data
-                    battle.active.coords = (path[-1][0], path[-1][1])
-                else:
-                    battle.bmap[battle.active.coords[0]][battle.active.coords[1]].actor = battle.active
-
-                self.show_ai_turn(battle.active, path, target, skill, RN_UI, battle)
-
-                if skill is not None:
-                    RN2_animations.RN_Animation_Class(battle.affected_tiles, self.RN_sound, RN_UI, skill.animation, battle.bmap, battle.active.coords)
-
-            self.update_game(battle, RN_UI)
-            game_over = self.clear_board(battle, RN_UI)
-            if game_over:
-                self.RN_sound.cut_music()
-                self.RN_sound.play_music('gameover')
-                RN_UI.fade_to_black()
-                return False
-            RN_UI.print_narration(self.report.process_report())
-            time.sleep(0.2)
-
-    def battle_events(self, start=False):     #check for battle event conditions
-        if start:
-            self.activate_event(self.battle.events[0])
-            return
-        for e in self.battle.events:
-            event_trigger = False
-            trigger_type = e['condition']['trigger_type']
-            condition = e['condition'].get('trigger_condition')
-            if trigger_type == "turn" and self.battle.turn_tracker.turn_count == condition:
-                event_trigger = True
-            elif trigger_type == "playeryGreater" and self.battle.hero.coords[1] >= condition:
-                event_trigger = True
-            elif trigger_type == "playeryLesser" and self.battle.hero.coords[1] <= condition:
-                event_trigger = True
-            elif trigger_type == "playeryIs" and self.battle.hero.coords[1] == condition:
-                event_trigger = True
-            elif trigger_type == "playerxLesser" and self.battle.hero.coords[0] <= condition:
-                event_trigger = True
-            elif trigger_type == "playerxGreater" and self.battle.hero.coords[0] >= condition:
-                event_trigger = True
-            elif trigger_type == "playerxIs" and self.battle.hero.coords[0] == condition:
-                event_trigger = True
-            elif trigger_type == "bosskill" and not [u for u in self.battle.all_living_units if u.is_boss]:
-                event_trigger = True
-            elif trigger_type == "kill_team_2" and not [u for u in self.battle.all_living_units if u.team_id == 2]:
-                event_trigger = True
-
-            if event_trigger:
-                if self.activate_event(e):
-                    return True
-
-    def activate_event(self, event):
-        effect_type = event['effect']['type']
-        if effect_type == "victory":
-            return True
-        elif effect_type == "add_mobs":
-            for mob_id in event['effect']['ids']:
-                enemy = self.battle.actors[mob_id]
-                self.battle.all_living_units.append(enemy)
-                self.battle.turn_tracker.add_unit(enemy)
-                self.battle.bmap[enemy.coords[0]][enemy.coords[1]].actor = enemy
-                self.UI.update_map("new", enemy.coords, enemy, self.battle.bmap)
-        elif effect_type == "pass":
-            pass
-        self.battle.events.remove(event)
-        return
-
-    def make_unit_list(self):
-        unit_list = []
-        for unit in self.battle.all_living_units:
-            if (unit.character, unit.name, "white") not in unit_list:
-                unit_list.append((unit.character, unit.name, "white"))
-        return unit_list
-
-    def update_game(self, battle, RN_UI):  #summons, forced movement
-        for change in battle.state_changes:
-            if change[0] == "summon":
-                self.add_summon(change, battle, RN_UI)
-            elif change[0] == "forcedmove":
-                for i in range(len(change[1])-1):
-                    RN_UI.update_map(change[1][i], change[1][i+1], change[2], battle.bmap)
-                    battle.bmap[change[1][0][0]][change[1][0][1]].actor = None
-                    battle.bmap[change[1][-1][0]][change[1][-1][1]].actor = change[2]
-                    time.sleep(0.05)
-            elif change[0] == "terrainmod":
-                pass
-            else:
-                pass
-        battle.state_changes = []
-        return
+            if battle.state == "confirmed":
+                RN_UI.print_prompt()
+                self.report.add_entry("use_skill", battle.active, battle.selected_skill.name)
+                RN_UI.print_narration(self.report.process_report())
+                RN2_animations.RN_Animation_Class(battle.affected_tiles, self.RN_sound, RN_UI,
+                                                  battle.selected_skill.animation, battle.bmap,
+                                                  battle.active.coords)
+                battle.skill_target(battle.active, battle.selected_skill, battle.affected_tiles)
+                RN_UI.print_status(battle.active,
+                                   battle.bmap[battle.active.coords[0]][battle.active.coords[1]].terrain)
 
     def clear_board(self, battle, RN_UI):
         unit_list = battle.all_living_units

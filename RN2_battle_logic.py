@@ -6,44 +6,39 @@ import RN2_AI
 import itertools
 
 
-def get_range(bmap, map_size, origin, arange, pathfind=False, is_move=False):
-    targetable_tiles = []
+def add_points(coord, change):
+    return tuple(sum(x) for x in zip(coord, change))
 
 
-    if arange == 'global':  # global attack
-        for x in range(map_size[0] + 1):
-            for y in range(map_size[1] + 1):
-                targetable_tiles.append((x, y))
+def get_neighboring_points(point):
+    neighbors = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+    return [add_points(point, n) for n in neighbors]
 
-    else:
-        targetable_tiles = [tuple(origin)]  # list of tuple coordinates of tiles that are in attack range
-        new_tiles = [tuple(origin)]
-        for i in range(arange):
-            for t in targetable_tiles:
-                if (t[0] + 1, t[1]) not in targetable_tiles:
-                    new_tiles.append((t[0] + 1, t[1]))
-                if (t[0] - 1, t[1]) not in targetable_tiles:
-                    new_tiles.append((t[0] - 1, t[1]))
-                if (t[0], t[1] - 1) not in targetable_tiles:
-                    new_tiles.append((t[0], t[1] - 1))
-                if (t[0], t[1] + 1) not in targetable_tiles:
-                    new_tiles.append((t[0], t[1] + 1))
-            for t in new_tiles:
-                if t not in targetable_tiles and 0 <= t[0] <= 49 and 0 <= t[1] <= 24:
-                    targetable_tiles.append(t)
-    remove_list = []
 
-    for t in targetable_tiles:
-        if (is_move and bmap[t[0]][t[1]].terrain.movable == 0) or (
-            not is_move and bmap[t[0]][t[1]].terrain.targetable == 0):
-            remove_list.append(t)
+def calculate_affected_area(origin, caster_loc, skill, bmap):
+    all_tiles = set()
+    edge_tiles = [origin]
 
-    if pathfind:
-        for t in targetable_tiles:
-            path = RN2_AI.pathfind(tuple(origin)[::-1], t[::-1], bmap)
-            if path[0] > arange + 1:
-                remove_list.append(t)
+    for a in range(skill.aoe):
+        all_tiles, new_tiles = skill.get_next_aoe_range(all_tiles, edge_tiles, caster_loc)
+        all_tiles.update(edge_tiles)
+        edge_tiles = []
+        for t in new_tiles:
+            if bmap.check_bounds(t) and bmap.get_tile_at(t).is_targetable():
+                edge_tiles.append(t)
+        if not edge_tiles:
+            break
 
-    for r in remove_list:
-        targetable_tiles.remove(r)
-    return targetable_tiles
+    try:
+        all_tiles.update(edge_tiles)
+    except TypeError:
+        print all_tiles, edge_tiles
+        exit()
+
+    return list(all_tiles)
+
+
+def get_adjusted_mp(mp, friendlies):
+    #pending summon tracking refactor
+    num_summons = len(friendlies) - 1
+    return mp if mp > -1 else 1 + (num_summons * 2)

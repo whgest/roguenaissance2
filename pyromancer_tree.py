@@ -1,7 +1,8 @@
-from RN2_battle_logic import get_range
 from RN2_AI import RN_AI_Class, pathfind
 import random
 import logging
+import RN2_battle_logic
+import math
 
 #todo: summons are not considered here
 
@@ -11,27 +12,109 @@ import logging
 #skills refactor to further generalize?
 
 
-INFLICT_SLOW = 1 #(if move >= distance and move - slow < distance), threat
-INFLICT_STUN = 1 #threat level, health
-INFLICT_ROOT = 1 #threat_level, health, distance > 1, nonranged
-INFLICT_PUSH = 1 #(if move >= distance and move - push < distance), threat
 
-DAMAGE_TO_ENEMY = 10
-DAMAGE_OVER_TIME_TO_ENEMY = 5
-ENEMY_KILLED = 50
-HIT_RATE = 1
-DAMAGE_TO_SELF = -100
-DAMAGE_TO_FRIENDLY = -1
-FRIENDLY_KILLED = -5
-SELF_KILLED = -10000
-TILE_THREAT_LEVEL = -10
-ENEMY_HEALED = -1
-FRIENDLY_HEALED = 1 #health
-FRIENDLY_HEALED_OVER_TIME = 1 #health
-SELF_HEALED = 1 #health
-SELF_HEALED_OVER_TIME = 1 #health
-MP_COST = -8
-ADDITIONAL_ALLY = -10000 #allies on board, threat
+class SimpleCheck:
+    def __init__(self, multiplier):
+        self.multiplier = multiplier
+
+
+class InflictDamage(SimpleCheck):
+    def __init__(self, multiplier):
+        SimpleCheck.__init__(self, multiplier)
+
+    def calculate(self, damage):
+        return damage * self.multiplier
+
+
+class ChanceToKill(SimpleCheck):
+    def __init__(self, multiplier):
+        SimpleCheck.__init__(self, multiplier)
+
+    def calculate(self, min_damage, max_damage, target):
+        try:
+            chance_to_kill = (max_damage - target.hp + 1) / (max_damage - min_damage + 1)
+        except ZeroDivisionError:
+            print min_damage, max_damage, target
+            exit()
+        return self.multiplier * chance_to_kill
+
+
+class HealDamage(SimpleCheck):
+    def __init__(self, multiplier):
+        SimpleCheck.__init__(self, multiplier)
+
+    def calculate(self, healing, target):
+        healing = abs(healing)
+        percentage_health = float(target.hp)/float(target.maxhp)
+
+        res = self.multiplier * ((1 - percentage_health) * healing)
+        return res
+
+
+class SummonCheck(SimpleCheck):
+    def calculate(self):
+        return 1 * self.multiplier
+
+
+DAMAGE_ENEMY = InflictDamage(10)
+DAMAGE_FRIENDLY = InflictDamage(-5)
+DAMAGE_SELF = InflictDamage(-100)
+
+ENEMY_KILLED = ChanceToKill(30)
+FRIENDLY_KILLED = ChanceToKill(-10)
+SELF_KILLED = ChanceToKill(-10000)
+
+HEAL_ENEMY = HealDamage(-10)
+HEAL_FRIENDLY = HealDamage(5)
+HEAL_SELF = HealDamage(100)
+
+ADDITIONAL_ALLY = SummonCheck(30)
+
+DAMAGE_OVER_TIME_MODIFIER = 0.5
+HEALING_OVER_TIME_MODIFIER = 0.5
+
+MP_COST = -12
+
+INFLICT_DISABLE = 100
+INFLICT_PUSH = 10
+
+HIT_RATE_MODIFIER = 1
+
+INCREASE_SELF_ATTACK = 1
+INCREASE_SELF_DEFENSE = 1
+INCREASE_SELF_MAGIC = 1
+INCREASE_SELF_RESISTANCE = 1
+INCREASE_SELF_MOVE = 1
+
+INCREASE_FRIENDLY_ATTACK = 1
+INCREASE_FRIENDLY_DEFENSE = 1
+INCREASE_FRIENDLY_MAGIC = 1
+INCREASE_FRIENDLY_RESISTANCE = 1
+INCREASE_FRIENDLY_MOVE = 1
+
+INCREASE_ENEMY_ATTACK = -1
+INCREASE_ENEMY_DEFENSE = -1
+INCREASE_ENEMY_MAGIC = -1
+INCREASE_ENEMY_RESISTANCE = -1
+INCREASE_ENEMY_MOVE = -1
+
+DECREASE_SELF_ATTACK = -1
+DECREASE_SELF_DEFENSE = -1
+DECREASE_SELF_MAGIC = -1
+DECREASE_SELF_RESISTANCE = -1
+DECREASE_SELF_MOVE = -1
+
+DECREASE_FRIENDLY_ATTACK = -1
+DECREASE_FRIENDLY_DEFENSE = -1
+DECREASE_FRIENDLY_MAGIC = -1
+DECREASE_FRIENDLY_RESISTANCE = -1
+DECREASE_FRIENDLY_MOVE = -1
+
+DECREASE_ENEMY_ATTACK = -1
+DECREASE_ENEMY_DEFENSE = -1
+DECREASE_ENEMY_MAGIC = -1
+DECREASE_ENEMY_RESISTANCE = -1
+DECREASE_ENEMY_MOVE = -1
 
 class ThreatMap:
     def __init__(self, battle_map):
@@ -45,13 +128,7 @@ class ThreatMap:
                     self.tmap[x].append(1)
 
     def add_threat(self, threat, bmap):
-        threat_range = threat.move + 1
-        threat_tiles = get_range(bmap, (50, 25), threat.coords, threat_range*2, pathfind=False, is_move=True)
-        for t in threat_tiles:
-            if self.tmap[t[0]][t[1]] > 0:
-                self.tmap[t[0]][t[1]] += 1
-
-        threat_tiles = get_range(bmap, (50, 25), threat.coords, threat_range, pathfind=False, is_move=True)
+        threat_tiles = threat.calculate_move_range(bmap, modifier=1)
         for t in threat_tiles:
             if self.tmap[t[0]][t[1]] > 0:
                 self.tmap[t[0]][t[1]] += 1
@@ -64,7 +141,8 @@ class PyromancerDecisionTree(RN_AI_Class):
     def __init__(self, battle, actor, skills):
         RN_AI_Class.__init__(self, battle, actor, skills)
         self.threat_map = self.create_threat_map()
-        self.move_range = get_range(self.battle.bmap, (50, 25), (self.actor.coords), self.actor.move, pathfind=True, is_move=True)
+        self.move_range = self.actor.calculate_move_range(self.battle.bmap)
+        self.aggression = 1 if self.actor.ai == "pyromancer" else 10
 
     #assign each tile a threat rating based on enemies that can reach it
     def create_threat_map(self):
@@ -86,10 +164,10 @@ class PyromancerDecisionTree(RN_AI_Class):
         neighbors = [(0, 1), (0, -1), (1, 0), (-1, 0)]
         return [self.add_points(point, n) for n in neighbors]
 
-    def get_valid_tiles(self, origin, move_range, skill_range, bmap):
+    def get_valid_tiles(self, origin, move_range, skill, bmap):
         origin = tuple(origin)
         all_tiles = {origin}
-        edges = {origin}
+        edges = [origin]
         for m in range(move_range):
             edge_neighbors = set()
             for t in edges:
@@ -98,18 +176,14 @@ class PyromancerDecisionTree(RN_AI_Class):
             all_tiles.update(edges)
             new_edges = edge_neighbors.difference(all_tiles)
 
-            edges = set()
+            edges = []
             for t in new_edges:
                 if self.check_bounds(t) and bmap.get_tile_at(t).is_movable():
-                    edges.add(t)
+                    edges.append(t)
 
-        for s in range(skill_range):
-            edge_neighbors = set()
-            for t in edges:
-                edge_neighbors.update(self.get_neighboring_points(t))
-
+        for s in range(skill.range):
+            all_tiles, new_edges = skill.get_next_aoe_range(all_tiles, edges, self.actor.coords)
             all_tiles.update(edges)
-            new_edges = edge_neighbors.difference(all_tiles)
 
             edges = set()
             for t in new_edges:
@@ -119,51 +193,49 @@ class PyromancerDecisionTree(RN_AI_Class):
         all_tiles.update(edges)
         return all_tiles
 
-
-    def determine_best_target_for_skill(self, skill, damage):
+    def determine_best_target_for_skill(self, skill, avg_damage, min_damage, max_damage, caster_threat):
         enemy_locations = [{'loc': e['unit'].coords, 'actor': e['unit']} for e in self.enemy_list]
         friendly_locations = [{'loc': a['unit'].coords, 'actor': a['unit']} for a in self.friendly_list]
         target_tile_options = {}
 
-        #calculate expected results for each possible tile
+        for tile in self.get_valid_tiles(self.actor.coords, self.actor.move, skill, self.battle.bmap):
+            target_tile_options[tile] = 0
+            affected_area = RN2_battle_logic.calculate_affected_area(tile, self.actor.coords, skill, self.battle.bmap)
 
-        for tile in self.get_valid_tiles(self.actor.coords, self.actor.move, skill.range, self.battle.bmap):
             if skill.effects and skill.effects[0]['type'] == "Summon" and self.battle.bmap[tile[0]][tile[1]].is_movable():
-                try:
-                    target_tile_options[tile] += ADDITIONAL_ALLY
-                except KeyError:
-                    target_tile_options[tile] = ADDITIONAL_ALLY
+                target_tile_options[tile] += ADDITIONAL_ALLY.calculate()
 
             if skill.affects_enemies:
                 for loc in enemy_locations:
-                    if self.grid_distance(loc['loc'], tile) <= skill.aoe:
-                        try:
-                            target_tile_options[tile] += damage * DAMAGE_TO_ENEMY
-                        except KeyError:
-                            target_tile_options[tile] = damage * DAMAGE_TO_ENEMY
+                    if tuple(loc['loc']) in affected_area:
+                        if avg_damage > 0:
+                            target_tile_options[tile] += DAMAGE_ENEMY.calculate(avg_damage)
+                            if min_damage == 8 and max_damage == 7:
+                                print skill.name, self.actor
+                                raise ZeroDivisionError
+                            target_tile_options[tile] += ENEMY_KILLED.calculate(min_damage, max_damage, loc['actor'])
+                        elif avg_damage < 0:
+                            target_tile_options[tile] += HEAL_ENEMY.calculate(avg_damage, loc['actor'])
 
-                        if loc['actor'].hp < damage:
-                            target_tile_options[tile] += 1 * ENEMY_KILLED
+                            # print 'heal_enemy_returns', HEAL_ENEMY.calculate(avg_damage, loc['actor'])
+
 
             if skill.affects_friendlies:
                 for loc in friendly_locations:
-                    if self.grid_distance(loc['loc'], tile) <= skill.aoe:
-                        try:
-                            target_tile_options[tile] += damage * DAMAGE_TO_FRIENDLY
-                        except KeyError:
-                            target_tile_options[tile] = damage * DAMAGE_TO_FRIENDLY
+                    if tuple(loc['loc']) in affected_area:
+                        if avg_damage > 0:
+                            target_tile_options[tile] += DAMAGE_FRIENDLY.calculate(avg_damage)
+                            target_tile_options[tile] += FRIENDLY_KILLED.calculate(min_damage, max_damage, loc['actor'])
+                        elif avg_damage < 0:
+                            target_tile_options[tile] += HEAL_FRIENDLY.calculate(avg_damage, loc['actor'])
 
-                        if loc['actor'].hp < damage:
-                            target_tile_options[tile] += 1 * FRIENDLY_KILLED
+                if tuple(self.actor.coords) in affected_area:
+                    if avg_damage > 0:
+                        target_tile_options[tile] += DAMAGE_SELF.calculate(avg_damage)
+                        target_tile_options[tile] += SELF_KILLED.calculate(min_damage, max_damage, self.actor)
+                    elif avg_damage < 0:
+                        target_tile_options[tile] += HEAL_SELF.calculate(avg_damage, self.actor)
 
-                if self.grid_distance(self.actor.coords, tile) <= skill.aoe:
-                    try:
-                        target_tile_options[tile] += damage * DAMAGE_TO_SELF
-                    except KeyError:
-                        target_tile_options[tile] = damage * DAMAGE_TO_SELF
-
-                    if self.actor.hp < damage:
-                        target_tile_options[tile] += 1 * SELF_KILLED
 
         results = []
         for k, v in target_tile_options.items():
@@ -190,36 +262,58 @@ class PyromancerDecisionTree(RN_AI_Class):
         results.sort()
         return results[0]
 
+    def advance_towards_enemy(self):
+        #todo: attack or retreat based on aggression level
+        advance_paths = []
+        for n in self.enemy_list:
+            path = pathfind((self.actor.coords[1], self.actor.coords[0]), (n['unit'].coords[1], n['unit'].coords[0]), self.battle.bmap)[1]
+            value = n['unit'].priority_value - len(path)
+            dist = min(len(path), self.actor.move) - 1
+
+            if path and dist >= 0:
+                advance_paths.append((value, path[dist]))
+        advance_paths.sort(reverse=True)
+
+        if advance_paths:
+            return advance_paths[0]
+        else:
+            return (0, (self.actor.coords[1], self.actor.coords[0]))
+
     def get_action(self):
         results = []
         best_retreat = self.choose_safest_tile()
 
         #calculate the value of the "do nothing" option
         no_action_value = 0
-        no_action_value += best_retreat['threat_level'] * TILE_THREAT_LEVEL
-        results.append((0, None, None, best_retreat['loc']))
+        no_action_value += best_retreat['threat_level']
+
+        results.append((no_action_value, None, None, best_retreat['loc']))
+
+        advance = self.advance_towards_enemy()
+        results.append((self.aggression, None, None, advance[1]))
 
         for s in self.actor.skillset:
             skill_data = self.skills[s]
             if skill_data.mp > self.actor.mp:
                 continue
 
-            average_damage_per_target = skill_data.get_average_damage(self.actor)
+            average_damage = skill_data.get_average_damage(self.actor)
+            max_damage = skill_data.get_maximum_damage(self.actor)
+            min_damage = skill_data.get_minimum_damage(self.actor)
 
-            skill_value, target_tile = self.determine_best_target_for_skill(skill_data, average_damage_per_target)
+            skill_value, target_tile = self.determine_best_target_for_skill(skill_data, average_damage, max_damage, min_damage, self.threat_map.get_threat_for_tile(self.actor.coords))
             if target_tile is None:
                 continue
 
             safest_tile = self.choose_safest_tile(skill=skill_data, loc=target_tile)
 
-            skill_value += safest_tile['threat_level'] * TILE_THREAT_LEVEL
-            skill_value += skill_data.mp * MP_COST
+            skill_value += safest_tile['threat_level'] * -0.1 #todo: aggression
+            skill_value += RN2_battle_logic.get_adjusted_mp(skill_data.mp, self.friendly_list) * MP_COST
             results.append((skill_value, skill_data.name, target_tile, safest_tile['loc']))
 
         results.sort(reverse=True)
         print results
 
         chosen_action = results[0]
-        print chosen_action
         path = pathfind((self.actor.coords[1], self.actor.coords[0]), (chosen_action[3][1], chosen_action[3][0]), self.battle.bmap)
         return chosen_action[1], chosen_action[2], path[1]

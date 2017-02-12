@@ -3,6 +3,8 @@ Roguenaissance 2.0 Game Initializer
 """
 import math
 import yaml
+import random
+from RN2_battle_logic import get_neighboring_points, add_points
 
 #pygame input constants, NOT ASCII CODES
 
@@ -82,6 +84,14 @@ class ModifiableMoveAttribute(ModifiableAttribute):
             return super(ModifiableMoveAttribute, self).get_modified_value(instance)
 
 
+
+class AppliedStatusEffect:
+    def __init__(self, status, duration):
+        self.status_effect = status
+        self.remaining_duration = duration
+
+
+
 class Actor(object):
     MODIFIABLE_ATTRIBUTES = ["maxhp", "maxmp", "attack", "defense", "magic", "resistance", "agility", "move", "stunned",
                              "rooted"]
@@ -97,50 +107,60 @@ class Actor(object):
     stunned = ModifiableAttribute("stunned")
     rooted = ModifiableAttribute("rooted")
 
-    def __init__(self, stats, name):
-        self.character = ''
-        self.immunities = []
-        self.always = []
+    def __init__(self, data, name):
+        self.character = data.get('character')
+        self.immunities = data.get('immunities', [])
+        self.innate_status = data.get('innate_status', [])
+        self.ai = data.get('ai', 'player')
+        self.skillset = data.get('skillset', [])
 
-        for key in stats:
-            if key not in self.MODIFIABLE_ATTRIBUTES:
-                setattr(self, key, stats[key])
-
-        self.status = []
+        self.active_status_effects = []
         self.attribute_modifiers = {}
 
         for attribute in self.MODIFIABLE_ATTRIBUTES:
-            try:
-                base_value = stats[attribute]
-            except KeyError:
-                base_value = 0
+            base_value = data.get(attribute, 0)
+
             setattr(self, "base_" + attribute, base_value)
+
             setattr(self, attribute, (base_value, self.attribute_modifiers))
+
             self.attribute_modifiers[attribute] = []
 
-        self.hp = self.maxhp
+        self.hp = int(getattr(self, 'base_maxhp'))
         self.mp = self.set_base_mp()
         self.coords = 0
         self.is_boss = False
         self.death_animation = 'deathanim'
         self.name = name
         self.team_id = 0
+        self.is_dead = False
 
     def __str__(self):
         return self.name
 
     def display(self):
-        return self.character, self.color
+        return self.character
 
-    def is_hostile(self, attacker):
-        return not attacker.team_id == self.team_id
+    def is_hostile_to(self, unit):
+        return not unit.team_id == self.team_id
+
+    def is_ally_of(self, unit):
+        return unit.team_id == self.team_id
+
+    def inflict_damage_or_healing(self, raw_damage):
+        #healing is negative damage
+        self.hp -= raw_damage
+        if self.hp > self.maxhp:
+            self.hp = self.maxhp
+        if self.hp <= 0:
+            self.kill_actor()
 
     def clear_attribute_modifiers(self):
         for attr in self.MODIFIABLE_ATTRIBUTES:
             self.attribute_modifiers[attr] = []
 
     def clear_status(self):
-        self.status = []
+        self.active_status_effects = []
 
     def set_base_mp(self):
         return max(0, int(math.floor(self.maxmp / 2) - 1))
@@ -154,11 +174,97 @@ class Actor(object):
         self.clear_status()
         self.hp = self.maxhp
         self.mp = self.set_base_mp()
+        self.is_dead = False
 
     def kill_actor(self):
         self.clear_attribute_modifiers()
         self.clear_status()
         self.hp = 0
+        self.is_dead = True
+
+    @property
+    def is_disabled(self):
+        disabling_effects = [effect for effect in self.active_status_effects if effect.status.lose_turn]
+        return disabling_effects.pop().name if len(disabling_effects) else False
+
+    def initiate_turn(self):
+        self.tick_continuous_status()
+        self.increment_mp()
+
+    @property
+    def can_act(self):
+        return not self.is_disabled and not self.is_dead
+
+    def calculate_move_range(self, bmap, origin=None, modifier=0):
+        if not origin:
+            origin = self.coords
+        origin = tuple(origin)
+        all_tiles = {origin}
+        edges = {origin}
+        for m in range(self.move + modifier):
+            edge_neighbors = set()
+            for t in edges:
+                edge_neighbors.update(get_neighboring_points(t))
+
+            all_tiles.update(edges)
+            new_edges = edge_neighbors.difference(all_tiles)
+
+            edges = set()
+            for t in new_edges:
+                if bmap.check_bounds(t) and bmap.get_tile_at(t).is_movable():
+                    edges.add(t)
+
+        all_tiles.update(edges)
+        return all_tiles
+
+    @property
+    def priority_value(self):
+        return self.attack + self.magic + len(self.skillset) * (3 * (1 + (1-(self.maxhp / self.hp))))
+
+    def apply_status(self, status):
+        for modifier in status.modifiers:
+            if not modifier.continuous:
+                self.apply_status_modifier(modifier)
+
+        self.active_status_effects.append(AppliedStatusEffect(status, status.duration))
+
+    def apply_status_modifier(self, modifier):
+        attribute = modifier.stat
+        change = modifier.value
+
+        if attribute in self.attribute_modifiers:
+            self.attribute_modifiers.get(attribute).append(change)
+        else:
+            new_value = getattr(self, attribute) + change
+            setattr(self, attribute, new_value)
+
+    def tick_continuous_status(self):
+        for active in self.active_status_effects:
+            for modifier in active.status_effect.modifiers:
+                if modifier.continuous:
+                    self.apply_status_modifier(modifier)
+
+        if self.hp <= 0:
+            self.kill_actor()
+
+    def decrement_status_durations(self):
+        for active in self.active_status_effects:
+            active.remaining_duration -= 1
+
+            if active.remaining_duration <= 0:
+                self.remove_status(active)
+
+    def remove_status(self, applied_status):
+        status = applied_status.status_effect
+        for modifier in status.modifiers:
+            if modifier.expires:
+                attribute = modifier.stat
+                change = modifier.value
+
+                self.attribute_modifiers[attribute].remove(change)
+
+        self.active_status_effects.remove(applied_status)
+
 
 
 class Hero(Actor):
@@ -181,65 +287,197 @@ class Boss(Actor):
         self.is_boss = True
 
 
-class Skill(object):
-    AFFECTS_TEXT = {
-        "enemy": "Enemies",
-        "friendly": "Allies",
-        "tile": "All",
-        "empty": "",
-        "self": "Self"
-    }
+class StandardDamage:
+    def __init__(self, data, ident, attack_stat, defense_stat):
 
+        self.attack_stat = attack_stat
+        self.defense_stat = defense_stat
+        self.no_damage = True if not data else False
 
-    def __init__(self):
-        self.ident = ""
-        self.target = ""
-        self.stat = ""
-        self.range = 0
-        self.aoe = 0
-        self.damage = 0
-        self.effects = []
-        self.mp = 0
-        self.prompt = ""
-        self.animation = ""
-        self.is_beneficial = 0
+        if data:
+            self.fixed_damage = data.get('fixed_damage', 0)
+            self.num_dice = data.get('num_dice', 0)
+            self.dice_size = data.get('dice_size', 0)
+            self.stat_modify = data.get('stat_modify', True)
 
-    def __str__(self):
-        return self.ident
+            if (self.num_dice and not self.dice_size) or (self.dice_size and not self.num_dice):
+                print "Skill {0} must have both num_dice and dice_size to use randomized damage.".format(ident)
+                raise ValueError
 
-    @property
-    def affects_enemies(self):
-        return self.target in ['tile', 'enemy']
+            if self.fixed_damage and (self.num_dice or self.dice_size):
+                print "Skill {0} can not have both fixed and randomized damage.".format(ident)
+                raise ValueError
 
-    @property
-    def affects_friendlies(self):
-        return self.target in ['tile', 'friendly']
 
     def get_damage_range(self, attacker):
         """
+        Return tuple represented minimum and maximum damage
+
         Damage formula for all skills is (skillStat / 3) + defined dice rolls num_dice, dice_size, (ie 2,6 is 2d6 or the
         cumulative result of 2 separate six sided dice rolls)
         """
-        damage = self.damage
-        if not damage:
-            return
+        if self.no_damage:
+            return 0, 0
 
-        if damage.get('fixed_damage'):
-            return abs(damage.get('fixed_damage')), abs(damage.get('fixed_damage'))
+        negative_multiplier = -1 if self.dice_size < 0 or self.fixed_damage < 0 else 1
+        stat_modifier = negative_multiplier * (getattr(attacker, self.attack_stat)/3) if self.attack_stat and self.stat_modify else 0
 
-        num_dice = damage['num_dice']
-        dice_size = abs(damage['dice_size'])
-        return (getattr(attacker, self.stat)/3) + num_dice, (getattr(attacker, self.stat)/3) + (num_dice * dice_size)
+        if self.fixed_damage:
+            return self.fixed_damage + stat_modifier, self.fixed_damage + stat_modifier
+        else:
+            return negative_multiplier * (stat_modifier + self.num_dice), negative_multiplier * (self.dice_size * self.num_dice + stat_modifier)
+
+    def get_minimum_damage(self, attacker):
+        return self.get_damage_range(attacker)[0]
+
+    def get_maximum_damage(self, attacker):
+        return self.get_damage_range(attacker)[1]
+
+    def get_average_damage(self, attacker):
+        """
+        For use in AI attack evaluation
+        """
+        return sum(self.get_damage_range(attacker)) / 2
+
+    def roll_damage(self, attacker):
+        damage_range = self.get_damage_range(attacker)
+        return random.choice(range(damage_range[0], damage_range[1] + 1))
+
+
+class DrainDamage(StandardDamage):
+    def __init__(self, data, ident, attack_stat, defense_stat):
+        StandardDamage.__init__(self, data, ident, attack_stat, defense_stat)
+
+    def roll_damage(self, attacker):
+        inflicted_damage = StandardDamage.roll_damage(self, attacker)
+        attacker.inflict_damage_or_healing(inflicted_damage * -1)
+
+        return inflicted_damage
+
+class LineAttack():
+    def get_next_aoe_range(self, all_tiles, edges, caster_loc):
+        def negative_coords(coords):
+            return coords[0] * -1, coords[1] * -1
+
+        if edges:
+            last_line_tile = edges[-1]
+        else:
+            return all_tiles, []
+
+        #Subtract caster loc from last_line_tile to determine direction
+        point_diff = add_points(last_line_tile, negative_coords(caster_loc))
+        if point_diff[0]:
+            direction = (point_diff[0] / abs(point_diff[0]), 0)
+        elif point_diff[1]:
+            direction = (0, point_diff[1] / abs(point_diff[1]))
+        else:
+            direction = (0, 0)
+
+        next_point = add_points(last_line_tile, direction)
+
+        new_edges = [next_point]
+        return all_tiles, new_edges
+
+class CircularAttack():
+    def get_next_aoe_range(self, all_tiles, edges):
+        edge_neighbors = set()
+        for t in edges:
+            edge_neighbors.update(get_neighboring_points(t))
+
+        all_tiles.update(edges)
+        new_edges = edge_neighbors.difference(all_tiles)
+        return all_tiles, new_edges
+
+AOE_TYPES = {
+    'line': LineAttack,
+    'circular': CircularAttack
+}
+
+DAMAGE_TYPES = {
+    'standard': StandardDamage,
+    'drain': DrainDamage
+}
+
+DEFAULT_DEFENSE_STATS = {
+    'attack': 'defense',
+    'magic': 'resistance'
+}
+
+
+class SkillMoveEffect:
+    def __init__(self, data):
+        self.move_type = data.get('move_type', 'push')
+        self.distance = data.get('distance')
+        self.instant = data.get('instant', False)
+
+
+class SkillStatusEffectModifier:
+    def __init__(self, data):
+        self.stat = data['stat']
+        self.value = data['value']
+        self.expires = data.get('expires', True)
+        self.continuous = data.get('continuous', False)
+
+class SkillStatusEffect:
+    def __init__(self, data, skill_ident):
+        self.type = data.get('type')
+        self.name = data.get('name', self.type)
+        if not self.name:
+            self.name = skill_ident
+
+        self.duration = data.get('duration', 1)
+        self.lose_turn = data.get('lose_turn', False)
+
+
+        self.modifiers = []
+        for m in data.get('modifiers', []):
+            self.modifiers.append(SkillStatusEffectModifier(m))
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def is_beneficial(self):
+        count = 0
+        for m in self.modifiers:
+            count += m.value
+
+        return True if count > 0 and not self.lose_turn else False
+
+
+class SkillEffectForTargetType:
+    def __init__(self, target_type_data, ident):
+        self.ignored = target_type_data.get('ignored', False)
+        self.damage_type = target_type_data.get('damage_type', 'standard')
+        self.effects = target_type_data.get('effects', [])
+        self.is_resistable = target_type_data.get('is_resistable', True)
+        self.attack_stat = target_type_data.get('attack_stat')
+        self.defense_stat = target_type_data.get('defense_stat')
+        if self.attack_stat and not self.defense_stat:
+            self.defense_stat = DEFAULT_DEFENSE_STATS[self.attack_stat]
+
+        self.damage = DAMAGE_TYPES[self.damage_type](target_type_data.get('damage'), self.attack_stat, self.defense_stat, ident)
+
+        self.status_effects = []
+        for s in target_type_data.get('status_effects', []):
+            self.status_effects.append(SkillStatusEffect(s, ident))
+
+        self.move_effects = []
+        for m in target_type_data.get('move_effects', []):
+            self.status_effects.append(SkillMoveEffect(m))
+
+        self.add_units = []
+
 
     def get_hit_chance(self, attacker, defender):
         """
         To hit formula for all hostile skills is (skillStat/2) + random integer between 0 and skillStat vs. defenseStat
         The below equation gets success chance, hopefully
         """
-        defending_stat = 'resistance' if self.stat == 'magic' else 'defense'
+        defending_stat = self.defense_stat
 
-        hit_numerator = (getattr(attacker, self.stat) - getattr(defender, defending_stat)) + (getattr(attacker, self.stat) / 2.0)
-        hit_denominator = getattr(attacker, self.stat)
+        hit_numerator = (getattr(attacker, self.attack_stat) - getattr(defender, defending_stat)) + (getattr(attacker, self.attack_stat) / 2.0)
+        hit_denominator = getattr(attacker, self.attack_stat)
 
         hit_chance = (hit_numerator / hit_denominator) * 100.0
         hit_chance = round(hit_chance, 2)
@@ -249,23 +487,69 @@ class Skill(object):
 
         return hit_chance
 
-    def get_average_damage(self, attacker):
-        """
-        For use in AI attack evaluation
-        """
-        damage = self.damage
-        if not damage:
-            return 0
-        attacker_stat = getattr(attacker, self.stat)
-        return (attacker_stat/3) + (damage['num_dice'] * (damage['dice_size']/2))
+    def attack_roll(self, attacker, defender):
+        #todo: modifiable attr get mysteriously stopped working
+        stat = getattr(attacker, self.attack_stat)
+        defense = getattr(defender, self.defense_stat)
+        random_roll = random.randint(0, stat)
+        attack_roll = (stat / 2) + random_roll
+        if attack_roll >= defense:
+            return True
+        else:
+            #self.report.add_entry("miss", defender, cause=skill.name)
+            return False
+
+
+class TargetTypes:
+    def __init__(self, targets, data, ident):
+        enemy_data = dict(data) #copy default data
+        enemy_data.update(targets.get('enemy', {}))
+        self.enemy = SkillEffectForTargetType(enemy_data, ident)
+
+        friendly_data = dict(data)
+        friendly_data.update(targets.get('friendly', {}))
+        self.friendly = SkillEffectForTargetType(friendly_data, ident)
+
+        self_data = dict(friendly_data)
+        self_data.update(targets.get('self', {}))
+        self.self = SkillEffectForTargetType(self_data, ident)
+
+
+class Skill:
+    def __init__(self, ident, data):
+        self.ident = ident
+        self.name = data.get('name', self.ident)
+
+        self.range = data.get('range', 0)
+        self.aoe_size = data.get('aoe_size', 0)
+        self.aoe_type = data.get('aoe_type', 'circular')
+        self.aoe = AOE_TYPES[self.aoe_type]()
+        self.mp = data.get('mp', 0)
+        self.mp_cost_type = data.get('mp_cost_type')
+        self.prompt = data.get('prompt')
+        self.animation = data.get('animation')
+        self.targets = TargetTypes(data.get('targets', {}), data, self.ident)
+
+    def __str__(self):
+        return self.name if self.name else self.ident
+
+    @property
+    def affects_enemies(self):
+        return not self.targets.enemy.ignored
+
+    @property
+    def affects_friendlies(self):
+        return not self.targets.friendly.ignored
+
+    @property
+    def affects_self(self):
+        return not self.targets.self.ignored
 
     def get_skill_prompt(self):
         prompt = self.prompt
         prompt += " Range: %s" % str(self.range)
         if self.aoe > 1:
-            prompt += " Area: %s" % str(self.aoe).capitalize()
-        if self.AFFECTS_TEXT.get(self.target):
-            prompt += " Affects: %s" % self.AFFECTS_TEXT.get(self.target)
+            prompt += " Area: %s" % str(self.aoe_size).capitalize()
 
         return prompt
 
@@ -296,18 +580,11 @@ def make_skills():
         skills_data = yaml.load(skills)
 
     for skill_key in skills_data:
-        skill_raw = skills_data[skill_key]
-        skill_object = Skill()
-        for key in skill_raw:
-            setattr(skill_object, key, skill_raw[key])
+        skill_data = skills_data[skill_key]
 
-        skill_object.name = skill_key
-        for effect in skill_object.effects:
-            if not effect.get('duration'):
-                effect['duration'] = 0
-            if not effect.get('magnitude'):
-                effect['magnitude'] = 0
-        skills_dict[skill_object.name] = skill_object
+        skill_object = Skill(skill_key, skill_data)
+
+        skills_dict[skill_key] = skill_object
     return skills_dict
 
 
