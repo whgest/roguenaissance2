@@ -1,31 +1,32 @@
-classes:
+actors:
   Astromancer:
     character: "@"
     ai: pyromancer
     maxhp: 52
-    maxmp: 9
+    maxmp: 99
     weapon: white sword
     armor: astral regalia
     attack: 17
     defense: 19
     magic: 20
     resistance: 19
-    agility: 14
+    agility: 144
     move: 6
     immunities:
       - Slow
     skillset:
-      - White sword
-      - Gravity Surge
-      - Zodiac Curse
-      - Time Distortion
-      - Soothing Starlight
-      - Singularity
-      - Meteor
+#      - White sword
+#      - Gravity Surge
+#      - Zodiac Curse
+#      - Time Distortion
+#      - Soothing Starlight
+#      - Singularity
+#     - Meteor
 #      - Gamma Ray
-      - Skycaller
-      - Summon Meteorman
-      - Summon 4DHypercube
+#      - Skycaller
+#      - Summon Meteorman
+#      - Summon 4DHypercube
+       - Frog Plague
     descr: A wizard mastering the powers of the cosmos.
 
   Pyromancer:
@@ -88,8 +89,7 @@ classes:
       - Summon Stegosaur
     descr: A wizard mastering the powers of the earth and her creatures.
 
-actors:
-  #Summoned monsters --:
+    #Summoned monsters --:
   Meteorman:
     character: M
     ai: player
@@ -286,12 +286,12 @@ actors:
     character: f
     color: red
     ai: weakest
-    maxhp: 35
+    maxhp: 350
     maxmp: 0
     attack: 13
     defense: 12
     magic: 18
-    resistance: 14
+    resistance: 0
     agility: 17
     move: 5
     immunities:

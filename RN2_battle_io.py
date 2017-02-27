@@ -18,6 +18,7 @@ import traceback
 import time
 import string as string_module
 import pathfinder
+import RN2_battle_logic
 
 logging.basicConfig(filename="logs/rn_debug.log", filemode="w+", level=logging.DEBUG)
 
@@ -58,21 +59,28 @@ class BattleReport:
             "good_status": BattleReportLine("%unit: Affected by %cause.", cause_color='good_status'),
             "immunity": BattleReportLine("%unit: Immune to %cause.", cause_color='bad_status'),
             "death": BattleReportLine("%unit dies!", line_color="death"),
-            "stunned": BattleReportLine("%unit is stunned and cannot act.", line_color='bad_status'),
+            "disabled": BattleReportLine("%unit is disabled by %cause and cannot act.", line_color='bad_status'),
             "status_damage": BattleReportLine("%unit: Suffers %effect damage from %cause.", cause_color='bad_status', effect_color='damage'),
-            "regen": BattleReportLine("%unit: Gains %effect life from %cause.", cause_color='good_status', effect_color='heal'),
+            "status_heal": BattleReportLine("%unit: Gains %effect life from %cause.", cause_color='good_status', effect_color='heal'),
             "status_update": BattleReportLine("%unit: Afflicted by %cause: %effect!", cause_color='bad_status', effect_color='bad_status'),
             "good_status_ends": BattleReportLine("%unit: No longer affected by %cause.", cause_color='good_status'),
-            "status_ends": BattleReportLine("%unit: No longer afflicted by %cause.", cause_color='bad_status'),
+            "bad_status_ends": BattleReportLine("%unit: No longer afflicted by %cause.", cause_color='bad_status'),
             "status_kill": BattleReportLine("%unit: Killed by %cause!", cause_color='bad_status'),
             "terrain_kill": BattleReportLine("%unit: Falls into %cause!", cause_color='bad_status'),
             "victory": BattleReportLine("%unit achieved victory.", line_color="ally_name")
         }
 
     def colorize_unit_name(self, unit):
+        #todo: show team color
         return "hero_name"
 
-    def add_entry(self, _format, unit, cause=None, effect=None):
+    def add_entry(self, entry):
+        _format = entry.get('_format', '')
+        unit = entry.get('unit', '')
+        cause = entry.get('cause', '')
+        effect = str(entry.get('effect', ''))
+
+
         report_obj = self.report_formats[_format]
         colorized_list = []
         word_list = report_obj.string.split(" ")
@@ -112,19 +120,12 @@ class BattleReport:
         self.RN_UI.print_narration(self.narration_q)
 
 
-class Battle_Controller:
-    def __init__(self, hero, battle_data, bmap, UI, RN_sound, skills, actors, input):
+class Battle_Controller(object):
+    def __init__(self, ui, sound_handler):
 
-        self.hero = hero
-        self.heroname = hero.name
-        self.heroclass = hero.hclass
-        self.battle_data = battle_data
-        self.bmap = bmap
-        self.input = input
-        self.skills = skills
-        self.actors = actors
-        self.UI = UI
-        self.RN_sound = RN_sound
+        self.report = BattleReport(ui)
+        self.ui = ui
+        self.sound_handler = sound_handler
         self.mute_switch = False
         self.states = {
             "move": self.movestate,
@@ -133,116 +134,83 @@ class Battle_Controller:
             "battle": self.battlemenu,
             "confirm": self.confirmstate
         }
-        self.heroes = []
 
-    def init_music(self):
-        self.RN_sound.cut_music()
+    def init_music(self, music_ident):
+        self.sound_handler.cut_music()
 
         try:
-            self.RN_sound.play_music(self.battle_data['music'][0])
-        except KeyError: #no music defined
-            pass
+            self.sound_handler.play_music(music_ident)
+        except KeyError:
+            print "Track id {0} not found.".format(music_ident)
+            raise KeyError
 
-    # def update_game(self, battle, RN_UI):  #summons, forced movement
-    #     for change in battle.state_changes:
-    #         if change[0] == "summon":
-    #             self.add_summon(change, battle, RN_UI)
-    #         elif change[0] == "forcedmove":
-    #             for i in range(len(change[1])-1):
-    #                 RN_UI.update_map(change[1][i], change[1][i+1], change[2], battle.bmap)
-    #                 battle.bmap[change[1][0][0]][change[1][0][1]].actor = None
-    #                 battle.bmap[change[1][-1][0]][change[1][-1][1]].actor = change[2]
-    #                 time.sleep(0.05)
-    #         elif change[0] == "terrainmod":
-    #             pass
-    #         else:
-    #             pass
-    #     battle.state_changes = []
-    #     return
+    def draw_battle_ui(self, battle):
+        self.ui.init_animation_class(battle.bmap)
+        self.ui.draw_UI()
+        self.ui.set_map(battle.bmap)
+        self.ui.print_map()
 
-    def init_battle(self):
-        #self.battle = RN2_battle.Battle(self.hero, self.battle_data, self.add_actors(self.battle_data), self.bmap)
-        self.report = BattleReport(self.UI)
-        self.battle.report = self.report
-        startpos = self.battle.startpos
-        self.battle.bmap[startpos[0]][startpos[1]].actor = self.hero
-        self.hero.coords = [startpos[0], startpos[1]]
-        self.UI.draw_UI()
-        self.UI.print_map(self.battle.bmap)
-        self.UI.print_legend(self.battle.bmap.legend_list, self.battle.unit_list)
-        self.init_music()
+    def update(self, state_changes):
+        # todo: update displays relating to unit states and map state
+        for change in state_changes:
+            if change.report_entry():
+                self.report.add_entry(change.report_entry())
+            change.animate(self.ui)
+            change.display(self.ui)
+
+
+
+
+    # def init_battle(self):
+    #     #self.battle = RN2_battle.Battle(self.hero, self.battle_data, self.add_actors(self.battle_data), self.bmap)
+    #     self.report = BattleReport(self.UI)
+    #     self.battle.report = self.report
+    #     self.UI.draw_UI()
+    #     self.UI.print_map(self.battle.bmap)
+    #     self.UI.print_legend(self.battle.bmap.legend_list, self.battle.unit_list)
+    #     self.init_music()
 
         # victory = self.battle_manager(self.battle, self.UI)
         # return victory
+    #
+    #
+    # def player_turn(self):
+    #     if player:
+    #         self.RN_sound.play_sound("beep2")
+    #         RN_UI.turn_indication(battle.active)
+    #         battle.state = "move"
+    #         battle.prevstate = "move"
+    #         battle.move_range = 0
+    #         battle.move_range = battle.get_range(tuple(battle.active.coords), battle.active.move, pathfind=True,
+    #                                              is_move=True)
+    #         RN_UI.highlight_area(True, battle.move_range, battle.bmap, "teal")
+    #         RN_UI.print_prompt("arrows = move. a = attack. s = use skills. space = end turn. h = help")
+    #         turn_ended = False
+    #         while not turn_ended:
+    #             RN_UI.print_status(battle.active,
+    #                                battle.bmap[battle.active.coords[0]][battle.active.coords[1]].terrain)
+    #             command = self.input()
+    #             if command == "invalid":
+    #                 RN_UI.print_prompt("Invalid command.")
+    #                 self.RN_sound.play_sound("error")
+    #                 continue
+    #             turn_ended, newstate = self.RN_output(command, battle, RN_UI)
+    #             if newstate != battle.state and newstate is not False:
+    #                 self.change_state(battle.state, newstate, battle)
+    #                 self.prep_state(battle, RN_UI)
+    #
+    #         if battle.state == "confirmed":
+    #             RN_UI.print_prompt()
+    #             self.report.add_entry("use_skill", battle.active, battle.selected_skill.name)
+    #             RN_UI.print_narration(self.report.process_report())
+    #             RN2_animations.RN_Animation_Class(battle.affected_tiles, self.RN_sound, RN_UI,
+    #                                               battle.selected_skill.animation, battle.bmap,
+    #                                               battle.active.coords)
+    #             battle.skill_target(battle.active, battle.selected_skill, battle.affected_tiles)
+    #             RN_UI.print_status(battle.active,
+    #                                battle.bmap[battle.active.coords[0]][battle.active.coords[1]].terrain)
+    #
 
-
-    def player_turn(self):
-        if player:
-            self.RN_sound.play_sound("beep2")
-            RN_UI.turn_indication(battle.active)
-            battle.state = "move"
-            battle.prevstate = "move"
-            battle.move_range = 0
-            battle.move_range = battle.get_range(tuple(battle.active.coords), battle.active.move, pathfind=True,
-                                                 is_move=True)
-            RN_UI.highlight_area(True, battle.move_range, battle.bmap, "teal")
-            RN_UI.print_prompt("arrows = move. a = attack. s = use skills. space = end turn. h = help")
-            turn_ended = False
-            while not turn_ended:
-                RN_UI.print_status(battle.active,
-                                   battle.bmap[battle.active.coords[0]][battle.active.coords[1]].terrain)
-                command = self.input()
-                if command == "invalid":
-                    RN_UI.print_prompt("Invalid command.")
-                    self.RN_sound.play_sound("error")
-                    continue
-                turn_ended, newstate = self.RN_output(command, battle, RN_UI)
-                if newstate != battle.state and newstate is not False:
-                    self.change_state(battle.state, newstate, battle)
-                    self.prep_state(battle, RN_UI)
-
-            if battle.state == "confirmed":
-                RN_UI.print_prompt()
-                self.report.add_entry("use_skill", battle.active, battle.selected_skill.name)
-                RN_UI.print_narration(self.report.process_report())
-                RN2_animations.RN_Animation_Class(battle.affected_tiles, self.RN_sound, RN_UI,
-                                                  battle.selected_skill.animation, battle.bmap,
-                                                  battle.active.coords)
-                battle.skill_target(battle.active, battle.selected_skill, battle.affected_tiles)
-                RN_UI.print_status(battle.active,
-                                   battle.bmap[battle.active.coords[0]][battle.active.coords[1]].terrain)
-
-    def clear_board(self, battle, RN_UI):
-        unit_list = battle.all_living_units
-        for unit in unit_list:
-            if unit.hp <= 0:
-                self.report.add_entry("death", unit)
-                if unit.death_animation:
-                    RN2_animations.RN_Animation_Class([tuple(unit.coords)], self.RN_sound, RN_UI, unit.death_animation, battle.bmap, battle.active.coords)
-                battle.bmap[unit.coords[0]][unit.coords[1]].actor = None
-                RN_UI.update_map(unit.coords, "dead", unit, battle.bmap)
-                self.battle.all_living_units.remove(unit)
-                if unit in battle.get_enemies_of(battle.hero):
-                    self.battle.hero.score['killed'] += 1
-                elif unit == self.battle.hero:
-                    return True #game over
-
-    def add_summon(self, data, battle, RN_UI):
-        name = data[1]
-        loc = data[2]
-        team_id = data[3]
-
-        stats = self.actors[name]
-        summon = RN2_initialize.Actor(stats, name)
-        summon.team_id = team_id
-
-        summon.coords = loc
-        battle.bmap[summon.coords[0]][summon.coords[1]].actor = summon
-        summon.name = name
-
-        battle.turn_tracker.add_unit(summon)
-        battle.all_living_units.append(summon)
-        RN_UI.update_map("new", summon.coords, summon, battle.bmap)
 
     def RN_output(self, command, battle, RN_UI):
         if command == "exit":
@@ -280,11 +248,11 @@ class Battle_Controller:
             RN_UI.cursor.move_cursor(x, y, battle.bmap[x][y])
             noun = "tile" if battle.selected_skill.aoe == 0 else "area"
             RN_UI.print_prompt(battle.selected_skill.name + " --- " + "Choose target %s." % noun)
-            targeted_aoe = battle.get_range((x, y), battle.selected_skill.aoe)
+            targeted_aoe = RN2_battle_logic.calculate_affected_area((x, y), battle.active.coords, battle.selected_skill, battle.bmap)
             self.highlight_targetable_area(battle, targeted_aoe, (x, y), RN_UI)
             self.print_target_display(targeted_aoe, RN_UI)
         elif battle.state == "confirm":
-            battle.affected_tiles = battle.get_range(battle.target_tile, battle.selected_skill.aoe)
+            battle.affected_tiles = RN2_battle_logic.calculate_affected_area(battle.target_tile, battle.active.coords, battle.selected_skill, battle.bmap)
             RN_UI.highlight_area(False, battle.targetable_tiles, battle.bmap)
             RN_UI.highlight_area(True, battle.affected_tiles, battle.bmap, "lime")
             self.print_target_display(battle.affected_tiles, RN_UI)
@@ -431,9 +399,10 @@ class Battle_Controller:
         RN_UI.clear_highlight_area(battle.bmap)
         RN_UI.cursor.move_cursor(x, y, battle.bmap[x][y])
 
-        targeted_aoe = battle.get_range((x, y), skill.aoe)
-        self.highlight_targetable_area(battle, targeted_aoe, (x, y), RN_UI)
-        self.print_target_display(targeted_aoe, RN_UI)
+        affected_tiles = RN2_battle_logic.calculate_affected_area((x, y), battle.active.coords, skill, battle.bmap)
+
+        self.highlight_targetable_area(battle, affected_tiles, (x, y), RN_UI)
+        self.print_target_display(affected_tiles, RN_UI)
 
         return False, False
 
@@ -497,19 +466,9 @@ class Battle_Controller:
 
     def show_ai_turn(self, e, path, target, skill, RN_UI, battle):
         if path:
-            for i in range(len(path)-1):
-                RN_UI.update_map(path[i], path[i+1], e, battle.bmap)
-                time.sleep(0.02)
+            prev_coords = e.coords
+            for tile in path:
+                RN_UI.update_map(prev_coords, tile, e, battle.bmap)
+                prev_coords = tile
+                #time.sleep(0.02)
             return
-
-
-# def main():
-#     pass
-#
-# if __name__ == "__main__":
-#     try:
-#         main()
-#     except:
-#         exception_string = traceback.format_exc()
-#         logging.error(exception_string)
-#         print exception_string

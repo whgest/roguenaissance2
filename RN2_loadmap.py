@@ -242,10 +242,35 @@ class BMap:
             return self.contents[coords[0]][coords[1]]
         except IndexError:
             print "Invalid coords", coords
-            return False
+            raise ValueError
+
+    def get_empty_tiles(self, tiles):
+        res = []
+        for tile in tiles:
+            if self.get_tile_at(tile).is_movable():
+                res.append(tile)
+
+        return res
 
     def find_goal_tiles(self):
         pass
+
+    def place_unit(self, unit, coords):
+        tile = self.get_tile_at(coords)
+        if tile.actor:
+            print "Tile {0} is occupied by {1}".format(coords, tile.actor)
+            raise KeyError
+
+        tile.actor = unit
+
+    def remove_unit(self, unit):
+        tile = self.get_tile_at(unit.coords)
+        tile.actor = None
+
+    def check_bounds(self, coords):
+        if 0 > coords[0] or coords[0] > self.map_size[0] or 0 > coords[1] or coords[1] > self.map_size[1]:
+            return False
+        return True
 
 
 class Tile:
@@ -271,16 +296,8 @@ class Tile:
         return self.terrain.targetable and not self.terrain.blocking
 
 
-
-
-
-
-
 def load_map(map_data):
-    startpos = []
     map_lines = map_data['layout']
-    for c in map_data['start'].split(","):
-        startpos.append(int(c))
     map_lines = map_lines.splitlines()
     for m in map_lines:
         list(m)
@@ -291,7 +308,7 @@ def load_map(map_data):
             tile = Tile(x, y)
             tile, map_list = analyze_data(map_lines[y][x], battle_map, tile)
             battle_map[x].append(tile)
-    return battle_map, startpos
+    return battle_map
 
 
 def analyze_data(character, battle_map, tile):

@@ -18,6 +18,7 @@ import random
 import math
 from threading import Timer, Thread, Event, Lock
 import logging
+import RN2_animations
 
 class RN_Cursor():
     def __init__(self, UI):
@@ -143,13 +144,14 @@ class RNScrollablePrompt:
 
 
 class RN_UI_Class():
-    def __init__(self):
+    def __init__(self, sound):
         self.grid_size = (75, 45)
         self.screen = pygcurse.PygcurseWindow(self.grid_size[0], self.grid_size[1])
         self.cursor = RN_Cursor(self)
         self.scrolling_prompt = RNScrollablePrompt(self)
         self.screen._autoupdate = False
         self.screen.update()
+        self.sound = sound
         pygame.display.set_caption("ASCIIMANCER")
         self.cell_size = (self.screen.cellheight, self.screen.cellwidth)
         self.right_menu_coords = (51,1,23,22)
@@ -177,17 +179,23 @@ class RN_UI_Class():
             2: "red",
             3: "yellow"
         }
-
-
     @staticmethod
     def wait_for_keypress():
         pygcurse.waitforkeypress()
         return
 
+    def init_animation_class(self, bmap):
+        self.animations = RN2_animations.Animation(self.sound, self, bmap)
+
+    def animate(self, tiles, anim_id, active):
+        self.animations.animate(tiles, anim_id, active)
 
     def text(self, x, y, s, fgcolor="white", bgcolor="black"):
         self.screen.write(s, x=x, y=y, fgcolor=fgcolor, bgcolor=bgcolor)
         return
+
+    def set_map(self, bmap):
+        self.bmap = bmap
 
     def gradient(self, y, base_color, gradient):
         r = base_color[0]
@@ -344,7 +352,8 @@ class RN_UI_Class():
         else:
             self.scrolling_prompt.reset()
 
-    def print_map(self, battle_map):
+    def print_map(self):
+        battle_map = self.bmap
         for x in range(50):
             for y in range(25):
                 if battle_map[x][y].actor != None:
@@ -357,12 +366,13 @@ class RN_UI_Class():
 
     def display_tile(self, tile):
         to_display = {}
-        for attr in ('character', 'fgcolor', 'color', 'bgcolor'):
+        for attr in ('character', 'fgcolor', 'team_id', 'bgcolor'):
             if getattr(tile.actor, attr, None):
-                if attr == 'color':
-                    to_display['fgcolor'] = self.team_colors[tile.actor.team_id]
-                else:
+                if attr == 'character':
                     to_display[attr] = getattr(tile.actor, attr)
+                else:
+                    to_display['fgcolor'] = self.team_colors[tile.actor.team_id]
+
             elif getattr(tile.terrainmod, attr, None):
                 to_display[attr] = getattr(tile.terrainmod, attr)
             elif getattr(tile.terrain, attr, None):
@@ -399,21 +409,26 @@ class RN_UI_Class():
         self.highlighted_tiles = []
         self.screen.update()
 
-    def move_unit(self, prev_c, new_c, actor, rmap):
-        if prev_c != "new":
-            self.text(prev_c[0], prev_c[1], rmap[prev_c[0]][prev_c[1]].terrain.character, fgcolor = rmap[prev_c[0]][prev_c[1]].terrain.fgcolor, bgcolor = rmap[prev_c[0]][prev_c[1]].terrain.bgcolor)
-        if new_c != "dead":
-            self.text(new_c[0], new_c[1], actor.character, fgcolor=self.team_colors[actor.team_id], bgcolor=rmap[new_c[0]][new_c[1]].terrain.bgcolor)
+    def move_unit(self, prev_c, new_c, actor):
+        bmap = self.bmap
+        self.text(prev_c[0], prev_c[1], bmap[prev_c[0]][prev_c[1]].terrain.character, fgcolor = bmap[prev_c[0]][prev_c[1]].terrain.fgcolor, bgcolor = bmap[prev_c[0]][prev_c[1]].terrain.bgcolor)
+        self.text(new_c[0], new_c[1], actor.character, fgcolor=self.team_colors[actor.team_id], bgcolor=bmap[new_c[0]][new_c[1]].terrain.bgcolor)
         self.screen.update()
-        return
 
-    def update_map(self, prev_c, new_c, actor, rmap):
-        if prev_c != "new":
-            self.text(prev_c[0], prev_c[1], rmap[prev_c[0]][prev_c[1]].terrain.character, fgcolor = rmap[prev_c[0]][prev_c[1]].terrain.fgcolor, bgcolor = rmap[prev_c[0]][prev_c[1]].terrain.bgcolor)
-        if new_c != "dead":
-            self.text(new_c[0], new_c[1], actor.character, fgcolor=self.team_colors[actor.team_id], bgcolor=rmap[new_c[0]][new_c[1]].terrain.bgcolor)
+    def remove_unit(self, actor):
+        bmap = self.bmap
+        prev_c = actor.coords
+        self.text(prev_c[0], prev_c[1], bmap[prev_c[0]][prev_c[1]].terrain.character,
+                  fgcolor=bmap[prev_c[0]][prev_c[1]].terrain.fgcolor,
+                  bgcolor=bmap[prev_c[0]][prev_c[1]].terrain.bgcolor)
         self.screen.update()
-        return
+
+    def add_unit(self, actor):
+        bmap = self.bmap
+        new_c = actor.coords
+        self.text(new_c[0], new_c[1], actor.character, fgcolor=self.team_colors[actor.team_id],
+                  bgcolor=bmap[new_c[0]][new_c[1]].terrain.bgcolor)
+        self.screen.update()
 
     def print_status(self, active, tile, switch=True):
         self.blank((1,26,73,1))

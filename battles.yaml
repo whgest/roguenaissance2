@@ -187,31 +187,35 @@
     - battle1a
     - battle1b
 
-  actors:
+  units:
+    -
+      ident: Astromancer
+      loc: 21,12
+      team_id: 1
     -
       ident: Freezefrog
-      loc: 30,20
+      loc: 23,12
       team_id: 2
-    -
-      ident: Rabid duckbunny
-      loc: 30,19
-      team_id: 2
-    -
-      ident: Origami golem
-      loc: 44,15
-      team_id: 2
-    -
-      ident: Dire roach
-      loc: 8,16
-      team_id: 2
-    -
-      ident: Rabid duckbunny
-      loc: 44,15
-      team_id: 2
-    -
-      ident: Dire roach
-      loc: 8,17
-      team_id: 2
+#    -
+#      ident: Rabid duckbunny
+#      loc: 30,19
+#      team_id: 2
+#    -
+#      ident: Origami golem
+#      loc: 44,15
+#      team_id: 2
+#    -
+#      ident: Dire roach
+#      loc: 8,16
+#      team_id: 2
+#    -
+#      ident: Rabid duckbunny
+#      loc: 44,16
+#      team_id: 2
+#    -
+#      ident: Dire roach
+#      loc: 8,17
+#      team_id: 2
 
   events:
     - condition:

@@ -4,8 +4,10 @@ by William Hardy Gest
 """
 
 import RN2_battle
+import RN2_battle_io
 import RN2_initialize
 import RN2_UI
+import RN2_loadmap
 import pygame.event
 import pygame.mixer
 import pickle
@@ -48,44 +50,46 @@ class RN_Sound():
         if not self.mute_switch:
             sound.play()
 
-class Game():
+
+class Game(object):
     def __init__(self):
         self.bindings = RN2_initialize.set_binds()
         self.battles = RN2_initialize.make_battle()
-        self.heroclasses, self.actors = RN2_initialize.make_actor()
+        self.actors = RN2_initialize.make_actor()
         self.skills = RN2_initialize.make_skills()
         self.maps = RN2_initialize.make_maps()
         self.text = RN2_initialize.make_text()
         self.sound, self.music = RN2_initialize.make_sound()
-        self.RN_UI = RN2_UI.RN_UI_Class()
-        self.RN_sound = RN_Sound(self.sound, self.music)
+        self.sound_handler = RN_Sound(self.sound, self.music)
+        self.ui = RN2_UI.RN_UI_Class(self.sound_handler)
         self.hero = None
         self.num_battles = 3
 
     def init_battle(self, ident):
         battle_data = copy.deepcopy(self.battles[ident])
-        # battle_controller = RN2_battle_io.Battle_Controller(self.hero, battle, self.maps[battle["map"]], self.RN_UI,
-        #                                                     self.RN_sound, self.skills, self.actors, self.RN_input)
-        # victory = battle_controller.init_battle()
+        map_raw = self.maps[(battle_data.get('map'))]
+        bmap = RN2_loadmap.load_map(map_raw)
 
-        victory = RN2_battle.Battle(battle_data)
+        io = RN2_battle_io.Battle_Controller(self.ui, self.sound_handler)
+        battle_class = RN2_battle.Battle(battle_data, self.actors, self.skills, bmap, io)
+        victory = battle_class.battle()
 
         if victory:
             return True
         else:
             return False
 
-    def init_hero(self, class_name, name):
-        heroclass = self.heroclasses[class_name]
-        self.hero = RN2_initialize.Hero(heroclass, name)
-        self.hero.class_name = class_name
+    # def init_hero(self, class_name, name):
+    #     heroclass = self.heroclasses[class_name]
+    #     self.hero = RN2_initialize.Hero(heroclass, name)
+    #     self.hero.class_name = class_name
 
-    def load_saved_hero(self, saved_hero):
-        heroclass = self.heroclasses[saved_hero['class_name']]
-        self.hero = RN2_initialize.Hero(heroclass, saved_hero['name'])
-        self.hero.class_name = saved_hero['class_name']
-        self.hero.score = saved_hero['score']
-        self.hero.current_battle = saved_hero['current_battle']
+    # def load_saved_hero(self, saved_hero):
+    #     heroclass = self.heroclasses[saved_hero['class_name']]
+    #     self.hero = RN2_initialize.Hero(heroclass, saved_hero['name'])
+    #     self.hero.class_name = saved_hero['class_name']
+    #     self.hero.score = saved_hero['score']
+    #     self.hero.current_battle = saved_hero['current_battle']
 
     def auto_save(self):
         save_data = {}
@@ -134,15 +138,14 @@ class Game():
 def main():
     #test mode
     game = Game()
-    game.init_hero("Astromancer", "Algor")
-    game.RN_sound.mute_switch = True
+    #game.sound_handler.mute_switch = True
     game.init_battle(4)
     exit()
 
     while 1:
         game = Game()
         done = 0
-        game.RN_sound.play_music("title")
+        game.sound_handler.play_music("title")
         while not done:
             done, load, hero = game.RN_UI.title_screen(game.maps["title"], game.RN_input, game.RN_sound)
         if not load:
@@ -159,12 +162,12 @@ def main():
                 game.load_saved_hero(saved_hero)
 
         while 1:
-            game.RN_sound.play_music("trans")
-            game.RN_UI.display_intro(game.text["battle" + str(game.hero.current_battle)])
+            game.sound_handler.play_music("trans")
+            game.ui.display_intro(game.text["battle" + str(game.hero.current_battle)])
             victory = game.init_battle(game.hero.current_battle)
             if not victory:
                 game.hero.reset_actor()
-                retry = game.RN_UI.display_game_over(game.maps["gameover"], game.battles[game.hero.current_battle]['tips'], game.RN_input, game.RN_sound)
+                retry = game.ui.display_game_over(game.maps["gameover"], game.battles[game.hero.current_battle]['tips'], game.RN_input, game.RN_sound)
                 if not retry:
                     break
                 else:
@@ -172,8 +175,8 @@ def main():
             game.hero.reset_actor()
             game.hero.current_battle += 1
             if game.hero.current_battle > game.num_battles:
-                game.RN_sound.play_music("ending")
-                game.RN_UI.display_ending(game.RN_input, game.hero, game.text['ending'])
+                game.sound_handler.play_music("ending")
+                game.ui.display_ending(game.RN_input, game.hero, game.text['ending'])
                 break
             game.auto_save()
 

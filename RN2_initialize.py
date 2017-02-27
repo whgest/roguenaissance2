@@ -5,6 +5,9 @@ import math
 import yaml
 import random
 from RN2_battle_logic import get_neighboring_points, add_points
+import pyromancer_tree
+from RN2_event import EventQueue, DamageOrHeal, GoodStatus, BadStatus, GoodStatusEnds, BadStatusEnds, StatusDamageOrHeal
+import itertools
 
 #pygame input constants, NOT ASCII CODES
 
@@ -84,12 +87,10 @@ class ModifiableMoveAttribute(ModifiableAttribute):
             return super(ModifiableMoveAttribute, self).get_modified_value(instance)
 
 
-
 class AppliedStatusEffect:
     def __init__(self, status, duration):
         self.status_effect = status
         self.remaining_duration = duration
-
 
 
 class Actor(object):
@@ -133,7 +134,9 @@ class Actor(object):
         self.death_animation = 'deathanim'
         self.name = name
         self.team_id = 0
-        self.is_dead = False
+        self.is_dead = 0
+        self.ai_class = pyromancer_tree.PyromancerDecisionTree
+        self.event = EventQueue()
 
     def __str__(self):
         return self.name
@@ -147,13 +150,19 @@ class Actor(object):
     def is_ally_of(self, unit):
         return unit.team_id == self.team_id
 
-    def inflict_damage_or_healing(self, raw_damage):
+    @property
+    def is_player_controlled(self):
+        return self.ai_class == 'player'
+
+    def inflict_damage_or_healing(self, raw_damage, skill_name):
         #healing is negative damage
         self.hp -= raw_damage
         if self.hp > self.maxhp:
             self.hp = self.maxhp
         if self.hp <= 0:
             self.kill_actor()
+
+        self.event.add_event(DamageOrHeal(self, raw_damage, skill_name))
 
     def clear_attribute_modifiers(self):
         for attr in self.MODIFIABLE_ATTRIBUTES:
@@ -184,11 +193,12 @@ class Actor(object):
 
     @property
     def is_disabled(self):
-        disabling_effects = [effect for effect in self.active_status_effects if effect.status.lose_turn]
-        return disabling_effects.pop().name if len(disabling_effects) else False
+        disabling_effects = [effect for effect in self.active_status_effects if effect.status_effect.lose_turn]
+        return disabling_effects[0].name if len(disabling_effects) else False
 
     def initiate_turn(self):
         self.tick_continuous_status()
+        self.decrement_status_durations()
         self.increment_mp()
 
     @property
@@ -219,7 +229,10 @@ class Actor(object):
 
     @property
     def priority_value(self):
-        return self.attack + self.magic + len(self.skillset) * (3 * (1 + (1-(self.maxhp / self.hp))))
+        try:
+            return self.attack + self.magic + len(self.skillset) * (3 * (1 + (1-(self.maxhp / self.hp))))
+        except ZeroDivisionError:
+            return 0
 
     def apply_status(self, status):
         for modifier in status.modifiers:
@@ -228,21 +241,38 @@ class Actor(object):
 
         self.active_status_effects.append(AppliedStatusEffect(status, status.duration))
 
+        if status.is_beneficial:
+            self.event.add_event(GoodStatus(self, status.name))
+        else:
+            self.event.add_event(BadStatus(self, status.name))
+
     def apply_status_modifier(self, modifier):
         attribute = modifier.stat
         change = modifier.value
 
         if attribute in self.attribute_modifiers:
             self.attribute_modifiers.get(attribute).append(change)
-        else:
-            new_value = getattr(self, attribute) + change
-            setattr(self, attribute, new_value)
 
     def tick_continuous_status(self):
         for active in self.active_status_effects:
             for modifier in active.status_effect.modifiers:
                 if modifier.continuous:
                     self.apply_status_modifier(modifier)
+                    #todo: continuous stat damage event
+
+        #tick only the strongest damage effect for each type
+        keyfunc = lambda x: x.type
+        all_dot_effects = [e.status_effect for e in self.active_status_effects if e.status_effect.damage]
+
+        if len(all_dot_effects):
+            all_dot_effects.sort(key=keyfunc, reverse=True)
+
+            for key, group in itertools.groupby(all_dot_effects, keyfunc):
+                effects_of_type = list(group)
+                effects_of_type.sort(key=lambda x: x.damage)
+                strongest_effect_for_type = effects_of_type.pop()
+                self.inflict_damage_or_healing(strongest_effect_for_type.damage, strongest_effect_for_type.type)
+                self.event.overwrite_last_event(StatusDamageOrHeal(self, strongest_effect_for_type.damage, strongest_effect_for_type.type))
 
         if self.hp <= 0:
             self.kill_actor()
@@ -265,6 +295,10 @@ class Actor(object):
 
         self.active_status_effects.remove(applied_status)
 
+        if applied_status.status_effect.is_beneficial:
+            self.event.add_event(GoodStatusEnds(self, applied_status.status_effect.name))
+        else:
+            self.event.add_event(BadStatusEnds(self, applied_status.status_effect.name))
 
 
 class Hero(Actor):
@@ -354,6 +388,7 @@ class DrainDamage(StandardDamage):
 
         return inflicted_damage
 
+
 class LineAttack():
     def get_next_aoe_range(self, all_tiles, edges, caster_loc):
         def negative_coords(coords):
@@ -378,8 +413,9 @@ class LineAttack():
         new_edges = [next_point]
         return all_tiles, new_edges
 
+
 class CircularAttack():
-    def get_next_aoe_range(self, all_tiles, edges):
+    def get_next_aoe_range(self, all_tiles, edges, caster_loc):
         edge_neighbors = set()
         for t in edges:
             edge_neighbors.update(get_neighboring_points(t))
@@ -407,6 +443,7 @@ DEFAULT_DEFENSE_STATS = {
 class SkillMoveEffect:
     def __init__(self, data):
         self.move_type = data.get('move_type', 'push')
+        self.origin = data.get('origin', 'user')
         self.distance = data.get('distance')
         self.instant = data.get('instant', False)
 
@@ -427,14 +464,14 @@ class SkillStatusEffect:
 
         self.duration = data.get('duration', 1)
         self.lose_turn = data.get('lose_turn', False)
-
+        self.damage = data.get('damage', 0)
 
         self.modifiers = []
         for m in data.get('modifiers', []):
             self.modifiers.append(SkillStatusEffectModifier(m))
 
     def __str__(self):
-        return self.name
+        return self.type + ' ' + self.damage
 
     @property
     def is_beneficial(self):
@@ -442,14 +479,14 @@ class SkillStatusEffect:
         for m in self.modifiers:
             count += m.value
 
-        return True if count > 0 and not self.lose_turn else False
+        return True if count > 0 and not self.lose_turn and self.damage < 0 else False
+
 
 
 class SkillEffectForTargetType:
     def __init__(self, target_type_data, ident):
         self.ignored = target_type_data.get('ignored', False)
         self.damage_type = target_type_data.get('damage_type', 'standard')
-        self.effects = target_type_data.get('effects', [])
         self.is_resistable = target_type_data.get('is_resistable', True)
         self.attack_stat = target_type_data.get('attack_stat')
         self.defense_stat = target_type_data.get('defense_stat')
@@ -464,7 +501,7 @@ class SkillEffectForTargetType:
 
         self.move_effects = []
         for m in target_type_data.get('move_effects', []):
-            self.status_effects.append(SkillMoveEffect(m))
+            self.move_effects.append(SkillMoveEffect(m))
 
         self.add_units = []
 
@@ -488,7 +525,6 @@ class SkillEffectForTargetType:
         return hit_chance
 
     def attack_roll(self, attacker, defender):
-        #todo: modifiable attr get mysteriously stopped working
         stat = getattr(attacker, self.attack_stat)
         defense = getattr(defender, self.defense_stat)
         random_roll = random.randint(0, stat)
@@ -524,6 +560,7 @@ class Skill:
         self.aoe_size = data.get('aoe_size', 0)
         self.aoe_type = data.get('aoe_type', 'circular')
         self.aoe = AOE_TYPES[self.aoe_type]()
+        self.add_unit = data.get('add_unit', [])
         self.mp = data.get('mp', 0)
         self.mp_cost_type = data.get('mp_cost_type')
         self.prompt = data.get('prompt')
@@ -557,7 +594,7 @@ def make_actor():
     with open('actors.yaml') as actors:
         actors_data = yaml.load(actors)
 
-    return actors_data['classes'], actors_data['actors']
+    return actors_data['actors']
 
 def make_maps():
     with open('maps.yaml') as maps:

@@ -1,0 +1,118 @@
+#
+#Skill ID:
+#  @prompt: {none}
+#  @animation: {none}
+#  @mp: {0} #mp cost
+#  @mp_cost_type: {static} #for modifiable mp costs
+#  @name: {skillID} #overwrite skill id with a different in game display name
+#
+#  @range: {0} #allowable distance for targeted tile
+#  @aoe_size: {0} #aoe range, as interpreted by aoe_type
+#  @aoe_type: {area} #area, line, conical, global
+
+#  @add_units:
+#   ident #will add unit with ident to a random tile within in the summon area of effect
+#
+#  #these can be set for all targets or overwritten for some/all target types (self, ally, enemy)
+#  @is_resistable: {true} #determines whether skill will be resistable. set false for heals, buffs or unavoidable attacks
+#  @attack_stat: {none} #attacker stat used for calculating hit chance and base damage
+#  @defense_stat: {opposite of attacker stat || none} #defender stat used for skill resistance
+#
+#  @damage: {0} #negative damage is considered healing
+#    @num_dice: #randomized damage, must be set with dice size
+#    @dice_size:  #randomized damage, must be set with num_dice
+#    @fixed_damage: #fixed damage
+#    @damage_type: {normal} #normal or drain, mp damage, etc.
+#    @stat_modified: {true} #whether damage is affected by skill's attack stat
+#
+#  @remove_status_type: #remove all statuses of this type#
+#  @status_effects:
+#    - @type: {none} #effects with the same type will not stack (stronger spells take precedence). typeless spells cannot be dispelled.
+#      @name: {type || name || skillID} #display name on character status
+#      @duration: {1} #how many turns the AFFECTED unit will take before status expiry
+#      @continous: {false} #continous effects will apply modifiers every turn instead of once at application (eg damage over time)
+#
+#      @lose_turn: {false} #this effect will cause the unit to skip its turn, but status durations will still tick down (eg stun or sleep)
+#
+#      @damage: damage applied every turn
+#      @modifiers: #stat modifiers
+#        stat: move # affected stat
+#        value: -3 #a value of 0 will set the affected stat to 0
+#         @expires: {true} #effects that do not expire will not restore lost attributes on status end (eg damage over time)
+
+#  @move_effects:
+#    @move_type: {push} #movement type- push, pull
+#    @origin: {user, target}  #origin for push/pull
+#    @distance: {none} #distance to move unit, not used for all types, none means will move will continue until blocked
+#    @instant: {false} #will instantly move to location. no clear path required.
+
+
+#
+#
+#  @targets:
+#    @enemy: # overwrite base properties for target type 'enemy'
+#      @ignored: {false} #skill does not affect this target type
+#    @friendly: # overwrite base properties for target type 'friendly'
+#      @ignored: {false} #skill does not affect this target type
+#    @self: # overwrite base and 'friendly' properties for target type 'self'
+#      @ignored: {false} #skill does not affect this target type
+#
+
+
+Test Spell:
+  damage:
+    fixed_damage: 10
+  targets:
+    enemy:
+      damage:
+        fixed_damage: 1
+
+    friendly:
+      damage:
+        fixed_damage: -1
+
+Ascendance:
+  range: 0
+  aoe: 0
+  is_resistable: 0
+  damage:
+    fixed_damage: -8
+    stat_modify: 0
+  status_effects:
+    - type: Ascendant
+      modifiers:
+       - stat: attack
+         value: 6
+       - stat: defense
+         value: 4
+       - stat: resistance
+         value: 4
+       - stat: move
+         value: 2
+      continuous: 0
+      duration: 4
+  mp: 7
+  prompt: Massively increase physical attack, move, and defenses.
+  animation: ascend
+
+Poison:
+  stat: attack
+  range: 1
+  aoe: 1
+  attack_stat: attack
+
+  damage:
+    fixed_damage: 10
+    stat_modify: 0
+
+  status_effects:
+    - type: Poison
+      duration: 3
+      modifiers:
+        - stat: hp
+          value: -3
+          continuous: 1
+          expires: 0
+  mp: 2
+  prompt: An empowered melee strike that poisons.
+  animation: venom

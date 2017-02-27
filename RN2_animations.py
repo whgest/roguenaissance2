@@ -4,17 +4,20 @@ from time import sleep
 import math
 import random
 
-class RN_Animation_Class():
-    def __init__(self, affected_tiles, game, RN_UI, anim_id, bmap, attacker):
-        self.tiles = affected_tiles
+class Animation():
+    def __init__(self, game, RN_UI, bmap):
         self.UI = RN_UI
         self.bmap = bmap
-        self.anim_id = anim_id
         self.game = game
-        self.attacker = attacker
+
+    def animate(self, affected_tiles, anim_id, attacker):
+        self.attacker = attacker.coords
+        self.anim_id = anim_id
+        self.tiles = affected_tiles
         self.UI.screen._autoupdate = True
         self.animation()
         self.UI.screen._autoupdate = False
+
 
     def cleanup(self, tiles, clean_tint=True, tint=(0, 0, 0)):
         if type(tiles) is not list:
@@ -162,12 +165,10 @@ class RN_Animation_Class():
     def grid_distance(self, actor1, actor2):
         return abs(actor1[0] - actor2[0]) + abs(actor1[1] - actor2[1])
 
-
-    #TODO: refactor this nonsense into a dict
     def animation(self):
         if self.anim_id == "meteor":
-            self.tint_screen((200, 25, 25))
             self.game.play_sound("fall")
+            self.tint_screen((-25, -25, -25))
             self.projectile((self.tiles[0][0], 0), (self.tiles[0][0], self.tiles[0][1]), ["O"], ["red", "maroon"])
             self.game.play_sound("bigboom")
             self.flash_tiles(self.tiles, [(50,-50,-50), (150,-50,-50)], 3)
