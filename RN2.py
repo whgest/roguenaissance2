@@ -70,7 +70,7 @@ class Game(object):
         map_raw = self.maps[(battle_data.get('map'))]
         bmap = RN2_loadmap.load_map(map_raw)
 
-        io = RN2_battle_io.Battle_Controller(self.ui, self.sound_handler)
+        io = RN2_battle_io.BattleController(self.ui, self.sound_handler, self.input)
         battle_class = RN2_battle.Battle(battle_data, self.actors, self.skills, bmap, io)
         victory = battle_class.battle()
 
@@ -104,7 +104,7 @@ class Game(object):
         fin.close()
         return
 
-    def RN_input(self):
+    def input(self):
         command = None
         while 1:
             for e in pygame.event.get():
@@ -123,12 +123,12 @@ class Game(object):
         if command == "exit":
             exit()
         if command == "mute":
-            self.RN_sound.mute_switch = not self.RN_sound.mute_switch
+            self.sound_handler.mute_switch = not self.RN_sound.mute_switch
 
-            if self.RN_sound.mute_switch:
-                self.RN_sound.cut_music()
+            if self.sound_handler.mute_switch:
+                self.sound_handler.cut_music()
             else:
-                self.RN_sound.deactivate_mute_switch()
+                self.sound_handler.deactivate_mute_switch()
 
         return command
 

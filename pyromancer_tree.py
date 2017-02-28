@@ -222,7 +222,7 @@ class PyromancerDecisionTree(object):
 
         for tile in valid_target_tiles:
             target_tile_options[tile] = 0
-            affected_area = RN2_battle_logic.calculate_affected_area(tile, self.actor.coords, skill, self.battle.bmap, self.ui)
+            affected_area = RN2_battle_logic.calculate_affected_area(tile, self.actor.coords, skill, self.battle.bmap)
 
             # if skill.effects and skill.effects[0]['type'] == "Summon" and self.battle.bmap[tile[0]][tile[1]].is_movable():
             #     target_tile_options[tile] += ADDITIONAL_ALLY.calculate()

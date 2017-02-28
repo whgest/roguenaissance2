@@ -1,7 +1,7 @@
 actors:
   Astromancer:
     character: "@"
-    ai: pyromancer
+    ai_class: player
     maxhp: 52
     maxmp: 99
     weapon: white sword
@@ -15,13 +15,13 @@ actors:
     immunities:
       - Slow
     skillset:
-#      - White sword
+       - White sword
 #      - Gravity Surge
-#      - Zodiac Curse
-#      - Time Distortion
-#      - Soothing Starlight
+       - Zodiac Curse
+       - Time Distortion
+       - Soothing Starlight
 #      - Singularity
-#     - Meteor
+       - Meteor
 #      - Gamma Ray
 #      - Skycaller
 #      - Summon Meteorman

@@ -49,6 +49,24 @@ F10 = 291
 F11 = 292
 F12 = 293
 
+#actions
+ACTIVATE = 0
+CANCEL = 1
+PASS_TURN = 2
+HELP_MENU = 3
+STATUS_MENU = 4
+SKILLS_MENU = 5
+LEGEND = 6
+BATTLE_OVERVIEW = 7
+MUTE_SOUND = 8
+EXIT = 9
+DOWN = 10
+LEFT = 11
+RIGHT = 12
+UP = 13
+
+
+
 
 class ModifiableAttribute(object):
     def __init__(self, name):
@@ -152,7 +170,7 @@ class Actor(object):
 
     @property
     def is_player_controlled(self):
-        return self.ai_class == 'player'
+        return self.ai == 'player'
 
     def inflict_damage_or_healing(self, raw_damage, skill_name):
         #healing is negative damage
@@ -162,7 +180,8 @@ class Actor(object):
         if self.hp <= 0:
             self.kill_actor()
 
-        self.event.add_event(DamageOrHeal(self, raw_damage, skill_name))
+        if raw_damage > 0:
+            self.event.add_event(DamageOrHeal(self, raw_damage, skill_name))
 
     def clear_attribute_modifiers(self):
         for attr in self.MODIFIABLE_ATTRIBUTES:
@@ -582,7 +601,8 @@ class Skill:
     def affects_self(self):
         return not self.targets.self.ignored
 
-    def get_skill_prompt(self):
+    @property
+    def skill_prompt(self):
         prompt = self.prompt
         prompt += " Range: %s" % str(self.range)
         if self.aoe > 1:
@@ -632,27 +652,27 @@ def make_sound():
 
 def set_binds():
     binds = {
-        RET_KEY : "activate",
-        A_KEY : "activate",
-        ENT_KEY : "activate",
-        ESC_KEY : "cancel",
-        BACKSPACE : "cancel",
-        SPACE_KEY : "pass",
-        H_KEY : "help",
-        T_KEY : "stats",
-        S_KEY : "skills",
-        L_KEY : "legend",
-        B_KEY : "battle",
-        M_KEY : "mute",
-        Q_KEY : "exit",
-        DOWN_ARROW : "down",
-        LEFT_ARROW : "left",
-        RIGHT_ARROW : "right",
-        UP_ARROW : "up",
-        TWO_KEY : "down",
-        FOUR_KEY : "left",
-        SIX_KEY : "right",
-        EIGHT_KEY : "up"
+        RET_KEY: ACTIVATE,
+        A_KEY: ACTIVATE,
+        ENT_KEY: ACTIVATE,
+        ESC_KEY: CANCEL,
+        BACKSPACE: CANCEL,
+        SPACE_KEY: PASS_TURN,
+        H_KEY: HELP_MENU,
+        T_KEY: STATUS_MENU,
+        S_KEY: SKILLS_MENU,
+        L_KEY: LEGEND,
+        B_KEY: BATTLE_OVERVIEW,
+        M_KEY: MUTE_SOUND,
+        Q_KEY: EXIT,
+        DOWN_ARROW: DOWN,
+        LEFT_ARROW: LEFT,
+        RIGHT_ARROW: RIGHT,
+        UP_ARROW: UP,
+        TWO_KEY: DOWN,
+        FOUR_KEY: LEFT,
+        SIX_KEY: RIGHT,
+        EIGHT_KEY: UP
     }
 
     #add function keys

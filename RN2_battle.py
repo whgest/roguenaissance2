@@ -73,7 +73,6 @@ class Battle:
         self.selected_skill = None
         self.skill_index = 0
         self.battle_index = 0
-        self.battle_menu_list = []
         self.v_top = 0
         self.move_range = None
         self.report = None
@@ -84,7 +83,6 @@ class Battle:
         self.kills = 0
         self.bmap = bmap
         self.map_size = (49, 24)
-        self.unit_list = []
 
         self.all_living_units = []
 
@@ -107,6 +105,18 @@ class Battle:
                 print unit, unit.coords, self.bmap.get_tile_at(unit.coords).actor
                 raise AssertionError
 
+    @property
+    def battle_menu_list(self):
+        #todo: refactor when ui is updated
+        unit_list = []
+        for unit in self.all_living_units:
+            unit_list.append((unit.name, " HP " + str(unit.hp) + "/" + str(unit.maxhp), unit))
+        unit_list.reverse()
+        unit_list.insert(0, unit_list.pop())  # put active unit at top
+
+        print 'ul', unit_list
+        return unit_list
+
     def battle(self):
         #self.battle_events(start=True)
         self.place_units(self.units)
@@ -125,40 +135,41 @@ class Battle:
             if not self.active.can_act:
                 continue
 
-            self.state_check()
+            self.state_check() #sanity check for agreement of unit coords and map pos
+
             if self.active.is_player_controlled:
-                pass
+                chosen_skill, target_tile, destination = self.io.player_turn(self)
+                self.validate_ai_turn(self.active, chosen_skill, target_tile, [destination])
 
             else:
-                #get ai move and validate
+                #ai controlled
                 ai = self.active.ai_class(self, self.active, self.skills)
                 skill_name, target_tile, move_path = ai.get_action(self.io.ui)
                 chosen_skill = self.skills.get(skill_name)
-                is_valid = self.validate_ai_turn(self.active, chosen_skill, target_tile, move_path[1:])
-                if not is_valid:
-                    continue
+                destination = move_path[-1] if move_path else None
 
-                #resolve turn
-                if move_path:
-                    self.move_unit(self.active, move_path[-1])
-                    self.event.add_event(RN2_event.MoveUnit(self.active, move_path))
-                if chosen_skill:
-                    affected_tiles = RN2_battle_logic.calculate_affected_area(target_tile, self.active.coords, chosen_skill, self.bmap, self.io.ui)
-                    self.event.add_event(RN2_event.UseSkill(self.active, chosen_skill, affected_tiles))
-                    self.execute_skill(self.active, chosen_skill, affected_tiles, target_tile)
+                self.validate_ai_turn(self.active, chosen_skill, target_tile, move_path[1:])
+                self.event.add_event(RN2_event.MoveUnit(self.active, move_path))
 
-                self.update_state()
-                self.update_display()
+            #resolve turn
+            if destination:
+                self.move_unit(self.active, destination)
+            if chosen_skill:
+                affected_tiles = RN2_battle_logic.calculate_affected_area(target_tile, self.active.coords, chosen_skill, self.bmap)
+                self.event.add_event(RN2_event.UseSkill(self.active, chosen_skill, affected_tiles))
+                self.execute_skill(self.active, chosen_skill, affected_tiles, target_tile)
+
+            self.clear_killed()
+            self.update_display()
 
             game_over = self.check_loss_condition()
             if game_over:
                 self.io.game_over()
                 return False
 
-            #RN_UI.print_narration(self.report.process_report())
             time.sleep(DELAY_BETWEEN_TURNS)
 
-    def update_state(self):
+    def clear_killed(self):
         to_remove = []
         for unit in self.all_living_units:
             if unit.hp <= 0 or unit.is_dead:
@@ -175,6 +186,7 @@ class Battle:
             if active_actor.hp > 0:
                 break
 
+        #todo: handle edge case where no units survive
         return active_actor
 
     def move_unit(self, unit, destination):
@@ -198,53 +210,6 @@ class Battle:
             self.turn_tracker.add_unit(actor)
             self.bmap.place_unit(actor, actor.coords)
 
-    # def battle_events(self, start=False):  # check for battle event conditions
-    #     if start:
-    #         self.activate_event(self.battle.events[0])
-    #         return
-    #     for e in self.battle.events:
-    #         event_trigger = False
-    #         trigger_type = e['condition']['trigger_type']
-    #         condition = e['condition'].get('trigger_condition')
-    #         if trigger_type == "turn" and self.battle.turn_tracker.turn_count == condition:
-    #             event_trigger = True
-    #         elif trigger_type == "playeryGreater" and self.battle.hero.coords[1] >= condition:
-    #             event_trigger = True
-    #         elif trigger_type == "playeryLesser" and self.battle.hero.coords[1] <= condition:
-    #             event_trigger = True
-    #         elif trigger_type == "playeryIs" and self.battle.hero.coords[1] == condition:
-    #             event_trigger = True
-    #         elif trigger_type == "playerxLesser" and self.battle.hero.coords[0] <= condition:
-    #             event_trigger = True
-    #         elif trigger_type == "playerxGreater" and self.battle.hero.coords[0] >= condition:
-    #             event_trigger = True
-    #         elif trigger_type == "playerxIs" and self.battle.hero.coords[0] == condition:
-    #             event_trigger = True
-    #         elif trigger_type == "bosskill" and not [u for u in self.battle.all_living_units if u.is_boss]:
-    #             event_trigger = True
-    #         elif trigger_type == "kill_team_2" and not [u for u in self.battle.all_living_units if u.team_id == 2]:
-    #             event_trigger = True
-    #
-    #         if event_trigger:
-    #             if self.activate_event(e):
-    #                 return True
-
-    # def activate_event(self, event):
-    #     effect_type = event['effect']['type']
-    #     if effect_type == "victory":
-    #         return True
-    #     elif effect_type == "add_mobs":
-    #         for mob_id in event['effect']['ids']:
-    #             enemy = self.actors[mob_id]
-    #             self.all_living_units.append(enemy)
-    #             self.turn_tracker.add_unit(enemy)
-    #             self.bmap[enemy.coords[0]][enemy.coords[1]].actor = enemy
-    #             self.UI.update_map("new", enemy.coords, enemy, self.battle.bmap)
-    #     elif effect_type == "pass":
-    #         pass
-    #     self.events.remove(event)
-    #     return
-
     def add_unit(self, name, loc, team_id):
         stats = self.actor_data[name]
         summon = RN2_initialize.Actor(stats, name)
@@ -257,7 +222,6 @@ class Battle:
         self.turn_tracker.add_unit(summon)
         self.all_living_units.append(summon)
         self.event.add_event(RN2_event.AddUnit(summon))
-
 
     @property
     def unit_list(self):
@@ -364,20 +328,18 @@ class Battle:
 
         def move_is_legal():
             for tile in path:
-                if self.bmap[tile[0]][tile[1]].is_movable():
+                if self.bmap.get_tile_at(tile).actor == e or self.bmap.get_tile_at(tile).is_movable():
                     continue
                 else:
                     print "Actor '{0}' returned illegal move. Tile ({1}, {2}) is blocked by {3}.".format(e.name, tile[0], tile[1], self.bmap.get_tile_at(tile).actor)
-                    exit()
-                    return False
-            return True
+                    raise AssertionError
 
         def skill_is_legal():
-            if e.mp >= skill.mp:
-                return True
-            else:
+            if not e.mp >= skill.mp:
                 print "Actor '{0}' does not have the MP to cast {1}. MP: {2} Needed: {3}".format(e.name, skill.name, e.mp, skill.mp)
-                return False
+                raise AssertionError
+
+            #todo: ensure unit has skill
 
         def target_is_legal():
             # if skill and skill.target == "empty" and not target_tile.is_movable():
@@ -388,16 +350,10 @@ class Battle:
             # #todo: check skill range, emptiness for summon skills, etc.
             return True
 
-        if skill and not skill_is_legal():
-            return False
+        if skill: skill_is_legal()
+        if path: move_is_legal()
+        if target: target_is_legal()
 
-        if path and not move_is_legal():
-            return False
-
-        if target and not target_is_legal():
-            return False
-
-        return True
 
     def grid_distance(self, actor1, actor2):
         return abs(actor1[0] - actor2[0]) + abs(actor1[1] - actor2[1])
