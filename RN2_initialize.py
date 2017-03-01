@@ -474,6 +474,17 @@ class SkillStatusEffectModifier:
         self.expires = data.get('expires', True)
         self.continuous = data.get('continuous', False)
 
+    def description(self):
+        if self.stat > 0:
+            verb = 'increased'
+        else:
+            verb = 'decreased'
+        return '{0} {1} by {2}'.format(self.stat, verb, self.value)
+
+    def is_beneficial(self):
+        return True if self.stat > 0 else False
+
+
 class SkillStatusEffect:
     def __init__(self, data, skill_ident):
         self.type = data.get('type')
@@ -489,6 +500,18 @@ class SkillStatusEffect:
         for m in data.get('modifiers', []):
             self.modifiers.append(SkillStatusEffectModifier(m))
 
+    def display(self):
+        return '{0} ({1} turns remaining)'.format(self.type, self.duration)
+
+    def modifier_descriptions(self):
+        descriptions = []
+        if self.damage:
+            descriptions.append({'description': '{0} damage per turn'.format(self.damage), 'is_beneficial': (self.damage < 0)})
+        for modifier in self.modifiers:
+            descriptions.append({'description': modifier.description, 'is_beneficial': modifier.is_beneficial})
+
+        return descriptions
+
     def __str__(self):
         return self.type + ' ' + self.damage
 
@@ -499,7 +522,6 @@ class SkillStatusEffect:
             count += m.value
 
         return True if count > 0 and not self.lose_turn and self.damage < 0 else False
-
 
 
 class SkillEffectForTargetType:
@@ -523,7 +545,6 @@ class SkillEffectForTargetType:
             self.move_effects.append(SkillMoveEffect(m))
 
         self.add_units = []
-
 
     def get_hit_chance(self, attacker, defender):
         """
@@ -551,8 +572,10 @@ class SkillEffectForTargetType:
         if attack_roll >= defense:
             return True
         else:
-            #self.report.add_entry("miss", defender, cause=skill.name)
             return False
+
+    def is_beneficial(self):
+        pass
 
 
 class TargetTypes:
