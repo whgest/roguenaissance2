@@ -5,6 +5,8 @@
     - battle1a
     - battle1b
 
+  player_start: 12,12
+
   actors:
     -
       ident: Freezefrog
@@ -38,10 +40,7 @@
       ident: Evil begonia
       loc: 32,0
       team_id: 2
-#    -
-#      ident: Freezefrog
-#      loc: 29,21
-#      team_id: 1
+
 
   events:
     - condition:

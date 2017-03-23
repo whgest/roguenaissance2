@@ -79,28 +79,30 @@ class Game(object):
         else:
             return False
 
-    # def init_hero(self, class_name, name):
-    #     heroclass = self.heroclasses[class_name]
-    #     self.hero = RN2_initialize.Hero(heroclass, name)
-    #     self.hero.class_name = class_name
+    def new_game(self, class_name, name):
+        hero_class = self.actors[class_name]
+        self.hero = RN2_initialize.Actor(hero_class, name)
+        self.hero.class_name = class_name
 
-    # def load_saved_hero(self, saved_hero):
-    #     heroclass = self.heroclasses[saved_hero['class_name']]
-    #     self.hero = RN2_initialize.Hero(heroclass, saved_hero['name'])
-    #     self.hero.class_name = saved_hero['class_name']
-    #     self.hero.score = saved_hero['score']
-    #     self.hero.current_battle = saved_hero['current_battle']
+    def load_saved_game(self, saved_hero):
+        hero_class = self.actors[saved_hero.hero_class]
+        self.hero = RN2_initialize.Actor(hero_class, saved_hero.name)
+        self.hero.class_name = saved_hero.class_name
+        self.hero.score = saved_hero.score
+        self.hero.current_battle = saved_hero.current_battle
 
     def auto_save(self):
-        save_data = {}
+        data = {}
 
-        save_data['class_name'] = self.hero.class_name
-        save_data['name'] = self.hero.name
-        save_data['score'] = self.hero.score
-        save_data['current_battle'] = self.hero.current_battle
+        data['class_name'] = self.hero.class_name
+        data['name'] = self.hero.name
+        data['score'] = self.hero.score
+        data['current_battle'] = self.hero.current_battle
+
+        saved_data = SavedGame(data)
 
         fin = open(self.hero.name + ".sav", 'w')
-        pickle.dump(save_data, fin)
+        pickle.dump(saved_data, fin)
         fin.close()
         return
 
@@ -123,7 +125,7 @@ class Game(object):
         if command == "exit":
             exit()
         if command == "mute":
-            self.sound_handler.mute_switch = not self.RN_sound.mute_switch
+            self.sound_handler.mute_switch = not self.sound_handler.mute_switch
 
             if self.sound_handler.mute_switch:
                 self.sound_handler.cut_music()
@@ -133,33 +135,52 @@ class Game(object):
         return command
 
 
+class SavedGame(object):
+    def __init__(self, data):
+        self.name = data.get('name', None)
+        self.hero_class = data.get('hero_class', None)
+        self.score = AsciimancerScore(data.get('score', {}))
+        self.current_battle = data.get('current_battle', 1)
+
+
+
+class AsciimancerScore:
+    def __init__(self, data):
+        self.turns_taken = data.get('turns_taken', 0)
+        self.enemies_killed = data.get('enemies_killed', 0)
+        self.damage_taken = data.get('damage_taken', 0)
+
 
 
 def main():
     #test mode
-    game = Game()
-    #game.sound_handler.mute_switch = True
-    game.init_battle(4)
-    exit()
+    # game = Game()
+    # game.sound_handler.mute_switch = True
+    # game.init_battle(4)
+    # exit()
 
     while 1:
         game = Game()
         done = 0
         game.sound_handler.play_music("title")
+        load = False
+        hero = None
+
         while not done:
-            done, load, hero = game.RN_UI.title_screen(game.maps["title"], game.RN_input, game.RN_sound)
+            done, load, hero = game.ui.title_screen(game.maps["title"], game.input, game.sound_handler)
+
         if not load:
-           game.RN_UI.display_intro(game.text["intro"])
-           name, hclass = game.RN_UI.create_character(game.text["Name"], game.text["Class"],
+            game.ui.display_intro(game.text["intro"])
+            name, hclass = game.ui.create_character(game.text["Name"], game.text["Class"],
                {"Astromancer": game.text["Astromancer"],
                 "Pyromancer": game.text["Pyromancer"],
-                "Terramancer": game.text["Terramancer"]}, game.RN_input, game.RN_sound)
-           game.init_hero(hclass, name)
-           game.auto_save()
+                "Terramancer": game.text["Terramancer"]}, game.input, game.sound_handler)
+            game.init_hero(hclass, name)
+            game.auto_save()
         else:
             with open(hero) as fin:
                 saved_hero = pickle.load(fin)
-                game.load_saved_hero(saved_hero)
+                game.load_saved_game(saved_hero)
 
         while 1:
             game.sound_handler.play_music("trans")
@@ -167,7 +188,7 @@ def main():
             victory = game.init_battle(game.hero.current_battle)
             if not victory:
                 game.hero.reset_actor()
-                retry = game.ui.display_game_over(game.maps["gameover"], game.battles[game.hero.current_battle]['tips'], game.RN_input, game.RN_sound)
+                retry = game.ui.display_game_over(game.maps["gameover"], game.battles[game.hero.current_battle]['tips'], game.input, game.sound_handler)
                 if not retry:
                     break
                 else:
@@ -176,7 +197,7 @@ def main():
             game.hero.current_battle += 1
             if game.hero.current_battle > game.num_battles:
                 game.sound_handler.play_music("ending")
-                game.ui.display_ending(game.RN_input, game.hero, game.text['ending'])
+                game.ui.display_ending(game.input, game.hero, game.text['ending'])
                 break
             game.auto_save()
 

@@ -65,6 +65,7 @@ class Battle:
 
         self.io = io
         self.units = battle_data.get('units', [])
+        self.player_start = battle_data.get('player_start', None)
         self.actor_data = actor_data
         self.skills = skills
         self.events = battle_data.get('events', [])
@@ -83,6 +84,7 @@ class Battle:
         self.kills = 0
         self.bmap = bmap
         self.map_size = (49, 24)
+        self.hero = None
 
         self.all_living_units = []
 
@@ -198,6 +200,9 @@ class Battle:
         self.bmap.remove_unit(unit)
 
     def place_units(self, units):
+        if self.hero:
+            units.append({'ident': self.hero.hero_class, 'loc': self.player_start, 'team_id': 1})
+
         for unit in units:
             name = unit['ident']
             stats = self.actor_data[name]

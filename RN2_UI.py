@@ -19,6 +19,8 @@ import math
 from threading import Timer, Thread, Event, Lock
 import logging
 import RN2_animations
+from RN2_initialize import ACTIVATE, CANCEL, PASS_TURN, HELP_MENU, STATUS_MENU, SKILLS_MENU, LEGEND, BATTLE_OVERVIEW, MUTE_SOUND, EXIT, DOWN, LEFT, RIGHT, UP
+
 
 class RN_Cursor():
     def __init__(self, UI):
@@ -651,7 +653,7 @@ class RN_UI_Class():
         UI = self
         self.draw_border()
         UI.title_text(14, 28, "On the \"Roguenaissance 2.0\" RPG Battle Engine")
-        UI.title_text(20, 30, "by William Hardy Gest, 2013-2015")
+        UI.title_text(20, 30, "by William Hardy Gest, 2013-2017")
         title_list = [("New Game", 10), ("Continue", 25), ("High Scores", 42), ("Quit", 60)]
         self.display_title(title)
 
@@ -668,15 +670,15 @@ class RN_UI_Class():
         UI.screen.update()
         while 1:
                 command = input()
-                if command == "right":
+                if command == RIGHT:
                     sound.play_sound('beep')
                     UI.title_text(title_list[title_index][1], 37, title_list[title_index][0])
                     title_index += 1
-                elif command == "left":
+                elif command == LEFT:
                     sound.play_sound('beep')
                     UI.title_text(title_list[title_index][1], 37, title_list[title_index][0])
                     title_index -= 1
-                elif command == "activate":
+                elif command == ACTIVATE:
                     sound.play_sound('beep2')
                     selection = title_list[title_index][0]
                     break
@@ -785,15 +787,15 @@ class RN_UI_Class():
         self.screen.update()
         while 1:
             command = input()
-            if command == "right":
+            if command == RIGHT:
                 sound.play_sound('beep')
                 self.title_text(title_list[title_index][1], 35, title_list[title_index][0])
                 title_index += 1
-            elif command == "left":
+            elif command == LEFT:
                 sound.play_sound('beep')
                 self.title_text(title_list[title_index][1], 35, title_list[title_index][0])
                 title_index -= 1
-            elif command == "activate":
+            elif command == ACTIVATE:
                 sound.play_sound('beep2')
                 selection = title_list[title_index][0]
                 break
@@ -853,15 +855,15 @@ class RN_UI_Class():
                 self.text_wrapper(class_descr[title_list[title_index][0]], 2, 24, fgcolor="yellow")
                 self.screen.update()
                 command = input()
-                if command == "right":
+                if command == RIGHT:
                     sound.play_sound('beep')
                     self.title_text(title_list[title_index][1], 35, title_list[title_index][0])
                     title_index += 1
-                elif command == "left":
+                elif command == LEFT:
                     sound.play_sound('beep')
                     self.title_text(title_list[title_index][1], 35, title_list[title_index][0])
                     title_index -= 1
-                elif command == "activate":
+                elif command == ACTIVATE:
                     sound.play_sound('beep2')
                     selection = title_list[title_index][0]
                     break
@@ -905,19 +907,19 @@ class RN_UI_Class():
         while 1:
             self.screen.update()
             command = input()
-            if command == "up" and len(save_game_list) > 1:
+            if command == UP and len(save_game_list) > 1:
                 sound.play_sound('beep')
                 self.title_text(10, 6+title_index, title_list[title_index])
                 title_index -= 1
-            elif command == "down" and len(save_game_list) > 1:
+            elif command == DOWN and len(save_game_list) > 1:
                 sound.play_sound('beep')
                 self.title_text(10, 6+title_index, title_list[title_index])
                 title_index += 1
-            elif command == "activate":
+            elif command == ACTIVATE:
                 sound.play_sound('beep2')
                 selection = title_list[title_index]
                 break
-            elif command == "cancel":
+            elif command == CANCEL:
                 sound.play_sound('error')
                 return False, []
             title_index %= len(title_list)

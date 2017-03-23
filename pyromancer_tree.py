@@ -4,7 +4,6 @@ import logging
 import RN2_battle_logic
 import time
 import math
-import RN2_UI
 #todo: summons are not considered here
 
 #weight placed on each consideration in action selection. these will serve as "genes" for the first few simple learning AIs

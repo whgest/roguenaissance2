@@ -7,20 +7,11 @@ by William Hardy Gest
 October 2013
 
 """
-import RN2_initialize
-import RN2_battle
-import RN2_UI
-import RN2_animations
-import copy
-import RN2_AI
 import logging
-import traceback
 import time
 import string as string_module
-import pathfinder
 import RN2_battle_logic
 from RN2_initialize import ACTIVATE, CANCEL, PASS_TURN, HELP_MENU, STATUS_MENU, SKILLS_MENU, LEGEND, BATTLE_OVERVIEW, MUTE_SOUND, EXIT, DOWN, LEFT, RIGHT, UP
-import RN2
 
 logging.basicConfig(filename="logs/rn_debug.log", filemode="w+", level=logging.DEBUG)
 
