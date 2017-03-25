@@ -5,9 +5,9 @@
     - battle1a
     - battle1b
 
-  player_start: 12,12
+  player_start: 15,24
 
-  actors:
+  units:
     -
       ident: Freezefrog
       loc: 30,20
@@ -42,40 +42,39 @@
       team_id: 2
 
 
-  events:
-    - condition:
-        trigger_type: start
-      effect:
-        type: add_mobs
-        ids:
-          - 0
-          - 1
+  triggers:
+    - conditions:
+        - condition_type: is_turn
+          condition_value: 0
+      effects:
+        - effect_type: add_units
+          effect_value:
+            - 0
+            - 1
 
-    - condition:
-        trigger_type: turn
-        trigger_condition: 3
-      effect:
-        type: add_mobs
-        ids:
-          - 2
-          - 3
+    - conditions:
+        - condition_type: is_turn
+          condition_value: 3
+      effects:
+        - effect_type: add_units
+          effect_value:
+            - 2
+            - 3
 
-    - condition:
-        trigger_type: playeryLesser
-        trigger_condition: 15
-      effect:
-        type: add_mobs
-        ids:
-          - 4
-          - 5
-          - 6
-          - 7
+    - conditions:
+        - condition_type: is_turn
+          condition_value: 5
+      effects:
+        - effect_type: add_units
+          effect_value:
+            - 4
+            - 5
+            - 6
+            - 7
 
-    - condition:
-        trigger_type: playeryIs
-        trigger_condition: 0
-      effect:
-        type: victory
+  victory_condition:
+    conditions:
+      - condition_type: on_goal_tile
 
   tips:
     - Summoning friendly monsters is the best way to even the odds. Summoning will cost additional MP for each active summon you have.
@@ -90,6 +89,8 @@
     music:
       - battle2a
       - battle2b
+
+    player_start: 12,12
       
     actors:
       - ident: Fungal clubber
@@ -113,9 +114,10 @@
       - ident: Fungal blowgunner
         loc: 7,24
 
-    events:
+    triggers:
       - condition:
-          trigger_type: start
+          trigger_type: turn
+          trigger_condition: 1
         effect:
           type: add_mobs
           ids:
@@ -160,9 +162,10 @@
       - ident: Belshazzar
         loc: 25,5
 
-    events:
+    triggers:
       - condition:
-          trigger_type: start
+          trigger_type: turn
+          trigger_condition: 1
         effect:
           type: add_mobs
           ids:
@@ -216,9 +219,10 @@
 #      loc: 8,17
 #      team_id: 2
 
-  events:
+  triggers:
     - condition:
-        trigger_type: start
+        trigger_type: turn
+        trigger_condition: 1
       effect:
         type: add_mobs
         ids:

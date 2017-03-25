@@ -197,6 +197,7 @@ class MoveCharacter(PlayerTurnState):
         PlayerTurnState.__init__(self, ui, unit, bmap, player_selections)
         self.destination = []
         self.initial_position = self.unit.coords
+
         self.move_range = RN2_battle_logic.calculate_move_range(self.unit, self.bmap)
 
     def move_is_valid(self, destination):
@@ -360,13 +361,11 @@ class TargetSkill(PlayerTurnState):
 
     def draw_state_ui(self):
         #self.ui.print_legend()
-        self.ui.print_prompt("arrows = move. a = attack. s = use skills. space = end turn. h = help")
         self.ui.print_prompt(self.player_selections.chosen_skill.name + " --- " + "Select target area.")
         targeted_aoe = RN2_battle_logic.calculate_affected_area(self.ui.cursor.coords, self.unit.coords, self.player_selections.chosen_skill, self.bmap)
+        self.ui.clear_highlight_area(self.bmap)
         self.highlight_targetable_area(targeted_aoe, self.ui.cursor.coords)
         self.print_target_display(targeted_aoe)
-        # self.highlight_targetable_area()
-        pass
 
     def activate(self):
         return CONFIRM_SKILL

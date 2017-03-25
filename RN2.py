@@ -62,7 +62,8 @@ class Game(object):
         self.sound, self.music = RN2_initialize.make_sound()
         self.sound_handler = RN_Sound(self.sound, self.music)
         self.ui = RN2_UI.RN_UI_Class(self.sound_handler)
-        self.hero = None
+        self.saved_data = None
+        self.persistent_actor = None
         self.num_battles = 3
 
     def init_battle(self, ident):
@@ -71,7 +72,7 @@ class Game(object):
         bmap = RN2_loadmap.load_map(map_raw)
 
         io = RN2_battle_io.BattleController(self.ui, self.sound_handler, self.input)
-        battle_class = RN2_battle.Battle(battle_data, self.actors, self.skills, bmap, io)
+        battle_class = RN2_battle.Battle(battle_data, self.actors, self.skills, bmap, io, persistent_actor=self.persistent_actor)
         victory = battle_class.battle()
 
         if victory:
@@ -80,31 +81,17 @@ class Game(object):
             return False
 
     def new_game(self, class_name, name):
-        hero_class = self.actors[class_name]
-        self.hero = RN2_initialize.Actor(hero_class, name)
-        self.hero.class_name = class_name
+        self.saved_data = SaveGame({'saved_character': {'class_name': class_name, 'name': name}})
+        self.persistent_actor = self.saved_data.saved_character
 
-    def load_saved_game(self, saved_hero):
-        hero_class = self.actors[saved_hero.hero_class]
-        self.hero = RN2_initialize.Actor(hero_class, saved_hero.name)
-        self.hero.class_name = saved_hero.class_name
-        self.hero.score = saved_hero.score
-        self.hero.current_battle = saved_hero.current_battle
+    def load_saved_game(self, saved_data):
+        self.saved_data = SaveGame(saved_data)
+        self.persistent_actor = self.saved_data.saved_character
 
     def auto_save(self):
-        data = {}
-
-        data['class_name'] = self.hero.class_name
-        data['name'] = self.hero.name
-        data['score'] = self.hero.score
-        data['current_battle'] = self.hero.current_battle
-
-        saved_data = SavedGame(data)
-
-        fin = open(self.hero.name + ".sav", 'w')
-        pickle.dump(saved_data, fin)
+        fin = open(self.saved_data.saved_character.name + ".sav", 'w')
+        pickle.dump(self.saved_data.dehydrate(), fin)
         fin.close()
-        return
 
     def input(self):
         command = None
@@ -135,33 +122,63 @@ class Game(object):
         return command
 
 
-class SavedGame(object):
+class SaveData(object):
     def __init__(self, data):
-        self.name = data.get('name', None)
-        self.hero_class = data.get('hero_class', None)
-        self.score = AsciimancerScore(data.get('score', {}))
-        self.current_battle = data.get('current_battle', 1)
+        for k in data.keys():
+            setattr(self, k, data.get(k))
+
+    def dehydrate(self):
+        #copy attrs and create a pickleable dictionary, recursively
+        dehydrated = dict(self.__dict__)
+        for k in dehydrated.keys():
+            if hasattr(dehydrated[k], 'dehydrate'):
+                dehydrated[k] = dehydrated[k].dehydrate()
+
+        return dehydrated
 
 
-
-class AsciimancerScore:
+class SavedCharacter(SaveData):
     def __init__(self, data):
-        self.turns_taken = data.get('turns_taken', 0)
-        self.enemies_killed = data.get('enemies_killed', 0)
-        self.damage_taken = data.get('damage_taken', 0)
+        self.name = None
+        self.class_name = None
+        SaveData.__init__(self, data)
+
+
+class SavedScore(SaveData):
+    def __init__(self, data):
+        self.turns_taken = 0
+        self.damage_taken = 0
+        self.enemies_killed = 0
+        SaveData.__init__(self, data)
+
+
+class SaveGame(SaveData):
+    def __init__(self, data):
+        self.current_battle = 1
+        SaveData.__init__(self, data)
+        self.saved_character = SavedCharacter(data.get('saved_character'))
+        self.score = SavedScore(data.get('score', {}))
+
+
+
+
+
+
 
 
 
 def main():
     #test mode
-    # game = Game()
-    # game.sound_handler.mute_switch = True
-    # game.init_battle(4)
-    # exit()
+    game = Game()
+    game.sound_handler.mute_switch = True
+    game.new_game('Astromancer', "Strongo D.")
+    game.init_battle(1)
+    exit()
 
     while 1:
         game = Game()
-        done = 0
+        done = False
+        game.sound_handler.mute_switch = True
         game.sound_handler.play_music("title")
         load = False
         hero = None
@@ -175,7 +192,7 @@ def main():
                {"Astromancer": game.text["Astromancer"],
                 "Pyromancer": game.text["Pyromancer"],
                 "Terramancer": game.text["Terramancer"]}, game.input, game.sound_handler)
-            game.init_hero(hclass, name)
+            game.new_game(hclass, name)
             game.auto_save()
         else:
             with open(hero) as fin:
@@ -184,20 +201,18 @@ def main():
 
         while 1:
             game.sound_handler.play_music("trans")
-            game.ui.display_intro(game.text["battle" + str(game.hero.current_battle)])
-            victory = game.init_battle(game.hero.current_battle)
+            game.ui.display_intro(game.text["battle" + str(game.saved_data.current_battle)])
+            victory = game.init_battle(game.saved_data.current_battle)
             if not victory:
-                game.hero.reset_actor()
-                retry = game.ui.display_game_over(game.maps["gameover"], game.battles[game.hero.current_battle]['tips'], game.input, game.sound_handler)
+                retry = game.ui.display_game_over(game.maps["gameover"], game.battles[game.saved_data.current_battle]['tips'], game.input, game.sound_handler)
                 if not retry:
                     break
                 else:
                     continue
-            game.hero.reset_actor()
-            game.hero.current_battle += 1
-            if game.hero.current_battle > game.num_battles:
+            game.saved_data.current_battle += 1
+            if game.saved_data.current_battle > game.num_battles:
                 game.sound_handler.play_music("ending")
-                game.ui.display_ending(game.input, game.hero, game.text['ending'])
+                game.ui.display_ending(game.input, game.saved_data, game.text['ending'])
                 break
             game.auto_save()
 

@@ -467,13 +467,13 @@ class RN_UI_Class():
             return "Normal", "lime"
         if len(active.active_status_effects) == 1:
             try:
-                return active.active_status_effects[0].name, "yellow"
+                return active.active_status_effects[0].status_effect.name, "yellow"
             except TypeError:
                 print "ERROR INVALID STATUS", active.active_status_effects
         else:
             res = ""
             for s in active.active_status_effects:
-                res = res + s.name[0] + "/"
+                res = res + s.status_effect.name[0] + "/"
             return res[:-1], "yellow"
 
     def print_narration(self, narration_q):
@@ -927,21 +927,20 @@ class RN_UI_Class():
         return True, selection + ".sav"
 
 
-    def display_ending(self, input, hero, ending_text):
+    def display_ending(self, input, saved_data, ending_text):
         self.draw_border()
         self.clear_screen_tint()
         self.screen._autoupdate = True
 
         self.title_text(10, 4, "ALDEBARAN ACADEMY FINAL EXAM SCORE:")
         sleep(1)
-        self.title_text(10, 8, "TURNS TAKEN:                         " + str(hero.score['turns']), fgcolor='yellow')
+        self.title_text(10, 8, "TURNS TAKEN:                         " + str(saved_data.score['turns_taken']), fgcolor='yellow')
         sleep(1)
-        self.title_text(10, 9, "PERSONAL DAMAGE RECIEVED:            " + str(hero.score['damage']), fgcolor='yellow')
+        self.title_text(10, 9, "PERSONAL DAMAGE RECIEVED:            " + str(saved_data.score['damage_taken']), fgcolor='yellow')
         sleep(1)
-        self.title_text(10, 10, "ENEMIES SLAIN:                       " + str(hero.score['killed']), fgcolor='aqua')
+        self.title_text(10, 10, "ENEMIES SLAIN:                       " + str(saved_data.score['enemies_killed']), fgcolor='aqua')
         sleep(3)
-        print hero.score
-        score = 500 - (hero.score['turns'] * 4.5) - (hero.score['damage'] * 2) + (hero.score['killed'] * 10)
+        score = 500 - (saved_data.score['turns_taken'] * 4.5) - (saved_data.score['damage_taken'] * 2) + (saved_data.score['enemies_killed'] * 10)
         self.title_text(10, 18, "FINAL SCORE:                         " + str(score))
         sleep(3)
         grade = "F"
@@ -961,7 +960,7 @@ class RN_UI_Class():
         except IOError:
             fin = open("highscores.dat", "w+")
 
-        fin.write(hero.name + "|" + hero.class_name + "|" + str(int(score)) + "\n")
+        fin.write(saved_data.saved_character.name + "|" + saved_data.saved_character.class_name + "|" + str(int(score)) + "\n")
         fin.close()
 
         sleep(1)

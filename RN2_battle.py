@@ -8,13 +8,12 @@ October 2013
 
 """
 
-import RN2_loadmap
 import RN2_initialize
 import random
 import time
-import RN2_battle_io
 import RN2_battle_logic
 import RN2_event
+import RN2_battle_triggers
 
 PLAYER_AI = "player"
 DELAY_BETWEEN_TURNS = 0.2
@@ -59,8 +58,9 @@ class TurnTracker:
             return self.get_next_unit()
 
 
+
 class Battle:
-    def __init__(self, battle_data, actor_data, skills, bmap, io):
+    def __init__(self, battle_data, actor_data, skills, bmap, io, persistent_actor=None):
         #todo: color data should not be in here
 
         self.io = io
@@ -68,7 +68,10 @@ class Battle:
         self.player_start = battle_data.get('player_start', None)
         self.actor_data = actor_data
         self.skills = skills
-        self.events = battle_data.get('events', [])
+        self.trigger_data = battle_data.get('triggers', [])
+        self.victory_condition_data = battle_data.get('victory_condition', {})
+        self.victory_condition= []
+        self.triggers = []
         self.event = RN2_event.EventQueue()
         self.active = None
         self.selected_skill = None
@@ -84,15 +87,24 @@ class Battle:
         self.kills = 0
         self.bmap = bmap
         self.map_size = (49, 24)
-        self.hero = None
+        self.persistent_actor = persistent_actor
+        self.avatar = None
 
         self.all_living_units = []
 
         self.turn_tracker = TurnTracker(self.all_living_units)
 
+        for trigger in self.trigger_data:
+            self.triggers.append(RN2_battle_triggers.BattleTrigger(trigger, self))
+
+        self.victory_condition = (RN2_battle_triggers.BattleTrigger(self.victory_condition_data, self))
+
     def check_victory_conditions(self):
-        #only 1 team alive
-        return len(set([u.team_id for u in self.all_living_units])) == 1
+        if self.victory_condition:
+            return self.victory_condition.resolve()
+        else:
+            #only 1 team alive
+            return len(set([u.team_id for u in self.all_living_units])) == 1
 
     def check_loss_condition(self):
         return False
@@ -102,36 +114,37 @@ class Battle:
         self.event.clear()
 
     def state_check(self):
+
         for unit in self.all_living_units:
             if self.bmap.get_tile_at(unit.coords).actor != unit:
-                print unit, unit.coords, self.bmap.get_tile_at(unit.coords).actor
+                print self.all_living_units, unit, unit.coords, self.bmap.get_tile_at(unit.coords).actor
                 raise AssertionError
 
     @property
     def battle_menu_list(self):
-        #todo: refactor when ui is updated
         unit_list = []
         for unit in self.all_living_units:
             unit_list.append((unit.name, " HP " + str(unit.hp) + "/" + str(unit.maxhp), unit))
         unit_list.reverse()
         unit_list.insert(0, unit_list.pop())  # put active unit at top
 
-        print 'ul', unit_list
         return unit_list
 
     def battle(self):
-        #self.battle_events(start=True)
-        self.place_units(self.units)
+        self.place_avatar()
         self.turn_tracker.roll_initiative()
         self.io.draw_battle_ui(self)
 
         while 1:
+
             if self.check_victory_conditions():
                 return True
 
-            #battle events
             #todo: update legend
+            self.resolve_battle_triggers()
             self.active = self.turn_manager()
+
+            self.update_display()
 
             self.active.initiate_turn()
             if not self.active.can_act:
@@ -151,7 +164,8 @@ class Battle:
                 destination = move_path[-1] if move_path else None
 
                 self.validate_ai_turn(self.active, chosen_skill, target_tile, move_path[1:])
-                self.event.add_event(RN2_event.MoveUnit(self.active, move_path))
+                if destination:
+                    self.event.add_event(RN2_event.MoveUnit(self.active, move_path))
 
             #resolve turn
             if destination:
@@ -170,6 +184,11 @@ class Battle:
                 return False
 
             time.sleep(DELAY_BETWEEN_TURNS)
+
+    def resolve_battle_triggers(self):
+        for trigger in self.triggers:
+            if trigger.resolve():
+                self.triggers.remove(trigger)
 
     def clear_killed(self):
         to_remove = []
@@ -199,13 +218,17 @@ class Battle:
     def remove_unit(self, unit):
         self.bmap.remove_unit(unit)
 
-    def place_units(self, units):
-        if self.hero:
-            units.append({'ident': self.hero.hero_class, 'loc': self.player_start, 'team_id': 1})
+    # for placing the avatar unit in a campaign
+    def place_avatar(self):
+        units = []
+        if self.persistent_actor and self.player_start:
+            units.append({'ident': self.persistent_actor.class_name, 'loc': self.player_start, 'team_id': 1, 'name': self.persistent_actor.name})
 
         for unit in units:
-            name = unit['ident']
-            stats = self.actor_data[name]
+            ident = unit['ident']
+            stats = self.actor_data[ident]
+
+            name = ident if not unit.get('name') else unit.get('name')
 
             actor = RN2_initialize.Actor(stats, name)
             actor.coords = tuple([int(c) for c in unit['loc'].split(",")])
@@ -214,19 +237,22 @@ class Battle:
             self.all_living_units.append(actor)
             self.turn_tracker.add_unit(actor)
             self.bmap.place_unit(actor, actor.coords)
+            self.avatar = actor
 
     def add_unit(self, name, loc, team_id):
-        stats = self.actor_data[name]
-        summon = RN2_initialize.Actor(stats, name)
+        if self.bmap.get_tile_at(loc).is_movable:
+            stats = self.actor_data[name]
+            unit = RN2_initialize.Actor(stats, name)
 
-        summon.team_id = team_id
-        summon.coords = loc
-        self.bmap[summon.coords[0]][summon.coords[1]].actor = summon
-        summon.name = name
+            unit.team_id = team_id
 
-        self.turn_tracker.add_unit(summon)
-        self.all_living_units.append(summon)
-        self.event.add_event(RN2_event.AddUnit(summon))
+            unit.coords = loc
+            self.bmap[unit.coords[0]][unit.coords[1]].actor = unit
+            unit.name = name
+
+            self.turn_tracker.add_unit(unit)
+            self.all_living_units.append(unit)
+            self.event.add_event(RN2_event.AddUnit(unit))
 
     @property
     def unit_list(self):
