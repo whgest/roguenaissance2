@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 Roguenaissance 2.0 Game Initializer
 """
@@ -66,7 +68,14 @@ RIGHT = 12
 UP = 13
 INVALID = 99
 
-
+ABBREVIATIONS = {
+    'attack': 'ATK',
+    'defense': 'DEF',
+    'move': 'MOV',
+    'magic': 'MAG',
+    'resistance': "RES",
+    'agility': "AGI"
+}
 
 
 class ModifiableAttribute(object):
@@ -110,6 +119,10 @@ class AppliedStatusEffect:
     def __init__(self, status, duration):
         self.status_effect = status
         self.remaining_duration = duration
+
+    @property
+    def display(self):
+        return '{0} ({1} turns)'.format(self.status_effect.type, self.remaining_duration)
 
 
 class Actor(object):
@@ -376,7 +389,7 @@ class StandardDamage:
         stat_modifier = negative_multiplier * (getattr(attacker, self.attack_stat)/3) if self.attack_stat and self.stat_modify else 0
 
         if self.fixed_damage:
-            return self.fixed_damage + stat_modifier, self.fixed_damage + stat_modifier
+            return self.fixed_damage, self.fixed_damage
         else:
             return negative_multiplier * (stat_modifier + self.num_dice), negative_multiplier * (self.dice_size * self.num_dice + stat_modifier)
 
@@ -474,15 +487,17 @@ class SkillStatusEffectModifier:
         self.expires = data.get('expires', True)
         self.continuous = data.get('continuous', False)
 
+    @property
     def description(self):
-        if self.stat > 0:
-            verb = 'increased'
+        if self.value > 0:
+            verb = u'▲'
         else:
-            verb = 'decreased'
-        return '{0} {1} by {2}'.format(self.stat, verb, self.value)
+            verb = u'▼'
+        return u'({0} {1} {2})'.format(ABBREVIATIONS[self.stat], verb, abs(self.value))
 
+    @property
     def is_beneficial(self):
-        return True if self.stat > 0 else False
+        return True if self.value > 0 else False
 
 
 class SkillStatusEffect:
@@ -500,15 +515,13 @@ class SkillStatusEffect:
         for m in data.get('modifiers', []):
             self.modifiers.append(SkillStatusEffectModifier(m))
 
-    def display(self):
-        return '{0} ({1} turns remaining)'.format(self.type, self.duration)
-
+    @property
     def modifier_descriptions(self):
         descriptions = []
         if self.damage:
-            descriptions.append({'description': '{0} damage per turn'.format(self.damage), 'is_beneficial': (self.damage < 0)})
+            descriptions.append({'text': 'for {0} HP ({1}t)'.format(abs(self.damage), self.duration), 'is_beneficial': (self.damage < 0)})
         for modifier in self.modifiers:
-            descriptions.append({'description': modifier.description, 'is_beneficial': modifier.is_beneficial})
+            descriptions.append({'text': u'{0} {1}t'.format(modifier.description, self.duration), 'is_beneficial': modifier.is_beneficial})
 
         return descriptions
 
@@ -521,7 +534,7 @@ class SkillStatusEffect:
         for m in self.modifiers:
             count += m.value
 
-        return True if count > 0 and not self.lose_turn and self.damage < 0 else False
+        return True if count >= 0 and not self.lose_turn and self.damage <= 0 else False
 
 
 class SkillEffectForTargetType:
@@ -557,7 +570,7 @@ class SkillEffectForTargetType:
         hit_denominator = getattr(attacker, self.attack_stat)
 
         hit_chance = (hit_numerator / hit_denominator) * 100.0
-        hit_chance = round(hit_chance, 2)
+        hit_chance = min(100, round(hit_chance, 2))
 
         if hit_chance == 0 or hit_chance == 100:
             hit_chance = int(hit_chance)

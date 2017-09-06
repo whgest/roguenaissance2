@@ -68,6 +68,7 @@ Zodiac Curse:
     dice_size: 10
   status_effects:
     - type: Weak
+      duration: 2
       modifiers:
         - stat: attack
           value: -2
@@ -109,6 +110,7 @@ Time Distortion:
             - stat: move
               value: -3
     friendly:
+      is_resistable: false
       status_effects:
         - type: Haste
           duration: 4
@@ -544,31 +546,28 @@ Skycaller:
 #  prompt: Damage and slow all enemies with the power of earth.
 #  animation: tectonic
 #
-#Ascendance:
-#  target: friendly
-#  attack_stat: attack
-#  range: 0
-#  aoe_size: 0
-#  is_beneficial: 1
-#  damage:
-#    fixed_damage: -8
-#  effects:
-#    - type: Ascendant
-#      magnitude: 1
-#      modifiers:
-#       - attack_stat: attack
-#         value: 6
-#       - attack_stat: defense
-#         value: 4
-#       - attack_stat: resistance
-#         value: 4
-#       - attack_stat: move
-#         value: 2
-#      continuous: 0
-#      duration: 4
-#  mp: 7
-#  prompt: Massively increase physical attack, move, and defenses.
-#  animation: ascend
+Ascendance:
+  range: 0
+  aoe_size: 0
+  is_resistable: false
+  damage:
+    fixed_damage: -8
+  status_effects:
+    - type: Ascended
+      modifiers:
+       - stat: attack
+         value: 6
+       - stat: defense
+         value: 4
+       - stat: resistance
+         value: 4
+       - stat: move
+         value: 2
+      continuous: 0
+      duration: 4
+  mp: 7
+  prompt: Massively increase physical attack, move, and defenses.
+  animation: ascend
 #
 #Summon Spring Wind:
 #  target: empty

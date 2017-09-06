@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 """
 
 Project Roguenaissance 2.0 UI
@@ -299,18 +300,12 @@ class RN_UI_Class():
             stat_name = stat[0].capitalize() + stat[1:]
             self.menutext(51, line_count, self.fix_spacing(stat_name + ":" + str(getattr(unit, stat)), 23, ":"), fgcolor=color)
             line_count += 1
-        line_count += 1
-        if hasattr(unit, "weapon"):
-            self.menutext(51, line_count, self.fix_spacing("Weapon:" + unit.weapon, 23, ":"))
-            self.menutext(51, line_count+1, self.fix_spacing("Armor:" + unit.armor, 23, ":"))
-        # if unit.status == []:
-        #     self.menutext(51, line_count+3, self.fix_spacing("Status:" + "Normal", 23, ":"))
-        # else:
-        #     line_count2 = 0
-        #     self.menutext(51, 15, "Status:")
-        #     for s in unit.status:
-        #         self.menutext(63, line_count+3+line_count2, s.name, fgcolor=self.textcolors[s.display_color])
-        #         line_count += 1
+
+        if not unit.active_status_effects:
+            self.menutext(51, line_count+1, "No active effects.")
+        else:
+            for i, effect in enumerate(unit.active_status_effects):
+                self.menutext(51, line_count+i+1, effect.display, fgcolor="white")
         self.screen.update()
     
     def show_help(self):
@@ -526,14 +521,12 @@ class RN_UI_Class():
             print "SEE LOGS FOR ERROR."
         return v_top
 
-
     def turn_indication(self, a):
         for i in range(2):
             self.highlight_active(a, True)
             time.sleep(0.1)
             self.highlight_active(a, False)
             time.sleep(0.1)
-
 
     def highlight_active(self, a, switch):
         if switch == True:
@@ -543,20 +536,14 @@ class RN_UI_Class():
         self.screen.update()
 
     def print_additional_effects(self, skill, starting_line=18):
-        pass
-        # for i, effect in enumerate(skill.effects):
-        #     self.menutext(51, starting_line, "Additional Effects: ", fgcolor="yellow")
-        #     if '|' in effect['type']:
-        #         double_effect = effect['type'].split('|')
-        #         self.menutext(51, starting_line + i + 1, "Allies: " + double_effect[0], fgcolor="lime")
-        #         self.menutext(51, starting_line + i + 2, "Enemies: " + double_effect[1], fgcolor="red")
-        #         self.menutext(51, starting_line + i + 3, '(' + str(effect["magnitude"]) + " for " + str(effect["duration"]) + " turns)")
-        #     elif effect["duration"] and effect["magnitude"]:
-        #         self.menutext(51, starting_line + i + 1, effect["type"] + " " + str(effect["magnitude"]) + " for " + str(effect["duration"]) + " turns.", fgcolor="white")
-        #     elif effect["duration"]:
-        #         self.menutext(51, starting_line + i + 1, effect["type"] + " for " + str(effect["duration"]) + " turns.", fgcolor="white")
-        #     elif effect["magnitude"]:
-        #         self.menutext(51, starting_line + i + 1, effect["type"] + " " + str(effect["magnitude"]) + " spaces.", fgcolor="white")
+        colors = {
+            True: 'aqua',
+            False: 'yellow'
+        }
+        for i, effect in enumerate(skill.status_effects):
+            for j, description in enumerate(effect.modifier_descriptions):
+                self.menutext(51, starting_line, effect.type + ' ' + description['text'], fgcolor=colors[description['is_beneficial']])
+                starting_line += 1
 
 
     def print_target(self, attacker, defender, skill):
@@ -566,32 +553,36 @@ class RN_UI_Class():
         self.menutext(51, 3, " HP " + str(attacker.hp) + "/" + str(attacker.maxhp) + " (" + self.get_status(attacker)[0] + ")", fgcolor="lime")
         center_space = (22 - len(skill.name))/2
         self.menutext(51, 4, (" "*10) + u"▼")
-        self.menutext(51, 5, (" "*10) + u"▼")
-        self.menutext(51, 6, (" "*10) + u"▼")
-        self.menutext(51, 7, (" "*center_space) + skill.name, fgcolor='white')
-        self.menutext(51, 8, (" "*10) + u"▼")
-        self.menutext(51, 9, (" "*10) + u"▼")
-        self.menutext(51, 10,(" "*10) + u"▼")
+        self.menutext(51, 5, (" "*center_space) + skill.name, fgcolor='white')
+        self.menutext(51, 6,(" "*10) + u"▼")
         center_space = (22 - len(defender.name))/2
         color = 'red' if defender.is_hostile_to(attacker) else 'lime'
-        self.menutext(51, 11, (" "*center_space) +defender.name, fgcolor=color)
-        self.menutext(51, 12, " HP " + str(defender.hp) + "/" + str(defender.maxhp) + " (" + self.get_status(defender)[0] + ")", fgcolor=color)
+        self.menutext(51, 7, (" "*center_space) +defender.name, fgcolor=color)
+        self.menutext(51, 8, " HP " + str(defender.hp) + "/" + str(defender.maxhp) + " (" + self.get_status(defender)[0] + ")", fgcolor=color)
 
-        # if not skill.is_beneficial:
-        #     hit_chance = skill.get_hit_chance(attacker, defender)
-        #     self.menutext(51, 15, "Hit Chance: " + str(hit_chance) + "%", fgcolor="yellow")
+        if defender == attacker:
+            skill_effect_for_target = skill.targets.self
+        elif defender.is_ally_of(attacker):
+            skill_effect_for_target = skill.targets.friendly
+        else:
+            skill_effect_for_target = skill.targets.enemy
 
-        # if skill.damage != 0:
-        #     color = 'lime' if skill.is_beneficial else 'darkred'
-        #     noun = 'Healing: ' if skill.is_beneficial else 'Damage: '
-        #     dmg_range = skill.get_damage_range(attacker)
-        #
-        #     if dmg_range[0] != dmg_range[1]:
-        #         self.menutext(51, 16, noun + str(dmg_range[0]) + " - " + str(dmg_range[1]), fgcolor=color)
-        #     else:
-        #         self.menutext(51, 16, noun + str(dmg_range[0]), fgcolor=color)
+        if skill_effect_for_target.is_resistable:
+            hit_chance = skill_effect_for_target.get_hit_chance(attacker, defender)
+            self.menutext(52, 10, "Hit Chance: " + str(hit_chance) + "%", fgcolor="yellow")
 
-        self.print_additional_effects(skill, starting_line=18)
+        if skill_effect_for_target.damage:
+            is_heal = (skill_effect_for_target.damage.get_average_damage(attacker) < 0)
+            color = 'lime' if is_heal else 'darkred'
+            noun = 'Healing: ' if is_heal else 'Damage: '
+            dmg_range = skill_effect_for_target.damage.get_damage_range(attacker)
+
+            if dmg_range[0] != dmg_range[1]:
+                self.menutext(52, 11, noun + str(abs(dmg_range[0])) + " - " + str(abs(dmg_range[1])), fgcolor=color)
+            else:
+                self.menutext(52, 11, noun + str(abs(dmg_range[0])), fgcolor=color)
+
+        self.print_additional_effects(skill_effect_for_target, starting_line=13)
         self.screen.update()
         return
 
@@ -634,7 +625,7 @@ class RN_UI_Class():
         #     else:
         #         self.menutext(51, 16, noun + str(dmg_range[0]), fgcolor=color)
 
-        self.print_additional_effects(skill, starting_line=19)
+        #self.print_additional_effects(skill, starting_line=19)
 
         self.screen.update()
         return

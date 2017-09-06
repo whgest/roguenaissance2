@@ -26,6 +26,7 @@ actors:
        - Skycaller
        - Summon Meteorman
        - Summon 4DHypercube
+       - Ascendance
     descr: A wizard mastering the powers of the cosmos.
 
   Pyromancer:

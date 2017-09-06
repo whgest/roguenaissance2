@@ -173,6 +173,8 @@ class PlayerTurnState(object):
         raise NotImplementedError
 
     def pass_turn(self):
+        self.player_selections.chosen_skill = None
+        self.player_selections.target_tile = None
         return END_TURN
 
     def help_menu(self):
