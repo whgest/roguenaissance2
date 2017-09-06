@@ -54,7 +54,7 @@ ACTIVATE = 0
 CANCEL = 1
 PASS_TURN = 2
 HELP_MENU = 3
-STATUS_MENU = 4
+STATUS_DISPLAY = 4
 SKILLS_MENU = 5
 LEGEND = 6
 BATTLE_OVERVIEW = 7
@@ -64,6 +64,7 @@ DOWN = 10
 LEFT = 11
 RIGHT = 12
 UP = 13
+INVALID = 99
 
 
 
@@ -180,7 +181,7 @@ class Actor(object):
         if self.hp <= 0:
             self.kill_actor()
 
-        if raw_damage > 0:
+        if raw_damage:
             self.event.add_event(DamageOrHeal(self, raw_damage, skill_name))
 
     def clear_attribute_modifiers(self):
@@ -240,7 +241,7 @@ class Actor(object):
 
             edges = set()
             for t in new_edges:
-                if bmap.check_bounds(t) and bmap.get_tile_at(t).is_movable():
+                if bmap.check_bounds(t) and bmap.get_tile_at(t).is_movable:
                     edges.add(t)
 
         all_tiles.update(edges)
@@ -360,7 +361,6 @@ class StandardDamage:
             if self.fixed_damage and (self.num_dice or self.dice_size):
                 print "Skill {0} can not have both fixed and randomized damage.".format(ident)
                 raise ValueError
-
 
     def get_damage_range(self, attacker):
         """
@@ -608,21 +608,22 @@ class Skill:
         self.prompt = data.get('prompt')
         self.animation = data.get('animation')
         self.targets = TargetTypes(data.get('targets', {}), data, self.ident)
+        self.targets_empty = data.get('targets_empty', False)
 
     def __str__(self):
         return self.name if self.name else self.ident
 
     @property
     def affects_enemies(self):
-        return not self.targets.enemy.ignored
+        return not self.targets.enemy.ignored and not self.targets_empty
 
     @property
     def affects_friendlies(self):
-        return not self.targets.friendly.ignored
+        return not self.targets.friendly.ignored and not self.targets_empty
 
     @property
     def affects_self(self):
-        return not self.targets.self.ignored
+        return not self.targets.self.ignored and not self.targets_empty
 
     @property
     def skill_prompt(self):
@@ -684,7 +685,7 @@ def set_binds():
         BACKSPACE: CANCEL,
         SPACE_KEY: PASS_TURN,
         H_KEY: HELP_MENU,
-        T_KEY: STATUS_MENU,
+        T_KEY: STATUS_DISPLAY,
         S_KEY: SKILLS_MENU,
         L_KEY: LEGEND,
         B_KEY: BATTLE_OVERVIEW,

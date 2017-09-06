@@ -16,6 +16,7 @@ def get_neighboring_points(point):
 
 
 def calculate_affected_area(origin, caster_loc, skill, bmap):
+
     all_tiles = set()
     edge_tiles = [origin]
 
@@ -24,7 +25,7 @@ def calculate_affected_area(origin, caster_loc, skill, bmap):
         all_tiles.update(edge_tiles)
         edge_tiles = []
         for t in new_tiles:
-            if bmap.check_bounds(t) and bmap.get_tile_at(t).is_targetable():
+            if bmap.check_bounds(t) and bmap.get_tile_at(t).is_targetable:
                 edge_tiles.append(t)
         if not edge_tiles:
             break
@@ -61,7 +62,7 @@ def calculate_range(origin, _range, bmap, is_skill=False):
 
         for t in new_edges:
             if bmap.check_bounds(t):
-                tile_is_valid = bmap.get_tile_at(t).is_targetable() if is_skill else  bmap.get_tile_at(t).is_movable()
+                tile_is_valid = bmap.get_tile_at(t).is_targetable if is_skill else  bmap.get_tile_at(t).is_movable
                 if tile_is_valid:
                     edges.append(t)
 

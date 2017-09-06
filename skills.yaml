@@ -1,6 +1,5 @@
 #Astromancer Skills
 White sword:
-  target: enemy
   attack_stat: attack
   range: 1
   aoe_size: 0
@@ -12,6 +11,7 @@ White sword:
   animation: basic
 
 Frog Plague:
+  targets_empty: true
   range: 5
   aoe_size: 2
   add_unit:
@@ -25,6 +25,7 @@ Frog Plague:
   animation: summon
 
 Summon Meteorman:
+  targets_empty: true
   range: 5
   aoe_size: 0
   add_unit:
@@ -34,6 +35,7 @@ Summon Meteorman:
   animation: summon
 
 Summon 4DHypercube:
+  targets_empty: true
   range: 5
   aoe_size: 0
   add_unit:
@@ -51,9 +53,10 @@ Gravity Surge:
     dice_size: 4
   move_effects:
     - type: push
+      origin: target
       distance: 3
   mp: 0
-  prompt: Damage enemies and pushes 3 spaces.
+  prompt: Damage enemies and pushes 3 spaces from spell origin.
   animation: surge
 
 Zodiac Curse:
@@ -63,13 +66,11 @@ Zodiac Curse:
   damage:
     num_dice: 1
     dice_size: 10
-  effects: 
+  status_effects:
     - type: Weak
       modifiers:
         - stat: attack
-          value: -22
-  
-  effects: 
+          value: -2
     - type: Slow
       duration: 2
       modifiers:
@@ -80,14 +81,13 @@ Zodiac Curse:
   animation: push
 
 Soothing Starlight:
-  target: tile
   attack_stat: magic
   range: 4
   aoe_size: 1
-  is_beneficial: 1
+  is_resistable: false
   damage:
     fixed_damage: -4
-  effects: 
+  status_effects:
     - type: Regen
       damage: -4
       duration: 4
@@ -162,38 +162,46 @@ Gamma Ray:
   range: 1
   aoe_size: 12
   aoe_type: line
-  damage:
-    num_dice: 3
-    dice_size: 6
   mp: 2
-  status_effects:
-    - type: Radiation
-      damage: 2
-      duration: 3
+  targets:
+    enemy:
+      damage:
+        num_dice: 3
+        dice_size: 6
+
+      status_effects:
+        - type: Radiation
+          damage: 2
+          duration: 3
+    self:
+      ignored: true
   prompt: Damages all units in a line and inflicts radiation.
   animation: gamma
 
-#Skycaller:
-#  target: enemy
-#  attack_stat: magic
-#  range: 0
-#  aoe_size: 0
-#  aoe_type: global
-#  damage:
-#    num_dice: 3
-#    dice_size: 6
-#  status_effects:
-#    - type: Weak
-#      duration: 4
-#      modifiers:
-#        - stat: attack
-#          value: -2
-#    - type: Burning
-#      damage: 2
-#      duration: 4
-#  mp: 8
-#  prompt: A storm of aetheric plasma smites all enemies.
-#  animation: skycaller
+Skycaller:
+  attack_stat: magic
+  range: 0
+  aoe_size: 50
+  targets:
+    enemy:
+      damage:
+        num_dice: 3
+        dice_size: 6
+      status_effects:
+        - type: Weaken
+          duration: 4
+          modifiers:
+            - stat: attack
+              value: -2
+        - type: Burning
+          damage: 2
+          duration: 4
+    friendly:
+      ignored: true
+
+  mp: 8
+  prompt: A storm of aetheric plasma smites all enemies.
+  animation: skycaller
 #
 #
 ##Pyromancer Skills
@@ -591,66 +599,78 @@ Gamma Ray:
 
 #Summon skills:
 
-Meteor Punch:
-  target: enemy
+White sword:
   attack_stat: attack
   range: 1
   aoe_size: 0
   damage:
     num_dice: 1
     dice_size: 8
-  effects: 
-    - type: Push
-      magnitude: 4
+  mp: 0
+  prompt: Basic attack.
+  animation: basic
+
+Meteor Punch:
+  attack_stat: attack
+  range: 1
+  aoe_size: 0
+  damage:
+    num_dice: 1
+    dice_size: 8
+  move_effects:
+    - type: push
+      distance: 3
   mp: 0
   prompt: Damage and push an enemy.
   animation: punch
 
 Magnetize:
-  target: enemy
+  targets:
+    self:
+      ignored: true
+    friendly:
+      ignored: true
   attack_stat: attack
   range: 0
   aoe_size: 4
   damage:
     fixed_damage: 2
-  effects: 
-    - type: Pull
-      magnitude: 6
+  move_effects:
+  - type: pull
+    distance: 6
   mp: 2
   prompt: Attract nearby enemies.
   animation: surge
-#
-#Starshards:
-#  target: enemy
-#  attack_stat: magic
-#  range: 5
-#  aoe_size: 1
-#  damage:
-#    num_dice: 1
-#    dice_size: 6
-#  effects:
-#    - type: Poison
-#      magnitude: 2
-#      duration: 4
-#  mp: 0
-#  prompt: Basic attack.
-#  animation: dark ball
-#
-#Cosmic Barrage:
-#  target: enemy
-#  attack_stat: magic
-#  range: 5
-#  aoe_size: 2
-#  damage:
-#    num_dice: 2
-#    dice_size: 4
-#  effects:
-#    - type: Poison
-#      magnitude: 2
-#      duration: 4
-#  mp: 3
-#  prompt: Highly damaging cosmic projectiles.
-#  animation: fire ball
+
+Starshards:
+  attack_stat: magic
+  range: 5
+  aoe_size: 1
+  damage:
+    num_dice: 1
+    dice_size: 6
+  status_effects:
+    - type: Radiation
+      damage: 2
+      duration: 4
+  mp: 0
+  prompt: Basic attack.
+  animation: dark ball
+
+Cosmic Barrage:
+  attack_stat: magic
+  range: 5
+  aoe_size: 2
+  damage:
+    num_dice: 2
+    dice_size: 4
+  status_effects:
+    - type: Radiation
+      damage: 2
+      duration: 4
+  mp: 3
+  prompt: Highly damaging cosmic projectiles.
+  animation: fire ball
 #
 #Snowball Crush:
 #  target: enemy

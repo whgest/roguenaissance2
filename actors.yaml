@@ -16,17 +16,16 @@ actors:
       - Slow
     skillset:
        - White sword
-#      - Gravity Surge
+       - Gravity Surge
        - Zodiac Curse
        - Time Distortion
        - Soothing Starlight
-#      - Singularity
+       - Singularity
        - Meteor
-#      - Gamma Ray
-#      - Skycaller
-#      - Summon Meteorman
-#      - Summon 4DHypercube
-       - Frog Plague
+       - Gamma Ray
+       - Skycaller
+       - Summon Meteorman
+       - Summon 4DHypercube
     descr: A wizard mastering the powers of the cosmos.
 
   Pyromancer:
@@ -286,7 +285,7 @@ actors:
     character: f
     color: red
     ai: weakest
-    maxhp: 350
+    maxhp: 35
     maxmp: 0
     attack: 13
     defense: 12

@@ -195,7 +195,7 @@ class PyromancerDecisionTree(object):
             new_edges = edge_neighbors.difference(all_tiles)
 
             for t in new_edges:
-                if self.check_bounds(t) and bmap.get_tile_at(t).is_movable():
+                if self.check_bounds(t) and bmap.get_tile_at(t).is_movable:
                     edges.append(t)
 
         for s in range(skill.range):
@@ -203,7 +203,7 @@ class PyromancerDecisionTree(object):
 
             edges = set()
             for t in new_edges:
-                if self.check_bounds(t) and bmap.get_tile_at(t).is_targetable():
+                if self.check_bounds(t) and bmap.get_tile_at(t).is_targetable:
                     edges.add(t)
 
         all_tiles.update(edges)
@@ -223,7 +223,7 @@ class PyromancerDecisionTree(object):
             target_tile_options[tile] = 0
             affected_area = RN2_battle_logic.calculate_affected_area(tile, self.actor.coords, skill, self.battle.bmap)
 
-            # if skill.effects and skill.effects[0]['type'] == "Summon" and self.battle.bmap[tile[0]][tile[1]].is_movable():
+            # if skill.effects and skill.effects[0]['type'] == "Summon" and self.battle.bmap[tile[0]][tile[1]].is_movable:
             #     target_tile_options[tile] += ADDITIONAL_ALLY.calculate()
 
             if skill.affects_enemies:

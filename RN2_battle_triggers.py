@@ -1,4 +1,3 @@
-
 class BattleTriggerEffect(object):
     def __init__(self, data, battle):
         self.value = data.get('effect_value', None)
@@ -57,8 +56,6 @@ class BattleTrigger(object):
             return True
 
         return False
-
-
 
 
 CLASS_MAPPINGS = {

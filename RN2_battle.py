@@ -144,11 +144,11 @@ class Battle:
             self.resolve_battle_triggers()
             self.active = self.turn_manager()
 
-            self.update_display()
-
             self.active.initiate_turn()
             if not self.active.can_act:
                 continue
+
+            self.update_display()
 
             self.state_check() #sanity check for agreement of unit coords and map pos
 
@@ -291,15 +291,15 @@ class Battle:
         #todo: sort by distance, resolve furthest (or closest for pull) first to reduce move collisions
         enemy_units_affected, friendly_units_affected, self_unit_affected = self.get_targets_for_area(attacker, affected_tiles)
 
-        if not skill.targets.enemy.ignored:
+        if skill.affects_enemies:
             for unit in enemy_units_affected:
                 self.skill_effect_on_unit(attacker, skill.targets.enemy, unit, skill.name, origin)
 
-        if not skill.targets.friendly.ignored:
+        if skill.affects_friendlies:
             for unit in friendly_units_affected:
                 self.skill_effect_on_unit(attacker, skill.targets.friendly, unit, skill.name, origin)
 
-        if not skill.targets.self.ignored:
+        if skill.affects_self:
             for unit in self_unit_affected:
                 self.skill_effect_on_unit(attacker, skill.targets.self, unit, skill.name, origin)
 
@@ -328,11 +328,11 @@ class Battle:
         def max_abs(coords):
             x = coords[0]
             y = coords[1]
-            return x if abs(x) > abs(y) else y
+            return abs(x) if abs(x) > abs(y) else abs(y)
 
         origin = attacker.coords if effect.origin == "user" else origin
         distance = effect.distance
-        modifier = -1 if effect.move_type == "push" else 1
+        modifier = 1 if effect.move_type == "push" else -1
         difference = [float(unit.coords[0] - origin[0]), float(unit.coords[1] - origin[1])]
 
         direction = [0, 0] if not any(difference) else [difference[0]/max_abs(difference), difference[1]/max_abs(difference)]
@@ -341,9 +341,11 @@ class Battle:
 
         for d in range(distance):
             new_coords = RN2_battle_logic.add_points(unit.coords, move_step)
-            if self.bmap.get_tile_at(new_coords).is_movable():
+            if self.bmap.check_bounds(new_coords) and self.bmap.get_tile_at(new_coords).is_movable:
                 self.event.add_event(RN2_event.MoveUnit(unit, [unit.coords, new_coords]))
                 self.move_unit(unit, new_coords)
+                if new_coords == origin:
+                    break
 
     def check_bounds(self, coords):
         if 0 > coords[0] or coords[0] > self.map_size[0] or 0 > coords[1] or coords[1] > self.map_size[1]:
@@ -359,7 +361,7 @@ class Battle:
 
         def move_is_legal():
             for tile in path:
-                if self.bmap.get_tile_at(tile).actor == e or self.bmap.get_tile_at(tile).is_movable():
+                if self.bmap.get_tile_at(tile).actor == e or self.bmap.get_tile_at(tile).is_movable:
                     continue
                 else:
                     print "Actor '{0}' returned illegal move. Tile ({1}, {2}) is blocked by {3}.".format(e.name, tile[0], tile[1], self.bmap.get_tile_at(tile).actor)
@@ -373,7 +375,7 @@ class Battle:
             #todo: ensure unit has skill
 
         def target_is_legal():
-            # if skill and skill.target == "empty" and not target_tile.is_movable():
+            # if skill and skill.target == "empty" and not target_tile.is_movable:
             #     print "Actor {0} can not use skill {1} on tile ({2}, {3}): Blocked".format(e.name, skill.name, target[0], target[1])
             #     return
             # else:

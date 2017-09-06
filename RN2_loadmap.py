@@ -247,7 +247,7 @@ class BMap:
     def get_empty_tiles(self, tiles):
         res = []
         for tile in tiles:
-            if self.get_tile_at(tile).is_movable():
+            if self.get_tile_at(tile).is_movable:
                 res.append(tile)
 
         return res
@@ -272,6 +272,11 @@ class BMap:
             return False
         return True
 
+    def all_targetable_tiles(self):
+        all_targetable_tiles = []
+        for x in range(self.map_size[0]):
+            for y in range(self.map_size[1]):
+                all_targetable_tiles.append((x, y))
 
 class Tile:
     def __init__(self, x, y):
@@ -289,9 +294,11 @@ class Tile:
         else:
             return getattr(self, name)
 
+    @property
     def is_movable(self):
         return self.terrain.movable and not self.actor
 
+    @property
     def is_targetable(self):
         return self.terrain.targetable and not self.terrain.blocking
 

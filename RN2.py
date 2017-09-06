@@ -107,7 +107,7 @@ class Game(object):
         if command in self.bindings:
             command = self.bindings[command]
         else:
-            return "invalid"
+            return 99
 
         if command == "exit":
             exit()
@@ -158,7 +158,6 @@ class SaveGame(SaveData):
         SaveData.__init__(self, data)
         self.saved_character = SavedCharacter(data.get('saved_character'))
         self.score = SavedScore(data.get('score', {}))
-
 
 
 

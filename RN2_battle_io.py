@@ -11,7 +11,7 @@ import logging
 import time
 import string as string_module
 import RN2_battle_logic
-from RN2_initialize import ACTIVATE, CANCEL, PASS_TURN, HELP_MENU, STATUS_MENU, SKILLS_MENU, LEGEND, BATTLE_OVERVIEW, MUTE_SOUND, EXIT, DOWN, LEFT, RIGHT, UP
+from RN2_initialize import ACTIVATE, CANCEL, PASS_TURN, HELP_MENU, STATUS_DISPLAY, SKILLS_MENU, LEGEND, BATTLE_OVERVIEW, MUTE_SOUND, EXIT, DOWN, LEFT, RIGHT, UP, INVALID
 
 logging.basicConfig(filename="logs/rn_debug.log", filemode="w+", level=logging.DEBUG)
 
@@ -142,12 +142,17 @@ class PlayerTurnState(object):
             HELP_MENU: self.help_menu,
             SKILLS_MENU: self.skills_menu,
             BATTLE_OVERVIEW: self.battle_overview,
+            STATUS_DISPLAY: self.status_display,
             #LEGEND: self.legend,
             DOWN: self.down,
             LEFT: self.left,
             RIGHT: self.right,
-            UP: self.up
+            UP: self.up,
+            INVALID: self.invalid
         }
+
+    def invalid(self):
+        pass
 
     def input_error(self, text):
         self.ui.print_error_prompt(text)
@@ -173,6 +178,9 @@ class PlayerTurnState(object):
     def help_menu(self):
         self.ui.show_help()
 
+    def status_display(self):
+        self.ui.print_stats(self.unit)
+
     def skills_menu(self):
         return IN_SKILLS_MENU
 
@@ -193,27 +201,25 @@ class PlayerTurnState(object):
 
 
 class MoveCharacter(PlayerTurnState):
-    def __init__(self, ui, unit, bmap, player_selections):
+    def __init__(self, ui, unit, bmap, player_selections, skills):
         PlayerTurnState.__init__(self, ui, unit, bmap, player_selections)
+        self.skills = skills
         self.destination = []
         self.initial_position = self.unit.coords
 
         self.move_range = RN2_battle_logic.calculate_move_range(self.unit, self.bmap)
 
     def move_is_valid(self, destination):
-        tile_is_movable = self.bmap.check_bounds(destination) and self.bmap.get_tile_at(destination).is_movable()
+        tile_is_movable = self.bmap.check_bounds(destination) and self.bmap.get_tile_at(destination).is_movable
         in_range = destination in self.move_range
 
         return tile_is_movable and in_range
 
-    def activate_state(self):
-        self.player_selections.target_tile = self.unit.coords
-
     def deactivate_state(self):
+        self.player_selections.target_tile = self.unit.coords
         self.ui.highlight_area(False, self.move_range, self.bmap, "teal")
 
     def draw_state_ui(self):
-        self.ui.print_legend()
         self.ui.print_prompt("arrows = move. a = attack. s = use skills. space = end turn. h = help")
         self.ui.highlight_area(True, self.move_range, self.bmap, "teal")
 
@@ -222,7 +228,7 @@ class MoveCharacter(PlayerTurnState):
             self.input_error("No usable skills.")
         else:
             self.ui.highlight_area(False, self.move_range, self.bmap)
-            self.player_selections.selected_skill = self.unit.skillset[0]
+            self.player_selections.chosen_skill = self.skills[self.unit.skillset[0]]
             return TARGET_SKILL
 
     def cancel(self):
@@ -288,7 +294,6 @@ class InBattleOverview(PlayerTurnState):
         self.v_top = 0
         self.battle = battle
         self.list = battle.battle_menu_list
-        print battle.battle_menu_list
 
     def draw_state_ui(self):
         self.index %= len(self.list)
@@ -318,13 +323,16 @@ class TargetSkill(PlayerTurnState):
     def activate_state(self):
         self.ui.cursor.visible = True
         self.ui.cursor.move_cursor(self.player_selections.target_tile[0], self.player_selections.target_tile[1], self.bmap.get_tile_at(self.unit.coords))
+
         self.targetable_tiles = RN2_battle_logic.calculate_skill_range(self.unit, self.player_selections.chosen_skill, self.bmap)
 
     def deactivate_state(self):
         self.ui.clear_highlight_area(self.bmap)
 
     def target_is_valid(self, tile):
-        tile_is_targetable = self.bmap.check_bounds(tile) and self.bmap.get_tile_at(tile).is_targetable()
+        tile_is_targetable = self.bmap.check_bounds(tile) and \
+                             self.bmap.get_tile_at(tile).is_targetable and \
+                             (not self.player_selections.chosen_skill.targets_empty or self.bmap.get_tile_at(tile).is_movable)
         in_range = tile in self.targetable_tiles
 
         return tile_is_targetable and in_range
@@ -397,6 +405,7 @@ class TargetSkill(PlayerTurnState):
 class ConfirmSkill(PlayerTurnState):
     def __init__(self, ui, unit, bmap, player_selections):
         PlayerTurnState.__init__(self, ui, unit, bmap, player_selections)
+        self.affected_tiles = []
 
     def activate_state(self):
         self.affected_tiles = RN2_battle_logic.calculate_affected_area(self.player_selections.target_tile, self.unit.coords, self.player_selections.chosen_skill, self.bmap)
@@ -431,7 +440,7 @@ class PlayerTurn(object):
         self.current_state = MOVE_CHARACTER
         self.player_selections = self.PlayerSelections(self.unit.coords)
         self.states = {
-            MOVE_CHARACTER: MoveCharacter(self.ui, self.unit, self.bmap, self.player_selections),
+            MOVE_CHARACTER: MoveCharacter(self.ui, self.unit, self.bmap, self.player_selections, self.battle.skills),
             TARGET_SKILL: TargetSkill(self.ui, self.unit, self.bmap, self.player_selections, self.battle.all_living_units, self.battle),
             IN_SKILLS_MENU: InSkillsMenu(self.ui, self.unit, self.bmap, self.player_selections, self.battle.skills),
             CONFIRM_SKILL: ConfirmSkill(self.ui, self.unit, self.bmap, self.player_selections),
@@ -452,7 +461,6 @@ class PlayerTurn(object):
                 except KeyError:
                     continue
 
-        print self.player_selections.destination
         return self.player_selections.chosen_skill, self.player_selections.target_tile, self.player_selections.destination
 
 

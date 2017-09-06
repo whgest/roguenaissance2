@@ -19,7 +19,7 @@ import math
 from threading import Timer, Thread, Event, Lock
 import logging
 import RN2_animations
-from RN2_initialize import ACTIVATE, CANCEL, PASS_TURN, HELP_MENU, STATUS_MENU, SKILLS_MENU, LEGEND, BATTLE_OVERVIEW, MUTE_SOUND, EXIT, DOWN, LEFT, RIGHT, UP
+from RN2_initialize import ACTIVATE, CANCEL, PASS_TURN, HELP_MENU, STATUS_DISPLAY, SKILLS_MENU, LEGEND, BATTLE_OVERVIEW, MUTE_SOUND, EXIT, DOWN, LEFT, RIGHT, UP
 
 
 class RN_Cursor():
@@ -282,36 +282,36 @@ class RN_UI_Class():
         #     line_count += 1
         self.screen.update()
 
-    def print_stats(self, hero):
+    def print_stats(self, unit):
         self.blank(self.right_menu_coords)
         stats_list = ["attack", "defense", "magic", "resistance", "agility", "move"]
-        self.menutext(51, 1, hero.name + ":", hero.color)
-        self.menutext(51, 3, self.fix_spacing("HP:" + str(hero.hp) + "/" + str(hero.maxhp), 23, ":"))
-        self.menutext(51, 4, self.fix_spacing("MP:" + str(hero.mp) + "/" + str(hero.maxmp), 23, ":"))
+        self.menutext(51, 1, unit.name + ":")
+        self.menutext(51, 3, self.fix_spacing("HP:" + str(unit.hp) + "/" + str(unit.maxhp), 23, ":"))
+        self.menutext(51, 4, self.fix_spacing("MP:" + str(unit.mp) + "/" + str(unit.maxmp), 23, ":"))
         line_count = 5
         for stat in stats_list:
-            if getattr(hero, stat) > getattr(hero, "base_" + stat):
+            if getattr(unit, stat) > getattr(unit, "base_" + stat):
                 color = "lime"
-            elif getattr(hero, stat) < getattr(hero, "base_" + stat):
+            elif getattr(unit, stat) < getattr(unit, "base_" + stat):
                 color = "darkred"
             else:
                 color = "white"
             stat_name = stat[0].capitalize() + stat[1:]
-            self.menutext(51, line_count, self.fix_spacing(stat_name + ":" + str(getattr(hero, stat)), 23, ":"), fgcolor=color)
+            self.menutext(51, line_count, self.fix_spacing(stat_name + ":" + str(getattr(unit, stat)), 23, ":"), fgcolor=color)
             line_count += 1
         line_count += 1
-        if hasattr(hero, "weapon"):
-            self.menutext(51, line_count, self.fix_spacing("Weapon:" + hero.weapon, 23, ":"))
-            self.menutext(51, line_count+1, self.fix_spacing("Armor:" + hero.armor, 23, ":"))
-        if hero.status == []:
-            self.menutext(51, line_count+3, self.fix_spacing("Status:" + "Normal", 23, ":"))
-        else:
-            line_count2 = 0
-            self.menutext(51, 15, "Status:")
-            for s in hero.status:
-                self.menutext(63, line_count+3+line_count2, s.name, fgcolor=self.textcolors[s.display_color])
-                line_count += 1
-        return
+        if hasattr(unit, "weapon"):
+            self.menutext(51, line_count, self.fix_spacing("Weapon:" + unit.weapon, 23, ":"))
+            self.menutext(51, line_count+1, self.fix_spacing("Armor:" + unit.armor, 23, ":"))
+        # if unit.status == []:
+        #     self.menutext(51, line_count+3, self.fix_spacing("Status:" + "Normal", 23, ":"))
+        # else:
+        #     line_count2 = 0
+        #     self.menutext(51, 15, "Status:")
+        #     for s in unit.status:
+        #         self.menutext(63, line_count+3+line_count2, s.name, fgcolor=self.textcolors[s.display_color])
+        #         line_count += 1
+        self.screen.update()
     
     def show_help(self):
         self.blank(self.right_menu_coords)
@@ -327,7 +327,7 @@ class RN_UI_Class():
         self.menutext(51, 11, "ESCAPE = cancel action")
         self.menutext(51, 13, "m = toggle music")
         self.menutext(51, 14, "q = exit")
-        return    
+        self.screen.update()
 
     def fix_spacing(self, s, length, delimiter):
         num_spaces = length - len(s) -1
@@ -451,9 +451,9 @@ class RN_UI_Class():
         elif 0.3 <= (1.0*active.hp/active.maxhp) < 0.7: color = "yellow"
         else: color = "darkred"
         self.menutext(19, 26, "HP: ")
-        self.menutext(23, 26, str(active.hp) +"/" + str(active.maxhp), fgcolor = color)
+        self.menutext(23, 26, str(active.hp) + "/" + str(active.maxhp), fgcolor=color)
         self.menutext(31, 26, "MP: ")
-        self.menutext(35, 26, str(active.mp) + "/" +str(active.maxmp), fgcolor = "aqua")
+        self.menutext(35, 26, str(active.mp) + "/" + str(active.maxmp), fgcolor="aqua")
         self.menutext(42, 26, "condition: ")
         status, color = self.get_status(active)
         self.menutext(53, 26, status, color)
