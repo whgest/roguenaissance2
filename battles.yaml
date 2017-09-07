@@ -26,11 +26,11 @@
       team_id: 2
     -
       ident: Rabid duckbunny
-      loc: 44,15
+      loc: 43,15 #44,15
       team_id: 2
     -
       ident: Dire roach
-      loc: 18,17
+      loc: 19,17 #18,17
       team_id: 2
     -
       ident: Evil begonia
@@ -54,7 +54,7 @@
 
     - conditions:
         - condition_type: is_turn
-          condition_value: 3
+          condition_value: 0 #3
       effects:
         - effect_type: add_units
           effect_value:
@@ -63,7 +63,7 @@
 
     - conditions:
         - condition_type: is_turn
-          condition_value: 5
+          condition_value: 0 #5
       effects:
         - effect_type: add_units
           effect_value:

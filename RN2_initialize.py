@@ -479,6 +479,11 @@ class SkillMoveEffect:
         self.distance = data.get('distance')
         self.instant = data.get('instant', False)
 
+    @property
+    def description(self):
+        preposition = 'from' if self.move_type is 'push' else 'to'
+        return '{0} {1} {2} {3}'.format(self.move_type.capitalize(), self.distance, preposition, self.origin)
+
 
 class SkillStatusEffectModifier:
     def __init__(self, data):
@@ -519,14 +524,14 @@ class SkillStatusEffect:
     def modifier_descriptions(self):
         descriptions = []
         if self.damage:
-            descriptions.append({'text': 'for {0} HP ({1}t)'.format(abs(self.damage), self.duration), 'is_beneficial': (self.damage < 0)})
+            descriptions.append({'text': 'for {0} HP {1}t'.format(abs(self.damage), self.duration), 'is_beneficial': (self.damage < 0)})
         for modifier in self.modifiers:
             descriptions.append({'text': u'{0} {1}t'.format(modifier.description, self.duration), 'is_beneficial': modifier.is_beneficial})
 
         return descriptions
 
     def __str__(self):
-        return self.type + ' ' + self.damage
+        return self.type
 
     @property
     def is_beneficial(self):
@@ -564,6 +569,9 @@ class SkillEffectForTargetType:
         To hit formula for all hostile skills is (skillStat/2) + random integer between 0 and skillStat vs. defenseStat
         The below equation gets success chance, hopefully
         """
+        if not self.attack_stat:
+            return 100
+
         defending_stat = self.defense_stat
 
         hit_numerator = (getattr(attacker, self.attack_stat) - getattr(defender, defending_stat)) + (getattr(attacker, self.attack_stat) / 2.0)
@@ -605,6 +613,8 @@ class TargetTypes:
         self_data.update(targets.get('self', {}))
         self.self = SkillEffectForTargetType(self_data, ident)
 
+        self.special_friendly_effect = bool(targets.get('friendly', False))
+        self.special_self_effect = bool(targets.get('self', False))
 
 class Skill:
     def __init__(self, ident, data):
@@ -622,6 +632,8 @@ class Skill:
         self.animation = data.get('animation')
         self.targets = TargetTypes(data.get('targets', {}), data, self.ident)
         self.targets_empty = data.get('targets_empty', False)
+
+        print self.ident, self.targets.special_friendly_effect, self.targets.special_self_effect
 
     def __str__(self):
         return self.name if self.name else self.ident

@@ -8,7 +8,6 @@ October 2013
 
 """
 import logging
-import time
 import string as string_module
 import RN2_battle_logic
 from RN2_initialize import ACTIVATE, CANCEL, PASS_TURN, HELP_MENU, STATUS_DISPLAY, SKILLS_MENU, LEGEND, BATTLE_OVERVIEW, MUTE_SOUND, EXIT, DOWN, LEFT, RIGHT, UP, INVALID
@@ -355,17 +354,14 @@ class TargetSkill(PlayerTurnState):
         self.ui.highlight_area(True, [cursor_pos], self.bmap, color='white')
 
     def print_target_display(self, targeted_aoe):
-        #todo: this and the UI functions have to be completely refactored for the new skill target type system
-        enemy_units_affected, friendly_units_affected, self_unit_affected = self.battle.get_targets_for_area(self.unit, targeted_aoe)
+        enemy_units_affected, friendly_units_affected, self_unit_affected = self.battle.get_targets_for_area(self.unit, targeted_aoe, self.player_selections.chosen_skill)
         affected_units = []
         affected_units.extend(enemy_units_affected)
         affected_units.extend(friendly_units_affected)
         affected_units.extend(self_unit_affected)
 
-        if len(affected_units) == 1:
-            self.ui.print_target(self.unit, affected_units[0], self.player_selections.chosen_skill)
-        elif len(affected_units) > 1:
-            self.ui.print_multi_target(self.unit, affected_units, self.player_selections.chosen_skill)
+        if len(affected_units):
+            self.ui.print_target(self.unit, affected_units, self.player_selections.chosen_skill)
         else:
             self.ui.print_legend()
 

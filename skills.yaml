@@ -99,7 +99,7 @@ Soothing Starlight:
 
 Time Distortion:
   attack_stat: magic
-  range: 7
+  range: 0
   aoe_size: 3
   targets:
     enemy:
@@ -110,6 +110,14 @@ Time Distortion:
             - stat: move
               value: -3
     friendly:
+      is_resistable: false
+      status_effects:
+        - type: Haste
+          duration: 4
+          modifiers:
+            - stat: move
+              value: 2
+    self:
       is_resistable: false
       status_effects:
         - type: Haste

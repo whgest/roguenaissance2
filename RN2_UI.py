@@ -540,92 +540,164 @@ class RN_UI_Class():
             True: 'aqua',
             False: 'yellow'
         }
-        for i, effect in enumerate(skill.status_effects):
-            for j, description in enumerate(effect.modifier_descriptions):
+
+        for effect in skill.status_effects:
+            for description in effect.modifier_descriptions:
+                # only pt
                 self.menutext(51, starting_line, effect.type + ' ' + description['text'], fgcolor=colors[description['is_beneficial']])
                 starting_line += 1
 
+        for effect in skill.move_effects:
+            self.menutext(51, starting_line, effect.description, fgcolor="yellow")
+            starting_line += 1
 
-    def print_target(self, attacker, defender, skill):
-        self.blank((self.right_menu_coords))
-        center_space = (22 - len(attacker.name))/2
-        self.menutext(51, 2, (" "*center_space) + attacker.name, fgcolor="lime")
-        self.menutext(51, 3, " HP " + str(attacker.hp) + "/" + str(attacker.maxhp) + " (" + self.get_status(attacker)[0] + ")", fgcolor="lime")
-        center_space = (22 - len(skill.name))/2
-        self.menutext(51, 4, (" "*10) + u"▼")
-        self.menutext(51, 5, (" "*center_space) + skill.name, fgcolor='white')
-        self.menutext(51, 6,(" "*10) + u"▼")
-        center_space = (22 - len(defender.name))/2
-        color = 'red' if defender.is_hostile_to(attacker) else 'lime'
-        self.menutext(51, 7, (" "*center_space) +defender.name, fgcolor=color)
-        self.menutext(51, 8, " HP " + str(defender.hp) + "/" + str(defender.maxhp) + " (" + self.get_status(defender)[0] + ")", fgcolor=color)
+        return starting_line
 
-        if defender == attacker:
-            skill_effect_for_target = skill.targets.self
-        elif defender.is_ally_of(attacker):
-            skill_effect_for_target = skill.targets.friendly
+    def print_target(self, attacker, defenders, skill):
+        if (skill.targets.special_friendly_effect and len([d for d in defenders if d.is_ally_of(attacker)]) and len([d for d in defenders if d.is_hostile_to(attacker)])) or \
+           (skill.targets.special_self_effect and len([d for d in defenders if attacker == d]) and len(defenders) > 1):
+            self.print_complex_target(attacker, defenders, skill)
         else:
-            skill_effect_for_target = skill.targets.enemy
+            if attacker == defenders[0]:
+                self.print_simple_target(attacker, defenders, skill, skill.targets.self)
+            elif attacker.is_ally_of(defenders[0]):
+                self.print_simple_target(attacker, defenders, skill, skill.targets.friendly)
+            else:
+                self.print_simple_target(attacker, defenders, skill, skill.targets.enemy)
 
-        if skill_effect_for_target.is_resistable:
-            hit_chance = skill_effect_for_target.get_hit_chance(attacker, defender)
-            self.menutext(52, 10, "Hit Chance: " + str(hit_chance) + "%", fgcolor="yellow")
+    def print_simple_target(self, attacker, defenders, skill, skill_effect_for_target):
+        def unit_line(unit):
+            line_length = 24
+            def_line = '{0}*{1}/{2}'.format(unit.name, str(unit.hp), str(unit.maxhp))
+            num_spaces = line_length - len(def_line)
+            return def_line.replace('*', ' ' * num_spaces)
 
-        if skill_effect_for_target.damage:
+        self.blank((self.right_menu_coords))
+
+        center_space = (20 - len(skill.name)) / 2
+        self.menutext(59, 0, 'TARGET')
+        self.menutext(51, 2, (" "*center_space) + '--{0}--'.format(skill.name), fgcolor='fuchsia')
+
+        line_to_print = 4
+
+        target_spacing = 0 if len(defenders) > 4 else 1
+
+        if len(defenders) > 6:
+            overflow_str = "+ %s more targets" % str(len(defenders) - 6)
+            defenders = defenders[:6]
+            self.menutext(51, 16, overflow_str)
+
+
+        for defender in defenders:
+            color = 'red' if defender.is_hostile_to(attacker) else 'lime'
+            self.menutext(51, line_to_print, unit_line(defender), fgcolor=color)
+            line_to_print += 1
+
+            if skill_effect_for_target.is_resistable:
+                hit_chance = skill_effect_for_target.get_hit_chance(attacker, defender)
+                self.menutext(51, line_to_print, "Hit Chance: " + str(hit_chance) + "%", fgcolor="yellow")
+
+            line_to_print += (1 + target_spacing)
+
+        line_to_print += 2
+        if skill_effect_for_target.damage.get_average_damage(attacker):
             is_heal = (skill_effect_for_target.damage.get_average_damage(attacker) < 0)
             color = 'lime' if is_heal else 'darkred'
             noun = 'Healing: ' if is_heal else 'Damage: '
             dmg_range = skill_effect_for_target.damage.get_damage_range(attacker)
 
+
             if dmg_range[0] != dmg_range[1]:
-                self.menutext(52, 11, noun + str(abs(dmg_range[0])) + " - " + str(abs(dmg_range[1])), fgcolor=color)
+                self.menutext(51, line_to_print, noun + str(abs(dmg_range[0])) + " - " + str(abs(dmg_range[1])), fgcolor=color)
             else:
-                self.menutext(52, 11, noun + str(abs(dmg_range[0])), fgcolor=color)
+                self.menutext(51, line_to_print, noun + str(abs(dmg_range[0])), fgcolor=color)
 
-        self.print_additional_effects(skill_effect_for_target, starting_line=13)
-        self.screen.update()
-        return
+        line_to_print += 1
+        if len(skill_effect_for_target.status_effects) or len(skill_effect_for_target.move_effects):
+            self.print_additional_effects(skill_effect_for_target, starting_line=line_to_print)
+            self.screen.update()
 
-    def print_multi_target(self, attacker, defenders, skill):
+    def print_complex_target(self, attacker, defenders, skill):
+        def unit_line(unit):
+            line_length = 24
+            def_line = '{0}*{1}/{2}'.format(unit.name, str(unit.hp), str(unit.maxhp))
+            num_spaces = line_length - len(def_line)
+            return def_line.replace('*', ' ' * num_spaces)
+
         self.blank(self.right_menu_coords)
-        center_space = (22 - len(attacker.name))/2
-        self.menutext(51, 1, (" "*center_space) + attacker.name, fgcolor="lime")
-        self.menutext(51, 2, " HP " + str(attacker.hp) + "/" + str(attacker.maxhp) + " (" + self.get_status(attacker)[0] + ")", fgcolor="lime")
-        center_space = (22 - len(skill.name))/2
 
-        self.menutext(51, 3, (" "*10) + u"▼")
-        self.menutext(51, 4, (" "*center_space) + skill.name, fgcolor='white')
-        self.menutext(51, 5, (" "*10) + u"▼")
+        center_space = (20 - len(skill.name)) / 2
+        self.menutext(59, 0, 'TARGET')
+        self.menutext(51, 2, (" "*center_space) + '--{0}--'.format(skill.name), fgcolor='fuchsia')
 
-        current_line = 7
+        line_to_print = 4
 
-        if len(defenders) > 5:
-            overflow_str = "+ %s more targets." % str(len(defenders) - 5)
-            defenders = defenders[:4]
-            self.menutext(51, 15, overflow_str, fgcolor="yellow")
+        if len([d for d in defenders if d.is_hostile_to(attacker)]):
+            for defender in [d for d in defenders if d.is_hostile_to(attacker)]:
+                self.menutext(51, line_to_print, unit_line(defender), fgcolor="red")
+                line_to_print += 1
 
-        for defender in defenders:
-            hit_chance_string = ''
-            # if not skill.is_beneficial:
-            #     hit_chance = skill.get_hit_chance(attacker, defender)
-            #     hit_chance_string = "Hit: " + str(hit_chance) + "%"
+            if skill.targets.enemy.damage.get_average_damage(attacker):
+                is_heal = (skill.targets.enemy.damage.get_average_damage(attacker) < 0)
+                color = 'lime' if is_heal else 'darkred'
+                noun = 'Healing: ' if is_heal else 'Damage: '
+                dmg_range = skill.targets.enemy.damage.get_damage_range(attacker)
 
-            center_space = (22 - len(defender.name))/2
-            color = 'red' if defender.is_hostile_to(attacker) else 'lime'
-            self.menutext(51, current_line, (" " * center_space) + defender.name, fgcolor=color)
-            self.menutext(51, current_line + 1, " HP " + str(defender.hp) + "/" + str(defender.maxhp) + '  ' + hit_chance_string, fgcolor=color)
-            current_line += 2
+                if dmg_range[0] != dmg_range[1]:
+                    self.menutext(51, line_to_print, noun + str(abs(dmg_range[0])) + " - " + str(abs(dmg_range[1])), fgcolor=color)
+                else:
+                    self.menutext(51, line_to_print, noun + str(abs(dmg_range[0])), fgcolor=color)
 
-        # if skill.damage != 0:
-        #     color = 'lime' if skill.is_beneficial else 'darkred'
-        #     noun = 'Healing: ' if skill.is_beneficial else 'Damage: '
-        #     dmg_range = skill.get_damage_range(attacker)
-        #     if dmg_range[0] != dmg_range[1]:
-        #         self.menutext(51, 16, noun + str(dmg_range[0]) + " - " + str(dmg_range[1]), fgcolor=color)
-        #     else:
-        #         self.menutext(51, 16, noun + str(dmg_range[0]), fgcolor=color)
+                line_to_print += 1
 
-        #self.print_additional_effects(skill, starting_line=19)
+            if len(skill.targets.enemy.status_effects) or len(skill.targets.enemy.move_effects):
+                line_to_print = self.print_additional_effects(skill.targets.enemy, starting_line=line_to_print)
+
+            line_to_print += 1
+
+        if len([d for d in defenders if d.is_ally_of(attacker) and d != attacker]):
+            for defender in [d for d in defenders if d.is_ally_of(attacker) and d != attacker]:
+                self.menutext(51, line_to_print, unit_line(defender), fgcolor="lime")
+                line_to_print += 1
+
+            if skill.targets.friendly.damage.get_average_damage(attacker):
+                is_heal = (skill.targets.friendly.damage.get_average_damage(attacker) < 0)
+                color = 'lime' if is_heal else 'darkred'
+                noun = 'Healing: ' if is_heal else 'Damage: '
+                dmg_range = skill.targets.friendly.damage.get_damage_range(attacker)
+
+                if dmg_range[0] != dmg_range[1]:
+                    self.menutext(51, line_to_print, noun + str(abs(dmg_range[0])) + " - " + str(abs(dmg_range[1])), fgcolor=color)
+                else:
+                    self.menutext(51, line_to_print, noun + str(abs(dmg_range[0])), fgcolor=color)
+
+                line_to_print += 1
+
+            if len(skill.targets.friendly.status_effects) or len(skill.targets.friendly.move_effects):
+                line_to_print = self.print_additional_effects(skill.targets.friendly, starting_line=line_to_print)
+
+            line_to_print += 1
+
+        if len([d for d in defenders if d == attacker]):
+            for defender in [d for d in defenders if d == attacker]:
+                self.menutext(51, line_to_print, unit_line(defender), fgcolor="lime")
+                line_to_print += 1
+
+            if skill.targets.self.damage.get_average_damage(attacker):
+                is_heal = (skill.targets.self.damage.get_average_damage(attacker) < 0)
+                color = 'lime' if is_heal else 'darkred'
+                noun = 'Healing: ' if is_heal else 'Damage: '
+                dmg_range = skill.targets.self.damage.get_damage_range(attacker)
+
+                if dmg_range[0] != dmg_range[1]:
+                    self.menutext(51, line_to_print, noun + str(abs(dmg_range[0])) + " - " + str(abs(dmg_range[1])), fgcolor=color)
+                else:
+                    self.menutext(51, line_to_print, noun + str(abs(dmg_range[0])), fgcolor=color)
+
+                line_to_print += 1
+
+            if len(skill.targets.self.status_effects) or len(skill.targets.self.move_effects):
+                line_to_print = self.print_additional_effects(skill.targets.self, starting_line=line_to_print)
 
         self.screen.update()
         return

@@ -268,19 +268,19 @@ class Battle:
     def get_enemies_of(self, actor):
         return list([x for x in self.all_living_units if x.team_id != actor.team_id])
 
-    def get_targets_for_area(self, attacker, affected_tiles):
+    def get_targets_for_area(self, attacker, affected_tiles, skill):
         enemy_units_affected = []
         friendly_units_affected = []
         self_unit_affected = []
         for unit in self.all_living_units:
             if unit.coords in affected_tiles:
-                if unit in self.get_allies_of(attacker):
+                if unit in self.get_allies_of(attacker) and skill.affects_friendlies:
                     friendly_units_affected.append(unit)
 
-                if unit in self.get_enemies_of(attacker):
+                if unit in self.get_enemies_of(attacker) and skill.affects_enemies:
                     enemy_units_affected.append(unit)
 
-                if unit == attacker:
+                if unit == attacker and skill.affects_self:
                     self_unit_affected.append(unit)
 
         return enemy_units_affected, friendly_units_affected, self_unit_affected
@@ -289,19 +289,16 @@ class Battle:
         attacker.mp = attacker.mp - skill.mp
 
         #todo: sort by distance, resolve furthest (or closest for pull) first to reduce move collisions
-        enemy_units_affected, friendly_units_affected, self_unit_affected = self.get_targets_for_area(attacker, affected_tiles)
+        enemy_units_affected, friendly_units_affected, self_unit_affected = self.get_targets_for_area(attacker, affected_tiles, skill)
 
-        if skill.affects_enemies:
-            for unit in enemy_units_affected:
-                self.skill_effect_on_unit(attacker, skill.targets.enemy, unit, skill.name, origin)
+        for unit in enemy_units_affected:
+            self.skill_effect_on_unit(attacker, skill.targets.enemy, unit, skill.name, origin)
 
-        if skill.affects_friendlies:
-            for unit in friendly_units_affected:
-                self.skill_effect_on_unit(attacker, skill.targets.friendly, unit, skill.name, origin)
+        for unit in friendly_units_affected:
+            self.skill_effect_on_unit(attacker, skill.targets.friendly, unit, skill.name, origin)
 
-        if skill.affects_self:
-            for unit in self_unit_affected:
-                self.skill_effect_on_unit(attacker, skill.targets.self, unit, skill.name, origin)
+        for unit in self_unit_affected:
+            self.skill_effect_on_unit(attacker, skill.targets.self, unit, skill.name, origin)
 
         for new_unit in skill.add_unit:
             empty_tiles = self.bmap.get_empty_tiles(affected_tiles)
