@@ -61,10 +61,9 @@ class TurnTracker:
 
 class Battle:
     def __init__(self, battle_data, actor_data, skills, bmap, io, persistent_actor=None):
-        #todo: color data should not be in here
-
         self.io = io
         self.units = battle_data.get('units', [])
+        self.music = battle_data.get('music', [])
         self.player_start = battle_data.get('player_start', None)
         self.actor_data = actor_data
         self.skills = skills
@@ -114,7 +113,6 @@ class Battle:
         self.event.clear()
 
     def state_check(self):
-
         for unit in self.all_living_units:
             if self.bmap.get_tile_at(unit.coords).actor != unit:
                 print self.all_living_units, unit, unit.coords, self.bmap.get_tile_at(unit.coords).actor
@@ -143,11 +141,9 @@ class Battle:
         self.io.draw_battle_ui(self)
 
         while 1:
-
             if self.check_victory_conditions():
                 return True
 
-            #todo: update legend
             self.resolve_battle_triggers()
             self.active = self.turn_manager()
 

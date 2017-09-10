@@ -559,8 +559,7 @@ class BattleController(object):
         self.ui.draw_UI()
         self.ui.set_map(battle.bmap)
         self.ui.print_map()
-        #self.ui.print_legend(self.battle.bmap.legend_list, self.battle.unit_list)
-        #self.init_music()
+        self.init_music(battle.music[0])
 
     def update(self, state_changes):
         for change in state_changes:

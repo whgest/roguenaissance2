@@ -26,11 +26,11 @@
       team_id: 2
     -
       ident: Rabid duckbunny
-      loc: 43,15 #44,15
+      loc: 44,15
       team_id: 2
     -
       ident: Dire roach
-      loc: 19,17 #18,17
+      loc: 18,17
       team_id: 2
     -
       ident: Evil begonia
@@ -54,7 +54,7 @@
 
     - conditions:
         - condition_type: is_turn
-          condition_value: 0 #3
+          condition_value: 3
       effects:
         - effect_type: add_units
           effect_value:
@@ -63,7 +63,7 @@
 
     - conditions:
         - condition_type: is_turn
-          condition_value: 0 #5
+          condition_value: 5
       effects:
         - effect_type: add_units
           effect_value:
@@ -84,102 +84,113 @@
 
 
 2:
-    intro: battle2
-    map: water
-    music:
-      - battle2a
-      - battle2b
+  intro: battle2
+  map: water
+  music:
+    - battle2a
+    - battle2b
 
-    player_start: 12,12
-      
-    actors:
-      - ident: Fungal clubber
-        loc: 41,11
-      - ident: Fungal clubber
-        loc: 45,11
-      - ident: Fungal sporemage
-        loc: 43,9
-      - ident: Fungal blowgunner
-        loc: 42,10
-      - ident: Fungal clubber
-        loc: 49,8
-      - ident: Fungal sporemage
-        loc: 49,9
-      - ident: Fungal blowgunner
-        loc: 49,10
-      - ident: Fungal clubber
-        loc: 5,24
-      - ident: Fungal sporemage
-        loc: 6,24
-      - ident: Fungal blowgunner
-        loc: 7,24
+  player_start: 42,22
+  units:
+    - ident: Fungal clubber
+      loc: 41,11
+      team_id: 2
+    - ident: Fungal clubber
+      loc: 45,11
+      team_id: 2
+    - ident: Fungal sporemage
+      loc: 43,9
+      team_id: 2
+    - ident: Fungal blowgunner
+      loc: 42,10
+      team_id: 2
+    - ident: Fungal clubber
+      loc: 49,8
+      team_id: 2
+    - ident: Fungal sporemage
+      loc: 49,9
+      team_id: 2
+    - ident: Fungal blowgunner
+      loc: 49,10
+      team_id: 2
+    - ident: Fungal clubber
+      loc: 5,24
+      team_id: 2
+    - ident: Fungal sporemage
+      loc: 6,24
+      team_id: 2
+    - ident: Fungal blowgunner
+      loc: 7,24
+      team_id: 2
 
-    triggers:
-      - condition:
-          trigger_type: turn
-          trigger_condition: 1
-        effect:
-          type: add_mobs
-          ids:
+  triggers:
+    - conditions:
+        - condition_type: is_turn
+          condition_value: 0
+      effects:
+        - effect_type: add_units
+          effect_value:
             - 0
             - 1
             - 2
             - 3
 
-      - condition:
-          trigger_type: playerxLesser
-          trigger_condition: 24
-        effect:
-          type: add_mobs
-          ids:
+    - conditions:
+        - condition_type: avatar_position
+          condition_value:
+            point: 24
+            axis: x
+            operator: <
+      effects:
+        - effect_type: add_units
+          effect_value:
             - 4
             - 5
             - 6
             - 7
             - 8
             - 9
-    
-      - condition:
-          trigger_type: playeryIs
-          trigger_condition: 24
-        effect:
-          type: victory
 
-    
+  victory_condition:
+    conditions:
+      - condition_type: on_goal_tile
+
     tips:
-      - Clustered enemies can be crushed with a spell featuring a wide area of effect.
-      - Your strongest spell can only be cast with full MP, but devastates all enemy units.
-      - Summoned monsters have skills too, but they usually need a turn or two to charge up enough MP to use them.
-      - All classes have a defensively oriented summon. Pyromancers and Astromancers also have an offensive summon, and Terramancers a healing summon.
+    - Clustered enemies can be crushed with a spell featuring a wide area of effect.
+    - Your strongest spell can only be cast with full MP, but devastates all enemy units.
+    - Summoned monsters have skills too, but they usually need a turn or two to charge up enough MP to use them.
+    - All classes have a defensively oriented summon. Pyromancers and Astromancers also have an offensive summon, and Terramancers a healing summon.
 
 3:
-    intro: battle3
-    map: lava
-    music:
-      - battle3
+  intro: battle3
+  map: lava
+  music:
+    - boss
 
-    actors:
-      - ident: Belshazzar
-        loc: 25,5
+  player_start: 30,23
 
-    triggers:
-      - condition:
-          trigger_type: turn
-          trigger_condition: 1
-        effect:
-          type: add_mobs
-          ids:
+  units:
+    - ident: Belshazzar
+      loc: 25,5
+      team_id: 2
+
+  triggers:
+    - conditions:
+       - condition_type: is_turn
+         condition_value: 0
+      effects:
+        - effect_type: add_units
+          effect_value:
             - 0
 
-      - condition:
-          trigger_type: bosskill
-        effect:
-          type: victory
+  victory_condition:
+    conditions:
+      - condition_type: on_goal_tile
 
-    tips:
-      - Belshazzar's minions can be pushed or pulled into lava for an instant kill, but Belshazzar himself will not be felled so easily.
-      - Belshazzar's MP are used and regenerated just like yours... if you allow him to fully charge, he will unleash a devastating spell.
-      - Forcing Belshazzar to drain life from his minions instead of attacking or summoning is one way to turn the fight against him.
+  tips:
+    - Belshazzar's minions can be pushed or pulled into lava for an instant kill, but Belshazzar himself will not be felled so easily.
+    - Belshazzar's MP are used and regenerated just like yours... if you allow him to fully charge, he will unleash a devastating spell.
+    - Forcing Belshazzar to drain life from his minions instead of attacking or summoning is one way to turn the fight against him.
 
 
 4:

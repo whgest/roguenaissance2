@@ -34,10 +34,32 @@ class OnGoalTile(BattleTriggerCondition):
         return self.battle.bmap.get_tile_at(self.battle.avatar.coords).terrain.name == "Goal"
 
 
+class AvatarPosition(BattleTriggerCondition):
+    def check(self):
+        axes = {'x': 0, 'y': 1}
+
+        try:
+            axis = self.condition['axis']
+            point = self.condition['point']
+            operator = self.condition['operator']
+        except KeyError as err:
+            print "Avatar Position condition requires axis, point, operator in condition_value"
+            raise err
+
+        if operator == '<':
+            return self.battle.avatar.coords[axes[axis]] < int(point)
+        elif operator == '=':
+            return self.battle.avatar.coords[axes[axis]] == int(point)
+        elif operator == '>':
+            return self.battle.avatar.coords[axes[axis]] > int(point)
+        else:
+            raise NotImplementedError
+
 class BattleTrigger(object):
     def __init__(self, data, battle):
         self.conditions = []
         self.effects = []
+        print data.get('conditions')
         for condition in data.get('conditions'):
             condition_class_to_instantiate = CLASS_MAPPINGS[condition['condition_type']]
             self.conditions.append(condition_class_to_instantiate(condition, battle))
@@ -61,5 +83,6 @@ class BattleTrigger(object):
 CLASS_MAPPINGS = {
     'on_goal_tile': OnGoalTile,
     'is_turn': IsTurn,
-    'add_units': AddUnits
+    'add_units': AddUnits,
+    'avatar_position': AvatarPosition
 }

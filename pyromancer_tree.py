@@ -52,8 +52,10 @@ class HealDamage(SimpleCheck):
 
 
 class SummonCheck(SimpleCheck):
-    def calculate(self):
-        return 1 * self.multiplier
+    def calculate(self, unit, battle, skill):
+        number_of_active_summons = len([u for u in battle.all_living_units if u.summoned_by == unit])
+        already_summoned = len([u for u in battle.all_living_units if u.summoned_by == unit and u.name in skill.add_unit])
+        return (1 * self.multiplier) / (1 + number_of_active_summons) - already_summoned * 10
 
 
 DAMAGE_ENEMY = InflictDamage(10)
@@ -68,7 +70,7 @@ HEAL_ENEMY = HealDamage(-10)
 HEAL_FRIENDLY = HealDamage(5)
 HEAL_SELF = HealDamage(100)
 
-ADDITIONAL_ALLY = SummonCheck(30)
+
 
 DAMAGE_OVER_TIME_MODIFIER = 0.5
 HEALING_OVER_TIME_MODIFIER = 0.5
@@ -116,6 +118,8 @@ DECREASE_ENEMY_MAGIC = -1
 DECREASE_ENEMY_RESISTANCE = -1
 DECREASE_ENEMY_MOVE = -1
 
+ADDITIONAL_ALLY = SummonCheck(500)
+
 class ThreatMap:
     def __init__(self, battle_map):
         self.tmap = []
@@ -148,6 +152,8 @@ class PyromancerDecisionTree(object):
         self.threat_map = self.create_threat_map()
         self.move_range = self.actor.calculate_move_range(self.battle.bmap)
         self.aggression = 1 if self.actor.ai == "pyromancer" else 10
+
+
 
     def get_targets(self):
         friendly_list = []
@@ -223,8 +229,8 @@ class PyromancerDecisionTree(object):
             target_tile_options[tile] = 0
             affected_area = RN2_battle_logic.calculate_affected_area(tile, self.actor.coords, skill, self.battle.bmap)
 
-            # if skill.effects and skill.effects[0]['type'] == "Summon" and self.battle.bmap[tile[0]][tile[1]].is_movable:
-            #     target_tile_options[tile] += ADDITIONAL_ALLY.calculate()
+            if skill.add_unit and self.battle.bmap[tile[0]][tile[1]].is_movable:
+                target_tile_options[tile] += ADDITIONAL_ALLY.calculate(user, self.battle, skill)
 
             if skill.affects_enemies:
                 for loc in enemy_locations:
@@ -266,9 +272,6 @@ class PyromancerDecisionTree(object):
             results.append((v, k))
 
         results.sort(reverse=True)
-
-
-
 
         return results[0] if results else (None, None)
 

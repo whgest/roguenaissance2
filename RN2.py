@@ -163,9 +163,9 @@ class SaveGame(SaveData):
 def main():
     #test mode
     game = Game()
-    game.sound_handler.mute_switch = True
-    game.new_game('Terramancer', "Flayk")
-    game.init_battle(1)
+    #game.sound_handler.mute_switch = True
+    game.new_game('Pyromancer', "Sigryn")
+    game.init_battle(3)
     exit()
 
     while 1:

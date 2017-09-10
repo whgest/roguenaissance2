@@ -199,7 +199,7 @@ Meteor:
 Gamma Ray:
   attack_stat: magic
   range: 1
-  aoe_size: 12
+  aoe_size: 7
   aoe_type: line
   mp: 2
   targets:
@@ -317,7 +317,7 @@ Life Drain:
 
 Frostburn:
   attack_stat: magic
-  range: 9
+  range: 6
   aoe_size: 0
   damage:
     num_dice: 2
@@ -335,7 +335,7 @@ Frostburn:
 
 Icy Prison:
   attack_stat: magic
-  range: 7
+  range: 6
   aoe_size: 0
   damage:
     num_dice: 1
@@ -801,7 +801,7 @@ Skelestomp:
       damage:
         num_dice: 1
         dice_size: 10
-      move_effects:
+      status_effects:
         - type: Slow
           duration: 3
           modifiers:
@@ -859,7 +859,6 @@ Healstorm:
   prompt: Regenerate all nearby allies, poison all enemies.
   animation: heal
 
-
 Bone Toss:
   attack_stat: magic
   range: 4
@@ -900,7 +899,6 @@ Bite:
   animation: bite
 
 Spit ice:
-
   attack_stat: magic
   range: 5
   aoe_size: 0
@@ -909,14 +907,13 @@ Spit ice:
     dice_size: 10
   status_effects: 
     - type: Frostbite
-      magnitude: 2
+      damage: 2
       duration: 3
   mp: 0
   prompt: Basic attack.
   animation: basic ranged
 
 Spit poison:
-
   attack_stat: magic
   range: 5
   aoe_size: 0
@@ -925,14 +922,13 @@ Spit poison:
     dice_size: 10
   status_effects: 
     - type: Poison
-      magnitude: 2
+      damage: 2
       duration: 3
   mp: 0
   prompt: Basic attack.
   animation: basic ranged
 
 Paper cut:
-
   attack_stat: attack
   range: 1
   aoe_size: 0
@@ -944,16 +940,16 @@ Paper cut:
   animation: basic
 
 Paper slam:
-
   attack_stat: attack
   range: 1
   aoe_size: 1
   damage:
     num_dice: 1
     dice_size: 8
-  status_effects: 
+  move_effects:
     - type: push
-      magnitude: 2
+      distance: 6
+      origin: user
   mp: 0
   prompt: Basic attack.
   animation: punch
@@ -967,49 +963,43 @@ Blowgun:
     dice_size: 8
   status_effects: 
     - type: Poison
-      magnitude: 2
+      damage: 2
       duration: 3
   mp: 0
   prompt: Basic attack.
   animation: basic ranged
 
 Club:
-
   attack_stat: attack
   range: 1
   aoe_size: 0
   damage:
     num_dice: 1
     dice_size: 8
-  status_effects: 
+  move_effects:
     - type: push
-      magnitude: 1
+      distance: 1
+      origin: user
   mp: 0
   prompt: Basic attack.
   animation: basic
 
 Spore Cloud:
-
   attack_stat: magic
   range: 6
   aoe_size: 0
   damage:
     num_dice: 1
     dice_size: 8
-  status_effects: 
-    - type: Dark
-      magnitude: 1
-      duration: 3
   mp: 0
   prompt: Basic attack.
   animation: basic
 
 Fungeneration:
-  target: friendly
   attack_stat: magic
   range: 4
   aoe_size: 0
-  is_beneficial: 1
+  is_resistable: false
   damage:
     num_dice: 1
     dice_size: -1
@@ -1018,7 +1008,6 @@ Fungeneration:
   animation: heal
 
 Frenzy:
-
   attack_stat: attack
   range: 1
   aoe_size: 0
@@ -1030,111 +1019,111 @@ Frenzy:
   animation: basic
 
 #
-##Boss skills:
-#Necrodrain:
-#  class: Drain
-#  target: friendly
-#  attack_stat: magic
-#  range: 5
-#  aoe_size: 0
-#  damage:
-#    num_dice: 1
-#    dice_size: 4
-#  mp: 2
-#  prompt: Absorbs HP from an ally. Range 7.
-#  animation: drain
-#
-#Cloudkill:
-#
-#  attack_stat: magic
-#  range: 6
-#  aoe_size: 2
-#  damage:
-#    num_dice: 1
-#    dice_size: 8
-#  status_effects:
-#    - type: Poison
-#      magnitude: 2
-#      duration: 3
-#  mp: 1
-#  prompt: Damages units and inflicts Poison. Range 6, area 2.
-#  animation: dark ball
-#
-#
-#Poisonbolt:
-#
-#  attack_stat: magic
-#  range: 8
-#  aoe_size: 0
-#  damage:
-#    num_dice: 2
-#    dice_size: 6
-#  status_effects:
-#    - type: Poison
-#      magnitude: 3
-#      duration: 3
-#  mp: 2
-#  prompt: Damages enemy and inflicts Poison. Range 8.
-#  animation: poisonbolt
-#
-#
-#Shadow Curse:
-#
-#  attack_stat: magic
-#  range: 5
-#  aoe_size: 0
-#  damage:
-#    num_dice: 2
-#    dice_size: 5
-#  status_effects:
-#    - type: Slow
-#      magnitude: 2
-#      duration: 3
-#  mp: 0
-#  prompt: Damages enemy and inflicts slow. Range 5.
-#  animation: surge
-#
-#
-#Annihilate:
-#
-#  attack_stat: magic
-#  range: 0
-#  aoe_size: global
-#  damage:
-#    num_dice: 3
-#    dice_size: 6
-#  status_effects:
-#    - type: Poison
-#      magnitude: 3
-#      duration: 3
-#  mp: 8
-#  prompt: Damages all enemies and inflicts poison.
-#  animation: annihilate
-#
-#
-#Summon Skelesaur:
-#  target: empty
-#  attack_stat: magic
-#  range: 5
-#  aoe_size: 0
-#  damage: 0
-#  status_effects:
-#    - type: Summon
-#      to_summon: Skelesaur
-#  mp: -1
-#  prompt: Summon a stegosaur to crush your foes.
-#  animation: summon
-#
-#
-#Summon Lichdrake:
-#  target: empty
-#  attack_stat: magic
-#  range: 5
-#  aoe_size: 0
-#  damage: 0
-#  status_effects:
-#    - type: Summon
-#      to_summon: Lichdrake
-#  mp: -1
-#  prompt: Summon a lichdrake to crush your foes.
-#  animation: summon
+#Boss skills:
+Necrodrain:
+  damage_type: drain
+  range: 5
+  aoe_size: 0
+  targets:
+    friendly:
+      damage:
+        num_dice: 1
+        dice_size: 4
+    self:
+      ignored: true
+    enemy:
+      ignored: true
+  mp: 2
+  prompt: Absorbs HP from an ally. Range 7.
+  animation: drain
+
+Cloudkill:
+  attack_stat: magic
+  range: 6
+  aoe_size: 2
+  damage:
+    num_dice: 1
+    dice_size: 8
+  status_effects:
+    - type: Poison
+      damage: 2
+      duration: 3
+  mp: 1
+  prompt: Damages units and inflicts Poison. Range 6, area 2.
+  animation: dark ball
+
+
+Poisonbolt:
+  attack_stat: magic
+  range: 8
+  aoe_size: 0
+  damage:
+    num_dice: 2
+    dice_size: 6
+  status_effects:
+    - type: Poison
+      damage: 3
+      duration: 3
+  mp: 2
+  prompt: Damages enemy and inflicts Poison. Range 8.
+  animation: poisonbolt
+
+Shadow Curse:
+  attack_stat: magic
+  range: 5
+  aoe_size: 0
+  damage:
+    num_dice: 2
+    dice_size: 5
+  status_effects:
+    - type: Slow
+      modifiers:
+        - value: 2
+          stat: move
+      duration: 3
+  mp: 0
+  prompt: Damages enemy and inflicts slow. Range 5.
+  animation: surge
+
+Annihilate:
+  attack_stat: magic
+  range: 0
+  aoe_size: 50
+  targets:
+    enemy:
+      damage:
+        num_dice: 3
+        dice_size: 6
+      status_effects:
+        - type: Poison
+          magnitude: 3
+          duration: 3
+    friendly:
+      ignored: true
+    self:
+      ignored: true
+  mp: 8
+  prompt: Damages all enemies and inflicts poison.
+  animation: annihilate
+
+
+Summon Skelesaur:
+  targets_empty: true
+  range: 5
+  aoe_size: 0
+  add_unit:
+    - Skelesaur
+  mp: -1
+  prompt: Summon a stegosaur to crush your foes.
+  animation: summon
+
+
+Summon Lichdrake:
+  targets_empty: true
+  range: 5
+  aoe_size: 0
+  add_unit:
+    - Lichdrake
+  mp: -1
+  prompt: Summon a lichdrake to crush your foes.
+  animation: summon

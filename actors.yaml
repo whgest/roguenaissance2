@@ -3,14 +3,14 @@ actors:
     character: "@"
     ai_class: player
     maxhp: 52
-    maxmp: 99
+    maxmp: 9
     weapon: white sword
     armor: astral regalia
     attack: 17
     defense: 19
     magic: 20
     resistance: 19
-    agility: 144
+    agility: 16
     move: 6
     immunities:
       - Slow
@@ -33,15 +33,15 @@ actors:
     character: "@"
     ai: player
     maxhp: 45
-    maxmp: 99
+    maxmp: 10
     weapon: focusing staff
     armor: flaming cloak
     attack: 15
     defense: 17
-    magic: 99 #19
+    magic: 19
     resistance: 20
-    agility: 99
-    move: 6
+    agility: 16
+    move: 5
     immunities:
       - Burning
     skillset:
@@ -63,14 +63,14 @@ actors:
     character: "@"
     ai: player
     maxhp: 60
-    maxmp: 99 #10
+    maxmp: 10
     weapon: obsidian sword
     armor: brigandine
-    attack: 99 #19
+    attack: 19
     defense: 20
-    magic: 99 #19
+    magic: 19
     resistance: 18
-    agility: 15
+    agility: 17
     move: 6
     immunities:
       - Poison
@@ -117,7 +117,7 @@ actors:
     magic: 19
     resistance: 13
     agility: 11
-    move: 6
+    move: 5
     skillset:
       - Starshards
       - Cosmic Barrage
@@ -125,7 +125,7 @@ actors:
 
   Snowball:
     character: S
-    ai: damage
+    ai: player
     maxhp: 50
     maxmp: 2
     attack: 19
@@ -141,7 +141,7 @@ actors:
 
   Flaming Crows:
     character: C
-    ai: damage
+    ai: player
     maxhp: 45
     maxmp: 3
     attack: 20
@@ -171,7 +171,7 @@ actors:
     magic: 12
     resistance: 16
     agility: 25
-    move: 9
+    move: 6
     skillset:
       - Breeze Blow
       - Soothing Breeze
@@ -190,7 +190,7 @@ actors:
     magic: 0
     resistance: 10
     agility: 2
-    move: 4
+    move: 5
     skillset:
       - Tail Swipe
       - Megastomp
@@ -208,9 +208,9 @@ actors:
     magic: 0
     resistance: 10
     agility: 2
-    move: 4
+    move: 5
     skillset:
-      - Tail Slam
+      - Tail Swipe
       - Skelestomp
     descr: A long-dead dinosaur.
 
@@ -388,16 +388,15 @@ actors:
 
   Belshazzar:
     character: "%"
-    color: black
-    ai: boss
+    ai: pyromancer
     maxhp: 55
     maxmp: 10
     attack: 25
     defense: 12
     magic: 21
-    resistance: 12
+    resistance: 14
     agility: 11
-    move: 6
+    move: 5
     immunities:
       - Terrain
     deathanim: beldeath

@@ -288,7 +288,6 @@ class Actor(object):
             return 0
 
     def apply_status(self, status):
-        print status.type, self.immunities
         if status.type not in self.immunities:
             self.active_status_effects.append(AppliedStatusEffect(status, status.duration))
 

@@ -54,8 +54,8 @@ class Lava(Terrain):
     def __init__(self):
         Terrain.__init__(self)
         self.name = "Lava"
-        self.fgcolor = "red"
-        self.bgcolor = "orangered"
+        self.fgcolor = "black"
+        self.bgcolor = "darkred"
         self.character = u'Ξ'
         self.movecost = 1
         self.aquatic = 0
