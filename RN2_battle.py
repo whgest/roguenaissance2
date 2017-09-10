@@ -70,7 +70,7 @@ class Battle:
         self.skills = skills
         self.trigger_data = battle_data.get('triggers', [])
         self.victory_condition_data = battle_data.get('victory_condition', {})
-        self.victory_condition= []
+        self.victory_condition = []
         self.triggers = []
         self.event = RN2_event.EventQueue()
         self.active = None
@@ -124,11 +124,18 @@ class Battle:
     def battle_menu_list(self):
         unit_list = []
         for unit in self.all_living_units:
-            unit_list.append((unit.name, " HP " + str(unit.hp) + "/" + str(unit.maxhp), unit))
+            unit_list.append(unit)
         unit_list.reverse()
         unit_list.insert(0, unit_list.pop())  # put active unit at top
 
         return unit_list
+
+    @property
+    def legend_unit_list(self):
+        res = {}
+        for unit in self.battle_menu_list:
+            res[unit.character] = unit
+        return res.values()
 
     def battle(self):
         self.place_avatar()
@@ -239,9 +246,10 @@ class Battle:
             self.bmap.place_unit(actor, actor.coords)
             self.avatar = actor
 
-    def add_unit(self, name, loc, team_id):
+    def add_unit(self, name, loc, team_id, summoner=None):
         if self.bmap.get_tile_at(loc).is_movable:
             stats = self.actor_data[name]
+            stats['summoned_by'] = summoner
             unit = RN2_initialize.Actor(stats, name)
 
             unit.team_id = team_id
@@ -253,14 +261,6 @@ class Battle:
             self.turn_tracker.add_unit(unit)
             self.all_living_units.append(unit)
             self.event.add_event(RN2_event.AddUnit(unit))
-
-    @property
-    def unit_list(self):
-        unit_list = []
-        for unit in self.all_living_units:
-            if (unit.character, unit.name, "white") not in unit_list:
-                unit_list.append((unit.character, unit.name, "white"))
-        return unit_list
 
     def get_allies_of(self, actor):
         return list([x for x in self.all_living_units if x.team_id == actor.team_id and x != actor])
@@ -286,9 +286,9 @@ class Battle:
         return enemy_units_affected, friendly_units_affected, self_unit_affected
 
     def execute_skill(self, attacker, skill, affected_tiles, origin):
-        attacker.mp = attacker.mp - skill.mp
 
-        #todo: sort by distance, resolve furthest (or closest for pull) first to reduce move collisions
+        attacker.mp = attacker.mp - self.get_mp_cost(skill, attacker)
+
         enemy_units_affected, friendly_units_affected, self_unit_affected = self.get_targets_for_area(attacker, affected_tiles, skill)
 
         for unit in enemy_units_affected:
@@ -303,7 +303,7 @@ class Battle:
         for new_unit in skill.add_unit:
             empty_tiles = self.bmap.get_empty_tiles(affected_tiles)
             if empty_tiles:
-                self.add_unit(new_unit, random.choice(empty_tiles), attacker.team_id)
+                self.add_unit(new_unit, random.choice(empty_tiles), attacker.team_id, summoner=attacker)
 
     def skill_effect_on_unit(self, attacker, skill_target_type_effect, target, skill_name, origin):
         requires_attack_roll = skill_target_type_effect.is_resistable
@@ -322,6 +322,8 @@ class Battle:
             self.move_effect_on_unit(attacker, move_effect, target, origin)
 
     def move_effect_on_unit(self, attacker, effect, unit, origin):
+        #todo: somehow reduce move collisions
+
         def max_abs(coords):
             x = coords[0]
             y = coords[1]
@@ -384,6 +386,13 @@ class Battle:
         if path: move_is_legal()
         if target: target_is_legal()
 
-
     def grid_distance(self, actor1, actor2):
         return abs(actor1[0] - actor2[0]) + abs(actor1[1] - actor2[1])
+
+    def get_mp_cost(self, skill, unit):
+        if skill.mp == -1:
+            num_summons = len([u for u in self.all_living_units if u.summoned_by == unit])
+            return 1 + (num_summons * 2)
+        else:
+            return skill.mp
+

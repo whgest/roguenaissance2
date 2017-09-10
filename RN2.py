@@ -160,17 +160,11 @@ class SaveGame(SaveData):
         self.score = SavedScore(data.get('score', {}))
 
 
-
-
-
-
-
-
 def main():
     #test mode
     game = Game()
     game.sound_handler.mute_switch = True
-    game.new_game('Astromancer', "Strongo D.")
+    game.new_game('Terramancer', "Flayk")
     game.init_battle(1)
     exit()
 

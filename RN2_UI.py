@@ -136,7 +136,7 @@ class RNScrollablePrompt:
     def print_prompt(self, text):
         if self.prompt_text != text:
             self.prompt_text = text
-            self.draw_prompt()
+        self.draw_prompt()
 
     def draw_prompt(self):
         self.reset()
@@ -166,26 +166,38 @@ class RN_UI_Class():
         self.battle_grid_coords = (0, 0, 50, 25)
         self.menu_base_color = (40,95,173)
         self.menu_gradient = (2,3,4)
-        self.select_color = "fuchsia"
+
         self.highlight_tint = (125,-120,47)
         self.highlighted_tiles = []
         self.textcolors = {
-            "damage": "darkred",
-            "heal":  "lime",
-            "skill": "fuchsia",
-            "death": "red",
-            "bad_status": "yellow",
-            "good_status": "aqua",
-            "hero_name": "white",
-            "ally_name": "green",
-            "enemy_name": "red",
-            "text": "silver"
+            "damage": "red2",
+            "heal":  "green2",
+            "skill": "magenta1",
+            "death": "darkred",
+            "bad_status": "yellow3",
+            "good_status": "turquoise",
+            "text": "snow2",
+            "hit_chance": "olivedrab1",
+            "mp": "dodgerblue"
+        }
+        self.ui_colors = {
+            "move_range": 'turquoise4',
+            "select_color": 'magenta',
+            "target_range": "darkred",
+            "aoe_range": 'yellow2',
+            "overlap_range": 'darkorange2',
+            "confirm_range": "green2",
+            "cursor": 'white'
         }
         self.team_colors = {
-            1: "lime",
-            2: "red",
-            3: "yellow"
+            1: "green2",
+            2: "red2",
+            3: "yellow2"
         }
+
+        self.select_color = self.ui_colors['select_color']
+        self.screen.font = pygame.font.Font('assets/lucon.ttf', 20)
+
     @staticmethod
     def wait_for_keypress():
         pygcurse.waitforkeypress()
@@ -231,6 +243,14 @@ class RN_UI_Class():
         self.screen.write(s, x=x, y=y, fgcolor=fgcolor, bgcolor=bgcolor)
         return
 
+    def right_menu_text(self, x, y, s, fgcolor="white", bgcolor=None):
+        if y > 22:
+            return
+        if bgcolor:
+            self.menutext(x, y, s, fgcolor=fgcolor, bgcolor=bgcolor)
+        else:
+            self.menutext(x, y, s, fgcolor=fgcolor)
+
     def blank(self, area):
         for y in range (area[3]):
             self.text(area[0], y+area[1], " "*area[2], bgcolor=self.gradient(y+area[1], self.menu_base_color, self.menu_gradient))
@@ -255,32 +275,34 @@ class RN_UI_Class():
     def draw_UI(self):
         self.blank((0, 0, 74, 45))
         for y in range(24):
-            self.text(50, y+1, u"║" + " "*23 + u"║", fgcolor= "white", bgcolor = self.gradient(y, self.menu_base_color, self.menu_gradient))
+            self.text(50, y+1, u"║" + " "*23 + u"║", fgcolor="white", bgcolor=self.gradient(y, self.menu_base_color, self.menu_gradient))
         for y in range(17):
-            self.text(0, y+26, u"║" + " "*73 + u"║", bgcolor= self.gradient(y+26, self.menu_base_color, self.menu_gradient))
-        self.text(50, 0, u'╔' + u"═"*23 + u'╗', fgcolor= "white", bgcolor=self.menu_base_color)
-        self.text(50, 23, u'╠' + u"═"*23 + u'╣', fgcolor= "white", bgcolor= self.gradient(23, self.menu_base_color, self.menu_gradient))
-        self.text(0, 25, u'╔' + u"═"*49 + u'╩' + u"═"*23 + u'╣', fgcolor= "white",  bgcolor= self.gradient(25, self.menu_base_color, self.menu_gradient))
-        self.text(0, 27, u'╠' + u"═"*73 + u'╣', fgcolor= "white",  bgcolor = self.gradient(27, self.menu_base_color, self.menu_gradient))
-        self.text(0, 29, u'╠' + u"═"*73 + u'╣', fgcolor= "white",  bgcolor = self.gradient(29, self.menu_base_color, self.menu_gradient))
-        self.text(0, 43, u'╚' + u"═"*73 + u'╝', fgcolor= "white",  bgcolor = self.gradient(43, self.menu_base_color, self.menu_gradient))
+            self.text(0, y+26, u"║" + " "*73 + u"║", bgcolor=self.gradient(y+26, self.menu_base_color, self.menu_gradient))
+        self.text(50, 0, u'╔' + u"═"*23 + u'╗', fgcolor="white", bgcolor=self.menu_base_color)
+        self.text(50, 23, u'╠' + u"═"*23 + u'╣', fgcolor="white", bgcolor=self.gradient(23, self.menu_base_color, self.menu_gradient))
+        self.text(0, 25, u'╔' + u"═"*49 + u'╩' + u"═"*23 + u'╣', fgcolor="white",  bgcolor=self.gradient(25, self.menu_base_color, self.menu_gradient))
+        self.text(0, 27, u'╠' + u"═"*73 + u'╣', fgcolor="white", bgcolor=self.gradient(27, self.menu_base_color, self.menu_gradient))
+        self.text(0, 29, u'╠' + u"═"*73 + u'╣', fgcolor="white", bgcolor=self.gradient(29, self.menu_base_color, self.menu_gradient))
+        self.text(0, 43, u'╚' + u"═"*73 + u'╝', fgcolor="white", bgcolor=self.gradient(43, self.menu_base_color, self.menu_gradient))
         self.screen.update()
 
-    def print_legend(self):
+    def print_legend(self, unit_list, legend_list):
         self.blank(self.right_menu_coords)
-        self.menutext(51, 1, "     BATTLE LEGEND:")
-        self.menutext(51, 3, " UNITS:")
-        # line_count = 1
-        # for u in unit_list:
-        #      self.menutext(52, (4+line_count), u[0] + ": " + u[1], fgcolor=u[2])
-        #      line_count += 1
-        # line_count += 1
-        # self.menutext(51, (4+line_count), " TERRAIN:")
-        # line_count += 2
-        # for l in legend_list:
-        #     self.text(52, (4+line_count), l[0], fgcolor=l[1], bgcolor=l[2])
-        #     self.menutext(53, (4+line_count), ":    " + l[3])
-        #     line_count += 1
+        self.menutext(59, 0, "LEGEND:")
+        line_count = 1
+        self.menutext(51, line_count, "UNITS:")
+        line_count += 1
+        for u in unit_list:
+             self.menutext(52, line_count, u.name + ':', fgcolor=self.team_colors[u.team_id])
+             self.menutext(72, line_count, u.character, fgcolor=self.team_colors[u.team_id])
+             line_count += 1
+        line_count += 1
+        self.menutext(51, line_count, "TERRAIN:")
+        line_count += 1
+        for l in legend_list:
+            self.text(52, (line_count), l[0], fgcolor=l[1], bgcolor=l[2])
+            self.menutext(53, (line_count), ":  " + l[3])
+            line_count += 1
         self.screen.update()
 
     def print_stats(self, unit):
@@ -292,20 +314,34 @@ class RN_UI_Class():
         line_count = 5
         for stat in stats_list:
             if getattr(unit, stat) > getattr(unit, "base_" + stat):
-                color = "lime"
+                arrow = u'▲'
+                color = self.textcolors["good_status"]
             elif getattr(unit, stat) < getattr(unit, "base_" + stat):
-                color = "darkred"
+                arrow = u'▼'
+                color = self.textcolors["bad_status"]
             else:
+                arrow = ""
                 color = "white"
             stat_name = stat[0].capitalize() + stat[1:]
-            self.menutext(51, line_count, self.fix_spacing(stat_name + ":" + str(getattr(unit, stat)), 23, ":"), fgcolor=color)
+            self.menutext(51, line_count, self.fix_spacing(stat_name + ":" + arrow + str(getattr(unit, stat)), 23, ":"), fgcolor=color)
             line_count += 1
 
         if not unit.active_status_effects:
             self.menutext(51, line_count+1, "No active effects.")
         else:
-            for i, effect in enumerate(unit.active_status_effects):
-                self.menutext(51, line_count+i+1, effect.display, fgcolor="white")
+            line_count += 1
+            self.menutext(51, line_count, "Active Effects:")
+            line_count += 1
+            colors = {
+                True: self.textcolors['good_status'],
+                False: self.textcolors['bad_status']
+            }
+
+            for effect in unit.active_status_effects:
+                for description in effect.status_effect.modifier_descriptions:
+                    self.right_menu_text(51, line_count, effect.status_effect.type + ' ' + description['text'],
+                                         fgcolor=colors[description['is_beneficial']])
+                    line_count += 1
         self.screen.update()
     
     def show_help(self):
@@ -329,17 +365,20 @@ class RN_UI_Class():
         line = s.split(delimiter)
         return line[0] + ":" + " "*num_spaces + line[1]
 
-    def draw_skills_menu(self, skills, skill_index, prompt):
+    def draw_skills_menu(self, skills, skill_index):
         self.blank(self.right_menu_coords)
-        self.menutext(51, 1, "SKILLS:")
+        self.menutext(59, 0, "SKILLS")
 
         for i, skill in enumerate(skills):
-            self.menutext(51, (3+i), 'F' + str(i+1) + ': ')
-            self.menutext(55, (3+i), skill)
+            self.menutext(51, (1+i), 'F' + str(i+1) + ': ')
+            self.menutext(55, (1+i), skill)
 
-        self.text(55, 3+skill_index, skills[skill_index], bgcolor=self.select_color)
-        self.scrolling_prompt.print_skill_description(prompt, "?")
+        self.text(55, 1+skill_index, skills[skill_index], bgcolor=self.select_color)
         self.screen.update()
+
+    def print_skill_description(self, prompt, adjusted_mp):
+        prompt_text = "(MP: " + str(adjusted_mp) + ") " + prompt
+        self.menutext(1, 28, prompt_text)
 
     def print_turn(self, a):
         self.blank((51, 24, 23, 1))
@@ -385,7 +424,12 @@ class RN_UI_Class():
 
         return (to_display['character'], to_display['fgcolor'], to_display['bgcolor'])
 
-    def highlight_area(self, highlight, tiles, battle_map, color="teal", is_target=False):
+    def highlight_area(self, highlight, tiles, battle_map, color=None, is_target=False):
+        if not color:
+            color = self.ui_colors['move_range']
+        else:
+            color = self.ui_colors[color]
+
         for t in tiles:
             x = t[0]
             y = t[1]
@@ -436,40 +480,54 @@ class RN_UI_Class():
         self.screen.update()
 
     def print_status(self, active, tile, switch=True):
-        self.blank((1,26,73,1))
+        def print_x(x_pos, s, fgcolor=self.textcolors['text']):
+            self.menutext(x_pos, 26, s, fgcolor=fgcolor)
+            x_pos += len(s) + 1
+            return x_pos
+
+        self.blank((1, 26, 73, 1))
         if not switch:
             return
-        self.menutext(1, 26, active.name, "white")
+        self.menutext(1, 26, active.name, self.textcolors['text'])
+        x_pos = 1 + len(active.name) + 1
         if active.hp <= 0:
             active.hp = 0
-        if (1.0*active.hp/active.maxhp) >= 0.7: color = "lime"
-        elif 0.3 <= (1.0*active.hp/active.maxhp) < 0.7: color = "yellow"
-        else: color = "darkred"
-        self.menutext(19, 26, "HP: ")
-        self.menutext(23, 26, str(active.hp) + "/" + str(active.maxhp), fgcolor=color)
-        self.menutext(31, 26, "MP: ")
-        self.menutext(35, 26, str(active.mp) + "/" + str(active.maxmp), fgcolor="aqua")
-        self.menutext(42, 26, "condition: ")
-        status, color = self.get_status(active)
-        self.menutext(53, 26, status, color)
+
+        if (1.0*active.hp/active.maxhp) >= 0.7:
+            color = self.textcolors['heal']
+        elif 0.3 <= (1.0*active.hp/active.maxhp) < 0.7:
+            color = self.textcolors['bad_status']
+        else:
+            color = self.textcolors['damage']
+
+        x_pos = print_x(x_pos, "HP:")
+        x_pos = print_x(x_pos, str(active.hp) + "/" + str(active.maxhp), fgcolor=color)
+        x_pos = print_x(x_pos, "MP:")
+        x_pos = print_x(x_pos, str(active.mp) + "/" + str(active.maxmp), fgcolor=self.textcolors['mp'])
+        x_pos = print_x(x_pos, "E:")
+        status = self.get_status(active, max_length=62-x_pos)
+        print_x(x_pos, status)
         self.menutext(63, 26, "terrain: ")
-        self.text(72, 26, tile.character, fgcolor= tile.fgcolor, bgcolor=tile.bgcolor)
+        self.text(72, 26, tile.character, fgcolor=tile.fgcolor, bgcolor=tile.bgcolor)
         self.screen.update()
         return
 
-    def get_status(self, active):
+    def get_status(self, active, max_length=24):
+        res = ''
         if not active.active_status_effects:
-            return "Normal", "lime"
-        if len(active.active_status_effects) == 1:
-            try:
-                return active.active_status_effects[0].status_effect.name, "yellow"
-            except TypeError:
-                print "ERROR INVALID STATUS", active.active_status_effects
+            return res
         else:
-            res = ""
-            for s in active.active_status_effects:
-                res = res + s.status_effect.name[0] + "/"
-            return res[:-1], "yellow"
+            for effect in active.active_status_effects:
+                res += "{}, ".format(effect.status_effect.type)
+        res = res[:-2]
+        if len(res) < max_length:
+            return res
+        else:
+            res = ''
+            for effect in active.active_status_effects:
+                res += "{}/".format(effect.status_effect.type[:3])
+            res = res[:-1]
+            return res[:max_length]
 
     def print_narration(self, narration_q):
         if narration_q:
@@ -477,15 +535,31 @@ class RN_UI_Class():
             for row, line in enumerate(narration_q):
                 col = self.narration_coords[0]
                 for word in line:
-                    self.menutext(col, 42-row, word.string, fgcolor=self.textcolors[word.color_binding])
+                    #color hack: can be either a textcolor string or team id int
+                    colors = dict(self.team_colors)
+                    colors.update(self.textcolors)
+                    self.menutext(col, 42-row, word.string, fgcolor=colors[word.color_binding])
                     col += len(word.string) + 1
             self.screen.update()
         return
 
     def print_battle_menu(self, battle_menu_list, turn_count, battle_index, v_top):
-        self.blank((self.right_menu_coords))
+        def unit_line(unit):
+            line_length = 24
+            def_line = '{0}*{1}/{2}'.format(unit.name, str(unit.hp), str(unit.maxhp))
+            num_spaces = line_length - len(def_line)
+            return def_line.replace('*', ' ' * num_spaces)
+
+        def stretch_line(line):
+            line_length = 24
+            num_spaces = line_length - len(line)
+            line += (" " * num_spaces)
+            return line
+
+        self.blank(self.right_menu_coords)
         num_chars = 10
-        self.menutext(51, 1, "OVERVIEW: (Turn " + str(turn_count) +")")
+        self.menutext(58, 0, "UNIT LIST")
+        self.menutext(51, 1, "Turn " + str(turn_count) + "        " + str(len(battle_menu_list)) + " units")
         visible_index = battle_index - v_top
         if visible_index >= num_chars:
             if v_top + num_chars < len(battle_menu_list):
@@ -505,17 +579,17 @@ class RN_UI_Class():
                 v_top = len(battle_menu_list) - num_chars - 1
                 visible_index = num_chars - 1
 
-
         visible_menu = battle_menu_list[v_top:v_top+num_chars]
         for i, actor in enumerate(visible_menu):
-            fgcolor = "white"
+            fgcolor = self.team_colors[actor.team_id]
             bgcolor = None
             if i == visible_index:
-                bgcolor = "fuchsia"
-            self.menutext(51, 3+(i*2), actor[0], fgcolor=fgcolor, bgcolor=bgcolor)
-            self.menutext(51, 4+(i*2), actor[1], fgcolor=fgcolor, bgcolor=bgcolor)
+                fgcolor = self.textcolors['text']
+                bgcolor = self.ui_colors['select_color']
+            self.right_menu_text(51, 3 + (i * 2), unit_line(actor), fgcolor=fgcolor, bgcolor=bgcolor)
+            self.right_menu_text(51, 3 + (i * 2) + 1, stretch_line(self.get_status(actor)), fgcolor=self.textcolors['text'], bgcolor=bgcolor)
         try:
-            self.highlight_active(battle_menu_list[battle_index][2], True)
+            self.highlight_active(battle_menu_list[battle_index], True)
         except IndexError:
             logging.error("BATTLE MENU GLITCH: " + repr(battle_menu_list))
             print "SEE LOGS FOR ERROR."
@@ -537,18 +611,17 @@ class RN_UI_Class():
 
     def print_additional_effects(self, skill, starting_line=18):
         colors = {
-            True: 'aqua',
-            False: 'yellow'
+            True: self.textcolors['good_status'],
+            False: self.textcolors['bad_status']
         }
 
         for effect in skill.status_effects:
             for description in effect.modifier_descriptions:
-                # only pt
-                self.menutext(51, starting_line, effect.type + ' ' + description['text'], fgcolor=colors[description['is_beneficial']])
+                self.right_menu_text(51, starting_line, effect.type + ' ' + description['text'], fgcolor=colors[description['is_beneficial']])
                 starting_line += 1
 
         for effect in skill.move_effects:
-            self.menutext(51, starting_line, effect.description, fgcolor="yellow")
+            self.right_menu_text(51, starting_line, effect.description, fgcolor=self.textcolors['bad_status'])
             starting_line += 1
 
         return starting_line
@@ -575,47 +648,46 @@ class RN_UI_Class():
         self.blank((self.right_menu_coords))
 
         center_space = (20 - len(skill.name)) / 2
-        self.menutext(59, 0, 'TARGET')
-        self.menutext(51, 2, (" "*center_space) + '--{0}--'.format(skill.name), fgcolor='fuchsia')
+        self.right_menu_text(59, 0, 'TARGET')
+        self.right_menu_text(51, 2, (" "*center_space) + '--{0}--'.format(skill.name), fgcolor=self.textcolors['skill'])
 
         line_to_print = 4
 
         target_spacing = 0 if len(defenders) > 4 else 1
 
-        if len(defenders) > 6:
+        if (len(defenders) > 6 and skill_effect_for_target.is_resistable) or (len(defenders) > 12 and not skill_effect_for_target.is_resistable):
             overflow_str = "+ %s more targets" % str(len(defenders) - 6)
             defenders = defenders[:6]
-            self.menutext(51, 16, overflow_str)
-
+            self.right_menu_text(51, 16, overflow_str)
 
         for defender in defenders:
-            color = 'red' if defender.is_hostile_to(attacker) else 'lime'
-            self.menutext(51, line_to_print, unit_line(defender), fgcolor=color)
+            self.right_menu_text(51, line_to_print, unit_line(defender), fgcolor=self.team_colors[defender.team_id])
             line_to_print += 1
 
             if skill_effect_for_target.is_resistable:
                 hit_chance = skill_effect_for_target.get_hit_chance(attacker, defender)
-                self.menutext(51, line_to_print, "Hit Chance: " + str(hit_chance) + "%", fgcolor="yellow")
+                self.right_menu_text(51, line_to_print, "Hit Chance: " + str(hit_chance) + "%", fgcolor=self.textcolors["hit_chance"])
+                line_to_print += 1
 
-            line_to_print += (1 + target_spacing)
+            line_to_print += (target_spacing)
 
         line_to_print += 2
         if skill_effect_for_target.damage.get_average_damage(attacker):
             is_heal = (skill_effect_for_target.damage.get_average_damage(attacker) < 0)
-            color = 'lime' if is_heal else 'darkred'
+            color = self.textcolors['heal'] if is_heal else self.textcolors['damage']
             noun = 'Healing: ' if is_heal else 'Damage: '
             dmg_range = skill_effect_for_target.damage.get_damage_range(attacker)
 
-
             if dmg_range[0] != dmg_range[1]:
-                self.menutext(51, line_to_print, noun + str(abs(dmg_range[0])) + " - " + str(abs(dmg_range[1])), fgcolor=color)
+                self.right_menu_text(51, line_to_print, noun + str(abs(dmg_range[0])) + " - " + str(abs(dmg_range[1])), fgcolor=color)
             else:
-                self.menutext(51, line_to_print, noun + str(abs(dmg_range[0])), fgcolor=color)
+                self.right_menu_text(51, line_to_print, noun + str(abs(dmg_range[0])), fgcolor=color)
 
         line_to_print += 1
         if len(skill_effect_for_target.status_effects) or len(skill_effect_for_target.move_effects):
             self.print_additional_effects(skill_effect_for_target, starting_line=line_to_print)
-            self.screen.update()
+
+        self.screen.update()
 
     def print_complex_target(self, attacker, defenders, skill):
         def unit_line(unit):
@@ -624,83 +696,53 @@ class RN_UI_Class():
             num_spaces = line_length - len(def_line)
             return def_line.replace('*', ' ' * num_spaces)
 
-        self.blank(self.right_menu_coords)
+        def print_skill_effect_for_target(skill_effect_for_target, targeted_defenders, line_to_print):
+            for defender in targeted_defenders:
+                self.right_menu_text(51, line_to_print, unit_line(defender), fgcolor=self.team_colors[defender.team_id])
+                line_to_print += 1
 
+            if skill_effect_for_target.damage.get_average_damage(attacker):
+                is_heal = (skill_effect_for_target.damage.get_average_damage(attacker) < 0)
+                color = self.textcolors['heal'] if is_heal else self.textcolors['damage']
+                noun = 'Healing: ' if is_heal else 'Damage: '
+                dmg_range = skill_effect_for_target.damage.get_damage_range(attacker)
+
+                if dmg_range[0] != dmg_range[1]:
+                    self.right_menu_text(51, line_to_print, noun + str(abs(dmg_range[0])) + " - " + str(abs(dmg_range[1])), fgcolor=color)
+                else:
+                    self.right_menu_text(51, line_to_print, noun + str(abs(dmg_range[0])), fgcolor=color)
+
+                line_to_print += 1
+
+            if len(skill_effect_for_target.status_effects) or len(skill_effect_for_target.move_effects):
+                line_to_print = self.print_additional_effects(skill_effect_for_target, starting_line=line_to_print)
+
+            return line_to_print + 1
+
+        self.blank(self.right_menu_coords)
         center_space = (20 - len(skill.name)) / 2
         self.menutext(59, 0, 'TARGET')
-        self.menutext(51, 2, (" "*center_space) + '--{0}--'.format(skill.name), fgcolor='fuchsia')
+        self.menutext(51, 2, (" "*center_space) + '--{0}--'.format(skill.name), fgcolor=self.textcolors['skill'])
 
         line_to_print = 4
 
         if len([d for d in defenders if d.is_hostile_to(attacker)]):
-            for defender in [d for d in defenders if d.is_hostile_to(attacker)]:
-                self.menutext(51, line_to_print, unit_line(defender), fgcolor="red")
-                line_to_print += 1
-
-            if skill.targets.enemy.damage.get_average_damage(attacker):
-                is_heal = (skill.targets.enemy.damage.get_average_damage(attacker) < 0)
-                color = 'lime' if is_heal else 'darkred'
-                noun = 'Healing: ' if is_heal else 'Damage: '
-                dmg_range = skill.targets.enemy.damage.get_damage_range(attacker)
-
-                if dmg_range[0] != dmg_range[1]:
-                    self.menutext(51, line_to_print, noun + str(abs(dmg_range[0])) + " - " + str(abs(dmg_range[1])), fgcolor=color)
-                else:
-                    self.menutext(51, line_to_print, noun + str(abs(dmg_range[0])), fgcolor=color)
-
-                line_to_print += 1
-
-            if len(skill.targets.enemy.status_effects) or len(skill.targets.enemy.move_effects):
-                line_to_print = self.print_additional_effects(skill.targets.enemy, starting_line=line_to_print)
-
-            line_to_print += 1
+            line_to_print = print_skill_effect_for_target(skill.targets.enemy,
+                                                          [d for d in defenders if d.is_hostile_to(attacker)],
+                                                          line_to_print)
 
         if len([d for d in defenders if d.is_ally_of(attacker) and d != attacker]):
-            for defender in [d for d in defenders if d.is_ally_of(attacker) and d != attacker]:
-                self.menutext(51, line_to_print, unit_line(defender), fgcolor="lime")
-                line_to_print += 1
-
-            if skill.targets.friendly.damage.get_average_damage(attacker):
-                is_heal = (skill.targets.friendly.damage.get_average_damage(attacker) < 0)
-                color = 'lime' if is_heal else 'darkred'
-                noun = 'Healing: ' if is_heal else 'Damage: '
-                dmg_range = skill.targets.friendly.damage.get_damage_range(attacker)
-
-                if dmg_range[0] != dmg_range[1]:
-                    self.menutext(51, line_to_print, noun + str(abs(dmg_range[0])) + " - " + str(abs(dmg_range[1])), fgcolor=color)
-                else:
-                    self.menutext(51, line_to_print, noun + str(abs(dmg_range[0])), fgcolor=color)
-
-                line_to_print += 1
-
-            if len(skill.targets.friendly.status_effects) or len(skill.targets.friendly.move_effects):
-                line_to_print = self.print_additional_effects(skill.targets.friendly, starting_line=line_to_print)
-
-            line_to_print += 1
+            line_to_print = print_skill_effect_for_target(skill.targets.friendly,
+                                                          [d for d in defenders if
+                                                           d.is_ally_of(attacker) and d != attacker],
+                                                          line_to_print)
 
         if len([d for d in defenders if d == attacker]):
-            for defender in [d for d in defenders if d == attacker]:
-                self.menutext(51, line_to_print, unit_line(defender), fgcolor="lime")
-                line_to_print += 1
-
-            if skill.targets.self.damage.get_average_damage(attacker):
-                is_heal = (skill.targets.self.damage.get_average_damage(attacker) < 0)
-                color = 'lime' if is_heal else 'darkred'
-                noun = 'Healing: ' if is_heal else 'Damage: '
-                dmg_range = skill.targets.self.damage.get_damage_range(attacker)
-
-                if dmg_range[0] != dmg_range[1]:
-                    self.menutext(51, line_to_print, noun + str(abs(dmg_range[0])) + " - " + str(abs(dmg_range[1])), fgcolor=color)
-                else:
-                    self.menutext(51, line_to_print, noun + str(abs(dmg_range[0])), fgcolor=color)
-
-                line_to_print += 1
-
-            if len(skill.targets.self.status_effects) or len(skill.targets.self.move_effects):
-                line_to_print = self.print_additional_effects(skill.targets.self, starting_line=line_to_print)
+            line_to_print = print_skill_effect_for_target(skill.targets.self,
+                                                          [d for d in defenders if d == attacker],
+                                                          line_to_print)
 
         self.screen.update()
-        return
 
     def draw_border(self):
         self.blank((0, 0, 74, 44))
@@ -1074,11 +1116,10 @@ class RN_UI_Class():
 
         return
 
-def main():
-    RN_UI = RN_UI_Class()
-    RN_UI.draw_UI()
-    RN_UI.print_legend([[".", "red", "grass"]], [["@", "white", "hero"]])
-    pygcurse.waitforkeypress()
-
-if __name__ == "__main__":
-    main()
+# def main():
+#     RN_UI = RN_UI_Class()
+#     RN_UI.draw_UI()
+#     pygcurse.waitforkeypress()
+#
+# if __name__ == "__main__":
+#     main()

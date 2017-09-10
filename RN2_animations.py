@@ -125,7 +125,7 @@ class Animation():
         self.cleanup(tiles)
         return
 
-    def firework(self, origin, size, character, color, delay=0.005, reverse=False, clean_wait=True, cleanup=True):
+    def firework(self, origin, size, character, color, delay=0.05, reverse=False, clean_wait=True, cleanup=True):
         self.UI.screen._autoupdate = False
         cleanup_list = []
         x = origin[0]
@@ -208,22 +208,22 @@ class Animation():
             return
 
         elif self.anim_id == "rock toss":
-            self.projectile(self.attacker, self.tiles, [u"■"], ["olive"])
+            self.projectile(self.attacker, self.tiles, [u"■"], ["olivedrab1"])
             self.game.play_sound("bighit")
-            self.hit(self.tiles, ["*", "o", "O"], ["olive"])
+            self.hit(self.tiles, ["*", "o", "O"], ["olivedrab1"])
             return
 
         elif self.anim_id == "venom":
             self.game.play_sound("slash")
-            self.hit(self.tiles, ["\\", "/", "X", u"♦"], ["lime"])
+            self.hit(self.tiles, ["\\", "/", "X", u"♦"], ["green2"])
             self.game.play_sound("dark")
             return
 
         elif self.anim_id == "ice toss":
             self.game.play_sound("ice")
-            self.projectile(self.attacker, self.tiles, [u"♦"], ["aqua"])
+            self.projectile(self.attacker, self.tiles, [u"♦"], ["deepskyblue"])
             self.game.play_sound("bighit")
-            self.hit(self.tiles, ["*", "o", "O"], ["aqua"])
+            self.hit(self.tiles, ["*", "o", "O"], ["deepskyblue"])
             return
 
         elif self.anim_id == "fire ball":
@@ -235,19 +235,19 @@ class Animation():
 
         elif self.anim_id == "dark ball":
             self.game.play_sound("fireball")
-            self.projectile(self.attacker, self.tiles, [u"☼"], ["fuchsia", "lime"])
+            self.projectile(self.attacker, self.tiles, [u"☼"], ["magenta", "green2"])
             self.game.play_sound("dark")
             self.flash_tiles(self.tiles, [(-125,-125,-125), (-205,-205,-205)], 3)
             return
 
         elif self.anim_id == "poisonbolt":
-            self.projectile(self.attacker, self.tiles, [u"Θ", "O"], ["green", "lime"])
+            self.projectile(self.attacker, self.tiles, [u"Θ", "O"], ["green", "green2"])
             self.game.play_sound("gamma")
             self.flash_tiles(self.tiles, [(-50,50,-50), (-50,150,-50)], 3)
 
         elif self.anim_id == "frostfire":
             self.game.play_sound("fireball")
-            self.projectile(self.attacker, self.tiles, [u"┼", u"╬"], ["red", "aqua"])
+            self.projectile(self.attacker, self.tiles, [u"┼", u"╬"], ["red", "deepskyblue"])
             self.game.play_sound("ice")
             self.game.play_sound("fire")
             self.flash_tiles(self.tiles, [(-50,-50,125), (125,-50,-50)], 4)
@@ -303,7 +303,7 @@ class Animation():
         elif self.anim_id == "skycaller":
             self.game.play_sound("starstorm")
             self.flash_tiles(self.tiles, [(-40, -40, -40)], 1, fast_update=True, cleanup=False)
-            colors = ["yellow", "fuchsia", "lime", "white"]
+            colors = ["yellow", "magenta", "green2", "white"]
             for i in range(6):
                 self.firework((random.randint(6,43), (random.randint(6,18))), 6, "*", random.choice(colors))
             self.game.play_sound("quake")
@@ -313,7 +313,7 @@ class Animation():
             self.tint_screen((139, 69, 19))
             self.game.play_sound("quake")
             self.game.play_sound("bigboom")
-            self.firework(self.attacker, 40, u"Ж", "olive", delay=0.015)
+            self.firework(self.attacker, 40, u"Ж", "olivedrab1", delay=0.015)
             self.game.play_sound("surge")
             self.flash_tiles(self.tiles, [(0, -50, -100), (-100, -100, -100)], 4, fast_update=True)
             self.tint_screen((0, 0, 0))
@@ -361,6 +361,9 @@ class Animation():
             self.flash_tiles(self.tiles, [(-50, -50, -50), (-150, -150, -150)], 8, cleanup=False)
             self.game.play_sound("bigboom")
             self.firework(self.tiles[0], 15, "X", (0, 0, 0), cleanup=False)
+
+        elif self.anim_id == "none":
+            pass
 
         else:
             return

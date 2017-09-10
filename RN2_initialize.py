@@ -8,7 +8,7 @@ import yaml
 import random
 from RN2_battle_logic import get_neighboring_points, add_points
 import pyromancer_tree
-from RN2_event import EventQueue, DamageOrHeal, GoodStatus, BadStatus, GoodStatusEnds, BadStatusEnds, StatusDamageOrHeal
+from RN2_event import EventQueue, DamageOrHeal, GoodStatus, BadStatus, GoodStatusEnds, BadStatusEnds, StatusDamageOrHeal, IsDisabled, ImmuneToStatus
 import itertools
 
 #pygame input constants, NOT ASCII CODES
@@ -38,18 +38,18 @@ FOUR_KEY = 260
 SIX_KEY = 262
 EIGHT_KEY = 264
 
-F1 = 282
-F2 = 283
-F3 = 284
-F4 = 285
-F5 = 286
-F6 = 287
-F7 = 288
-F8 = 289
-F9 = 290
-F10 = 291
-F11 = 292
-F12 = 293
+F1 = 'F1'
+F2 = 'F2'
+F3 = 'F3'
+F4 = 'F4'
+F5 = 'F5'
+F6 = 'F6'
+F7 = 'F7'
+F8 = 'F8'
+F9 = 'F9'
+F10 = 'F10'
+F11 = 'F11'
+F12 = 'F12'
 
 #actions
 ACTIVATE = 0
@@ -94,13 +94,26 @@ class ModifiableAttribute(object):
             self.attribute_modifiers = value[1]
 
     def get_modified_value(self, instance):
-        total_modifier = 0
         try:
             base_stat = self.data[instance]
         except KeyError:
             pass
-        for modifier in instance.attribute_modifiers[self.name]:
-            total_modifier += modifier
+        # modifiers do not stack: only the highest positive and negative ones are used
+        mods = instance.attribute_modifiers[self.name]
+
+        mods.sort(reverse=True)
+
+        try:
+            # positive and negative mods present, take strongest of each
+            if mods[0] * mods[-1] < 0:
+                total_modifier = mods[0] + mods[-1]
+            else:
+                # only strongest takes effect
+                mods.sort(key=lambda x: abs(x), reverse=True)
+                total_modifier = mods[0]
+        except IndexError:
+            total_modifier = 0
+
         return base_stat + total_modifier
 
 
@@ -169,8 +182,13 @@ class Actor(object):
         self.is_dead = 0
         self.ai_class = pyromancer_tree.PyromancerDecisionTree
         self.event = EventQueue()
+        self.summoned_by = data.get('summoned_by', None)
 
-    def __str__(self):
+        if self.innate_status:
+            for status in self.innate_status:
+                self.apply_status(SkillStatusEffect(status, 'Innate'))
+
+    def __repr__(self):
         return self.name
 
     def display(self):
@@ -224,10 +242,12 @@ class Actor(object):
         self.hp = 0
         self.is_dead = True
 
-    @property
     def is_disabled(self):
         disabling_effects = [effect for effect in self.active_status_effects if effect.status_effect.lose_turn]
-        return disabling_effects[0].name if len(disabling_effects) else False
+        is_disabled = disabling_effects[0].status_effect.type if len(disabling_effects) else False
+        if is_disabled:
+            self.event.add_event(IsDisabled(self, disabling_effects[0].status_effect.type))
+        return is_disabled
 
     def initiate_turn(self):
         self.tick_continuous_status()
@@ -236,7 +256,7 @@ class Actor(object):
 
     @property
     def can_act(self):
-        return not self.is_disabled and not self.is_dead
+        return not self.is_disabled()and not self.is_dead
 
     def calculate_move_range(self, bmap, origin=None, modifier=0):
         if not origin:
@@ -268,16 +288,20 @@ class Actor(object):
             return 0
 
     def apply_status(self, status):
-        for modifier in status.modifiers:
-            if not modifier.continuous:
-                self.apply_status_modifier(modifier)
+        print status.type, self.immunities
+        if status.type not in self.immunities:
+            self.active_status_effects.append(AppliedStatusEffect(status, status.duration))
 
-        self.active_status_effects.append(AppliedStatusEffect(status, status.duration))
+            for modifier in status.modifiers:
+                if not modifier.continuous:
+                    self.apply_status_modifier(modifier)
 
-        if status.is_beneficial:
-            self.event.add_event(GoodStatus(self, status.name))
+            if status.is_beneficial:
+                self.event.add_event(GoodStatus(self, status.name))
+            else:
+                self.event.add_event(BadStatus(self, status.name))
         else:
-            self.event.add_event(BadStatus(self, status.name))
+            self.event.add_event(ImmuneToStatus(self, status.type))
 
     def apply_status_modifier(self, modifier):
         attribute = modifier.stat
@@ -297,9 +321,10 @@ class Actor(object):
         keyfunc = lambda x: x.type
         all_dot_effects = [e.status_effect for e in self.active_status_effects if e.status_effect.damage]
 
-        if len(all_dot_effects):
-            all_dot_effects.sort(key=keyfunc, reverse=True)
+        #force healing effects to tick last
+        all_dot_effects.sort(key=lambda x: x.damage, reverse=True)
 
+        if len(all_dot_effects):
             for key, group in itertools.groupby(all_dot_effects, keyfunc):
                 effects_of_type = list(group)
                 effects_of_type.sort(key=lambda x: x.damage)
@@ -312,8 +337,10 @@ class Actor(object):
 
     def decrement_status_durations(self):
         for active in self.active_status_effects:
-            active.remaining_duration -= 1
+            if active.status_effect.expires:
+                active.remaining_duration -= 1
 
+        for active in self.active_status_effects:
             if active.remaining_duration <= 0:
                 self.remove_status(active)
 
@@ -413,10 +440,11 @@ class StandardDamage:
 class DrainDamage(StandardDamage):
     def __init__(self, data, ident, attack_stat, defense_stat):
         StandardDamage.__init__(self, data, ident, attack_stat, defense_stat)
+        self.name = ident
 
     def roll_damage(self, attacker):
         inflicted_damage = StandardDamage.roll_damage(self, attacker)
-        attacker.inflict_damage_or_healing(inflicted_damage * -1)
+        attacker.inflict_damage_or_healing(inflicted_damage * -1, self.name)
 
         return inflicted_damage
 
@@ -474,7 +502,7 @@ DEFAULT_DEFENSE_STATS = {
 
 class SkillMoveEffect:
     def __init__(self, data):
-        self.move_type = data.get('move_type', 'push')
+        self.move_type = data.get('type', 'push')
         self.origin = data.get('origin', 'user')
         self.distance = data.get('distance')
         self.instant = data.get('instant', False)
@@ -495,10 +523,10 @@ class SkillStatusEffectModifier:
     @property
     def description(self):
         if self.value > 0:
-            verb = u'▲'
+            arrow = u'▲'
         else:
-            verb = u'▼'
-        return u'({0} {1} {2})'.format(ABBREVIATIONS[self.stat], verb, abs(self.value))
+            arrow = u'▼'
+        return u'({0} {1} {2})'.format(ABBREVIATIONS[self.stat], arrow, abs(self.value))
 
     @property
     def is_beneficial(self):
@@ -515,6 +543,7 @@ class SkillStatusEffect:
         self.duration = data.get('duration', 1)
         self.lose_turn = data.get('lose_turn', False)
         self.damage = data.get('damage', 0)
+        self.expires = data.get('expires', True)
 
         self.modifiers = []
         for m in data.get('modifiers', []):
@@ -552,7 +581,7 @@ class SkillEffectForTargetType:
         if self.attack_stat and not self.defense_stat:
             self.defense_stat = DEFAULT_DEFENSE_STATS[self.attack_stat]
 
-        self.damage = DAMAGE_TYPES[self.damage_type](target_type_data.get('damage'), self.attack_stat, self.defense_stat, ident)
+        self.damage = DAMAGE_TYPES[self.damage_type](target_type_data.get('damage'), ident, self.attack_stat, self.defense_stat)
 
         self.status_effects = []
         for s in target_type_data.get('status_effects', []):
@@ -566,7 +595,7 @@ class SkillEffectForTargetType:
 
     def get_hit_chance(self, attacker, defender):
         """
-        To hit formula for all hostile skills is (skillStat/2) + random integer between 0 and skillStat vs. defenseStat
+        To hit formula for all hostile skills is (skillStat/2) + (random integer between 0 and skillStat) vs. defenseStat
         The below equation gets success chance, hopefully
         """
         if not self.attack_stat:
@@ -605,7 +634,7 @@ class TargetTypes:
         enemy_data.update(targets.get('enemy', {}))
         self.enemy = SkillEffectForTargetType(enemy_data, ident)
 
-        friendly_data = dict(data)
+        friendly_data = dict(enemy_data)
         friendly_data.update(targets.get('friendly', {}))
         self.friendly = SkillEffectForTargetType(friendly_data, ident)
 
@@ -632,8 +661,6 @@ class Skill:
         self.animation = data.get('animation')
         self.targets = TargetTypes(data.get('targets', {}), data, self.ident)
         self.targets_empty = data.get('targets_empty', False)
-
-        print self.ident, self.targets.special_friendly_effect, self.targets.special_self_effect
 
     def __str__(self):
         return self.name if self.name else self.ident
@@ -731,3 +758,25 @@ def set_binds():
         binds[281 + f] = "F" + str(f)
 
     return binds
+
+#
+# def attack_roll():
+#     stat = 19
+#     defense = 14
+#     random_roll = random.randint(0, stat)
+#     attack_roll = (stat / 2) + random_roll
+#     if attack_roll >= defense:
+#         return True
+#     else:
+#         return False
+#
+# pass_count = 0
+# fail_count = 0
+# for i in range(10000):
+#     trial = attack_roll()
+#     if trial:
+#         pass_count += 1
+#     else:
+#         fail_count += 1
+#
+# print pass_count/100, '%'

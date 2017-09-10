@@ -234,10 +234,19 @@
           - 5
 
     - condition:
-        trigger_type: kill_team_2
-        trigger_condition: 0
+        trigger_type: on_goal_tile
       effect:
         type: victory
 
   tips:
     - Good luck suckaaaaa
+
+5:
+  map: bridge
+  music:
+    - battle1a
+    - battle1b
+  player_start: 12,12
+  victory_condition:
+    conditions:
+      - condition_type: on_goal_tile

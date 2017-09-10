@@ -10,7 +10,9 @@ October 2013
 import logging
 import string as string_module
 import RN2_battle_logic
-from RN2_initialize import ACTIVATE, CANCEL, PASS_TURN, HELP_MENU, STATUS_DISPLAY, SKILLS_MENU, LEGEND, BATTLE_OVERVIEW, MUTE_SOUND, EXIT, DOWN, LEFT, RIGHT, UP, INVALID
+from RN2_initialize import (ACTIVATE, CANCEL, PASS_TURN, HELP_MENU, STATUS_DISPLAY, SKILLS_MENU, LEGEND, BATTLE_OVERVIEW,
+                            MUTE_SOUND, EXIT, DOWN, LEFT, RIGHT, UP, INVALID, F1, F2, F3, F4, F5, F6, F7, F8, F9, F10,
+                            F11, F12)
 
 logging.basicConfig(filename="logs/rn_debug.log", filemode="w+", level=logging.DEBUG)
 
@@ -49,9 +51,9 @@ class BattleReport:
             "resist": BattleReportLine("%unit: Resists %cause.", cause_color='skill'),
             "bad_status": BattleReportLine("%unit: Afflicted by %cause.", cause_color='bad_status'),
             "good_status": BattleReportLine("%unit: Affected by %cause.", cause_color='good_status'),
-            "immunity": BattleReportLine("%unit: Immune to %cause.", cause_color='bad_status'),
+            "immune": BattleReportLine("%unit: Immune to %cause.", cause_color='bad_status'),
             "death": BattleReportLine("%unit dies!", line_color="death"),
-            "disabled": BattleReportLine("%unit is disabled by %cause and cannot act.", line_color='bad_status'),
+            "disabled": BattleReportLine("%unit: Disabled by %cause and cannot act.", cause_color='bad_status'),
             "status_damage": BattleReportLine("%unit: Suffers %effect damage from %cause.", cause_color='bad_status', effect_color='damage'),
             "status_heal": BattleReportLine("%unit: Gains %effect life from %cause.", cause_color='good_status', effect_color='heal'),
             "status_update": BattleReportLine("%unit: Afflicted by %cause: %effect!", cause_color='bad_status', effect_color='bad_status'),
@@ -63,15 +65,13 @@ class BattleReport:
         }
 
     def colorize_unit_name(self, unit):
-        #todo: show team color
-        return "hero_name"
+        return unit.team_id
 
     def add_entry(self, entry):
         _format = entry.get('_format', '')
         unit = entry.get('unit', '')
         cause = entry.get('cause', '')
         effect = str(entry.get('effect', ''))
-
 
         report_obj = self.report_formats[_format]
         colorized_list = []
@@ -127,10 +127,11 @@ DIR_DOWN = [0, 1]
 
 
 class PlayerTurnState(object):
-    def __init__(self, ui, unit, bmap, player_selections):
+    def __init__(self, ui, unit, bmap, player_selections, battle):
         self.ui = ui
         self.unit = unit
         self.bmap = bmap
+        self.battle = battle
         self.player_selections = player_selections
         self.selected_skill = None
         self.targetable_tiles = []
@@ -142,7 +143,7 @@ class PlayerTurnState(object):
             SKILLS_MENU: self.skills_menu,
             BATTLE_OVERVIEW: self.battle_overview,
             STATUS_DISPLAY: self.status_display,
-            #LEGEND: self.legend,
+            LEGEND: self.legend,
             DOWN: self.down,
             LEFT: self.left,
             RIGHT: self.right,
@@ -157,7 +158,10 @@ class PlayerTurnState(object):
         self.ui.print_error_prompt(text)
 
     def process_input(self, command):
-        return self.function_bindings[command]()
+        try:
+            return self.function_bindings[command]()
+        except KeyError:
+            pass
 
     def activate_state(self):
         pass
@@ -170,6 +174,9 @@ class PlayerTurnState(object):
 
     def cancel(self):
         raise NotImplementedError
+
+    def legend(self):
+        self.ui.print_legend(self.battle.legend_unit_list, self.bmap.legend_list)
 
     def pass_turn(self):
         self.player_selections.chosen_skill = None
@@ -202,8 +209,8 @@ class PlayerTurnState(object):
 
 
 class MoveCharacter(PlayerTurnState):
-    def __init__(self, ui, unit, bmap, player_selections, skills):
-        PlayerTurnState.__init__(self, ui, unit, bmap, player_selections)
+    def __init__(self, ui, unit, bmap, player_selections, skills, battle):
+        PlayerTurnState.__init__(self, ui, unit, bmap, player_selections, battle)
         self.skills = skills
         self.destination = []
         self.initial_position = self.unit.coords
@@ -216,13 +223,17 @@ class MoveCharacter(PlayerTurnState):
 
         return tile_is_movable and in_range
 
+    def activate_state(self):
+        self.legend()
+
     def deactivate_state(self):
         self.player_selections.target_tile = self.unit.coords
-        self.ui.highlight_area(False, self.move_range, self.bmap, "teal")
+        self.ui.highlight_area(False, self.move_range, self.bmap)
 
     def draw_state_ui(self):
         self.ui.print_prompt("arrows = move. a = attack. s = use skills. space = end turn. h = help")
-        self.ui.highlight_area(True, self.move_range, self.bmap, "teal")
+        self.ui.print_status(self.unit,  self.bmap.get_tile_at(self.unit.coords))
+        self.ui.highlight_area(True, self.move_range, self.bmap)
 
     def activate(self):
         if not self.unit.skillset:
@@ -233,7 +244,7 @@ class MoveCharacter(PlayerTurnState):
             return TARGET_SKILL
 
     def cancel(self):
-        self.ui.print_legend()
+        self.legend()
 
     def handle_movement(self, direction):
         destination = RN2_battle_logic.add_points(self.unit.coords, direction)
@@ -262,35 +273,78 @@ class MoveCharacter(PlayerTurnState):
 
 
 class InSkillsMenu(PlayerTurnState):
-    def __init__(self, ui, unit, bmap, player_selections, skills):
-        PlayerTurnState.__init__(self, ui, unit, bmap, player_selections)
+    def __init__(self, ui, unit, bmap, player_selections, skills, battle):
+        PlayerTurnState.__init__(self, ui, unit, bmap, player_selections, battle)
         self.skills = skills
         self.skill_menu_index = 0
+        self.battle = battle
+
+        self.function_bindings.update({
+            F1: lambda: self.activate(function_key=1),
+            F2: lambda: self.activate(function_key=2),
+            F3: lambda: self.activate(function_key=3),
+            F4: lambda: self.activate(function_key=4),
+            F5: lambda: self.activate(function_key=5),
+            F6: lambda: self.activate(function_key=6),
+            F7: lambda: self.activate(function_key=7),
+            F8: lambda: self.activate(function_key=8),
+            F9: lambda: self.activate(function_key=9),
+            F10: lambda: self.activate(function_key=10),
+            F11: lambda: self.activate(function_key=11),
+            F12: lambda: self.activate(function_key=12)
+        })
 
     def draw_state_ui(self):
+        if len(self.unit.skillset) < 2:
+            self.input_error("No usable skills.")
+            return
         self.skill_menu_index %= len(self.unit.skillset[1:])
-        skill_to_display = self.skills[self.unit.skillset[1:][self.skill_menu_index]]
-        prompt = skill_to_display.skill_prompt
-        self.ui.draw_skills_menu(self.unit.skillset[1:], self.skill_menu_index, prompt)
 
-    def activate(self):
-        skill_name = self.unit.skillset[1:][self.skill_menu_index]
-        self.player_selections.chosen_skill = self.skills[skill_name]
-        return TARGET_SKILL
+        self.ui.draw_skills_menu(self.unit.skillset[1:], self.skill_menu_index)
+
+    def activate(self, function_key=None):
+        if not function_key:
+            skill_name = self.unit.skillset[1:][self.skill_menu_index]
+        else:
+            try:
+                skill_name = self.unit.skillset[function_key]
+            except IndexError:
+                pass
+
+        if self.battle.get_mp_cost(self.skills[skill_name], self.unit) > self.unit.mp:
+            self.input_error("Insufficient MP.")
+        else:
+            self.player_selections.chosen_skill = self.skills[skill_name]
+            return TARGET_SKILL
+
+    def activate_state(self):
+        skill_to_display = self.skills[self.unit.skillset[1:][self.skill_menu_index]]
+        self.print_selected_skill_prompt(skill_to_display)
 
     def cancel(self):
         return MOVE_CHARACTER
 
     def up(self):
         self.skill_menu_index -= 1
+        self.skill_menu_index %= len(self.unit.skillset[1:])
+        skill_to_display = self.skills[self.unit.skillset[1:][self.skill_menu_index]]
+        self.print_selected_skill_prompt(skill_to_display)
 
     def down(self):
         self.skill_menu_index += 1
+        self.skill_menu_index %= len(self.unit.skillset[1:])
+        skill_to_display = self.skills[self.unit.skillset[1:][self.skill_menu_index]]
+        self.print_selected_skill_prompt(skill_to_display)
+
+    def print_selected_skill_prompt(self, skill_to_display):
+        prompt_for_selected = skill_to_display.skill_prompt
+        mp_for_selected = self.battle.get_mp_cost(skill_to_display, self.unit)
+        self.ui.print_skill_description(prompt_for_selected, mp_for_selected)
 
 
 class InBattleOverview(PlayerTurnState):
     def __init__(self, ui, unit, bmap, player_selections, battle):
-        PlayerTurnState.__init__(self, ui, unit, bmap, player_selections)
+        PlayerTurnState.__init__(self, ui, unit, bmap, player_selections, battle)
         self.index = 0
         self.v_top = 0
         self.battle = battle
@@ -299,25 +353,29 @@ class InBattleOverview(PlayerTurnState):
     def draw_state_ui(self):
         self.index %= len(self.list)
         self.v_top = self.ui.print_battle_menu(self.list, self.battle.turn_tracker.turn_count, self.index, self.v_top)
-        self.ui.highlight_active(self.list[self.index][2], False)
 
     def activate(self):
         return MOVE_CHARACTER
+
+    def deactivate_state(self):
+        self.ui.highlight_active(self.list[self.index], False)
 
     def cancel(self):
         return MOVE_CHARACTER
 
     def up(self):
+        self.ui.highlight_active(self.list[self.index], False)
         self.index -= 1
 
     def down(self):
+        self.ui.highlight_active(self.list[self.index], False)
         self.index += 1
 
 
 class TargetSkill(PlayerTurnState):
-    def __init__(self, ui, unit, bmap, player_selections, all_units, battle):
-        PlayerTurnState.__init__(self, ui, unit, bmap, player_selections)
-        self.all_units = all_units
+    def __init__(self, ui, unit, bmap, player_selections, battle):
+        PlayerTurnState.__init__(self, ui, unit, bmap, player_selections, battle)
+        self.all_units = self.battle.all_living_units
         self.battle = battle
         self.player_selections.target_tile = self.unit.coords
 
@@ -348,10 +406,10 @@ class TargetSkill(PlayerTurnState):
         range_tiles = self.targetable_tiles
         range_only, aoe_only, overlap = get_shared_tiles(range_tiles, targeted_aoe)
 
-        self.ui.highlight_area(True, range_only, self.bmap, color='maroon')
-        self.ui.highlight_area(True, aoe_only, self.bmap, color='yellow')
-        self.ui.highlight_area(True, overlap, self.bmap, color='orange')
-        self.ui.highlight_area(True, [cursor_pos], self.bmap, color='white')
+        self.ui.highlight_area(True, range_only, self.bmap, color='target_range')
+        self.ui.highlight_area(True, aoe_only, self.bmap, color='aoe_range')
+        self.ui.highlight_area(True, overlap, self.bmap, color='overlap_range')
+        self.ui.highlight_area(True, [cursor_pos], self.bmap, color='cursor')
 
     def print_target_display(self, targeted_aoe):
         enemy_units_affected, friendly_units_affected, self_unit_affected = self.battle.get_targets_for_area(self.unit, targeted_aoe, self.player_selections.chosen_skill)
@@ -363,10 +421,9 @@ class TargetSkill(PlayerTurnState):
         if len(affected_units):
             self.ui.print_target(self.unit, affected_units, self.player_selections.chosen_skill)
         else:
-            self.ui.print_legend()
+            self.legend()
 
     def draw_state_ui(self):
-        #self.ui.print_legend()
         self.ui.print_prompt(self.player_selections.chosen_skill.name + " --- " + "Select target area.")
         targeted_aoe = RN2_battle_logic.calculate_affected_area(self.ui.cursor.coords, self.unit.coords, self.player_selections.chosen_skill, self.bmap)
         self.ui.clear_highlight_area(self.bmap)
@@ -374,7 +431,10 @@ class TargetSkill(PlayerTurnState):
         self.print_target_display(targeted_aoe)
 
     def activate(self):
-        return CONFIRM_SKILL
+        if self.target_is_valid(self.player_selections.target_tile):
+            return CONFIRM_SKILL
+        else:
+            self.input_error('Invalid target.')
 
     def cancel(self):
         return MOVE_CHARACTER
@@ -385,7 +445,7 @@ class TargetSkill(PlayerTurnState):
             self.player_selections.target_tile = target_tile
             self.ui.cursor.move_cursor(target_tile[0], target_tile[1], self.bmap.get_tile_at(target_tile))
         else:
-            self.input_error("Invalid target.")
+            self.input_error('Invalid target.')
 
     def left(self):
         self.handle_movement(DIR_LEFT)
@@ -401,19 +461,35 @@ class TargetSkill(PlayerTurnState):
 
 
 class ConfirmSkill(PlayerTurnState):
-    def __init__(self, ui, unit, bmap, player_selections):
-        PlayerTurnState.__init__(self, ui, unit, bmap, player_selections)
+    def __init__(self, ui, unit, bmap, player_selections, battle):
+        PlayerTurnState.__init__(self, ui, unit, bmap, player_selections, battle)
         self.affected_tiles = []
 
     def activate_state(self):
+        # this method is so much to do so little
+        def contains_ignored_target(tile, skill, unit):
+            tile = self.bmap.get_tile_at(tile)
+            if ((skill.targets.enemy.ignored and tile.actor.team_id != unit.team_id) or
+               (skill.targets.friendly.ignored and tile.actor.team_id == unit.team_id) or
+               (skill.targets.self.ignored and tile.actor == unit)):
+                return True
+
         self.affected_tiles = RN2_battle_logic.calculate_affected_area(self.player_selections.target_tile, self.unit.coords, self.player_selections.chosen_skill, self.bmap)
+        ignored_tiles = []
+        for tile in self.affected_tiles:
+            if self.bmap.get_tile_at(tile).actor and contains_ignored_target(tile, self.player_selections.chosen_skill, self.unit):
+                ignored_tiles.append(tile)
+
+        for tile in ignored_tiles:
+            self.affected_tiles.remove(tile)
+
+        self.ui.print_prompt("ENTER to confirm attack, ESC to cancel.")
 
     def deactivate_state(self):
         self.ui.highlight_area(False, self.affected_tiles, self.bmap)
 
     def draw_state_ui(self):
-        self.ui.highlight_area(True, self.affected_tiles, self.bmap, "lime")
-        self.ui.print_prompt("ENTER to confirm attack, ESC to cancel.")
+        self.ui.highlight_area(True, self.affected_tiles, self.bmap, "confirm_range")
 
     def activate(self):
         return END_TURN
@@ -438,10 +514,10 @@ class PlayerTurn(object):
         self.current_state = MOVE_CHARACTER
         self.player_selections = self.PlayerSelections(self.unit.coords)
         self.states = {
-            MOVE_CHARACTER: MoveCharacter(self.ui, self.unit, self.bmap, self.player_selections, self.battle.skills),
-            TARGET_SKILL: TargetSkill(self.ui, self.unit, self.bmap, self.player_selections, self.battle.all_living_units, self.battle),
-            IN_SKILLS_MENU: InSkillsMenu(self.ui, self.unit, self.bmap, self.player_selections, self.battle.skills),
-            CONFIRM_SKILL: ConfirmSkill(self.ui, self.unit, self.bmap, self.player_selections),
+            MOVE_CHARACTER: MoveCharacter(self.ui, self.unit, self.bmap, self.player_selections, self.battle.skills, self.battle),
+            TARGET_SKILL: TargetSkill(self.ui, self.unit, self.bmap, self.player_selections, self.battle),
+            IN_SKILLS_MENU: InSkillsMenu(self.ui, self.unit, self.bmap, self.player_selections, self.battle.skills, self.battle),
+            CONFIRM_SKILL: ConfirmSkill(self.ui, self.unit, self.bmap, self.player_selections, self.battle),
             IN_BATTLE_OVERVIEW: InBattleOverview(self.ui, self.unit, self.bmap, self.player_selections, self.battle)
         }
 

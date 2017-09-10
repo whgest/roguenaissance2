@@ -1,14 +1,32 @@
-#Astromancer Skills
-White sword:
-  attack_stat: attack
-  range: 1
+#Test skills
+Status Test:
+  is_resistable: false
+  range: 0
   aoe_size: 0
-  damage:
-    num_dice: 1
-    dice_size: 8
+  status_effects:
+#    - type: Slower
+#      duration: 10
+#      modifiers:
+#        - stat: move
+#          value: -2
+    - type: Slow
+      duration: 10
+      modifiers:
+        - stat: move
+          value: -1
+#    - type: Regen
+#      damage: -4
+#      duration: 10
+#    - type: Burning
+#      damage: 4
+#      duration: 10
+    - type: Poison
+      duration: 2
+      damage: 2
+
   mp: 0
-  prompt: Basic attack.
-  animation: basic
+  prompt: test statii
+  animation: pass
 
 Frog Plague:
   targets_empty: true
@@ -23,6 +41,18 @@ Frog Plague:
   mp: -1
   prompt: LOL FROGS.
   animation: summon
+
+#Astromancer Skills
+White sword:
+  attack_stat: attack
+  range: 1
+  aoe_size: 0
+  damage:
+    num_dice: 1
+    dice_size: 8
+  mp: 0
+  prompt: Basic attack.
+  animation: basic
 
 Summon Meteorman:
   targets_empty: true
@@ -144,13 +174,12 @@ Singularity:
         - stat: move
           value: -99
   move_effects:
-    - move_type: pull
+    - type: pull
       distance: 5
       origin: target
   mp: 3
-  prompt: Pulls in and roots all enemies in area.
+  prompt: pulls in and roots all enemies in area.
   animation: singularity
-
 
 Meteor:
   attack_stat: magic
@@ -212,254 +241,247 @@ Skycaller:
   mp: 8
   prompt: A storm of aetheric plasma smites all enemies.
   animation: skycaller
-#
-#
-##Pyromancer Skills
-#Focusing staff:
-#  target: enemy
-#  attack_stat: attack
-#  range: 2
-#  aoe_size: 0
-#  damage:
-#    num_dice: 1
-#    dice_size: 6
-#  mp: 0
-#  prompt: Basic attack.
-#  animation: punch
-#
-#
-#Flash Freeze:
-#  target: enemy
-#  attack_stat: magic
-#  range: 7
-#  aoe_size: 0
-#  damage:
-#    num_dice: 2
-#    dice_size: 8
-#  effects:
-#    - type: Slow
-#      magnitude: 2
-#      duration: 3
-#  mp: 0
-#  prompt: Damages enemy and inflicts slow.
-#  animation: freeze
-#
-#
-#Ice Spear:
-#  target: enemy
-#  attack_stat: magic
-#  range: 7
-#  aoe_size: 0
-#  damage:
-#    num_dice: 1
-#    dice_size: 10
-#  effects:
-#    - type: Push
-#      magnitude: 3
-#  mp: 1
-#  prompt: Skewer enemy for damage and push.
-#  animation: ice toss
-#
-#Pyrokinesis:
-#  target: tile
-#  attack_stat: magic
-#  range: 6
-#  aoe_size: 2
-#  damage:
-#    num_dice: 2
-#    dice_size: 5
-#  effects:
-#    - type: Burning
-#      magnitude: 2
-#      duration: 3
-#  mp: 1
-#  prompt: Damages units and inflicts Burning.
-#  animation: fire ball
-#
-#
-#Life Drain:
-#  class: Drain
-#  target: enemy
-#  attack_stat: magic
-#  range: 5
-#  aoe_size: 0
-#  damage:
-#    num_dice: 1
-#    dice_size: 8
-#  mp: 2
-#  prompt: Absorbs HP from an enemy.
-#  animation: drain
-#
-#
-#Frostburn:
-#  target: enemy
-#  attack_stat: magic
-#  range: 9
-#  aoe_size: 0
-#  damage:
-#    num_dice: 2
-#    dice_size: 6
-#  effects:
-#    - type: Burning
-#      magnitude: 2
-#      duration: 4
-#    - type: Frostbite
-#      magnitude: 2
-#      duration: 4
-#  mp: 2
-#  prompt: Damages enemy and inflicts Burning and Frostbite.
-#  animation: frostfire
-#
-#
-#Icy Prison:
-#  target: enemy
-#  attack_stat: magic
-#  range: 7
-#  aoe_size: 0
-#  damage:
-#    num_dice: 1
-#    dice_size: 10
-#  effects:
-#    - type: Root
-#      duration: 3
-#      magnitude: 1
-#  mp: 1
-#  prompt: Damages enemy and inflicts Root.
-#  animation: freeze
-#
-#
-#Absolute Zero:
-#  target: tile
-#  attack_stat: magic
-#  range: 6
-#  aoe_size: 4
-#  damage:
-#    num_dice: 1
-#    dice_size: 6
-#  effects:
-#    - type: Stun
-#      duration: 2
-#      magnitude: 1
-#    - type: Frostbite
-#      magnitude: 3
-#      duration: 3
-#  mp: 5
-#  prompt: Damage in a wide area and inflicts Frostbite, Stun.
-#  animation: zero
-#
-#Fuse Atom:
-#  target: enemy
-#  attack_stat: magic
-#  range: 0
-#  aoe_size: global
-#  damage:
-#    num_dice: 3
-#    dice_size: 8
-#  effects:
-#    - type: Radiation
-#      magnitude: 3
-#      duration: 5
-#    - type: Push
-#      magnitude: 3
-#  mp: 9
-#  prompt: Nuclear fire sears all enemies. Causes heavy damage and radiation.
-#  animation: splitatom
-#
-#Smn. Flaming Crows:
-#  target: empty
-#  attack_stat: magic
-#  range: 5
-#  aoe_size: 0
-#  damage: 0
-#  effects:
-#    - type: Summon
-#      to_summon: Flaming Crows
-#  mp: -1
-#  prompt: Summon a flock of crazed flaming crows
-#  animation: summon
-#
-#Summon Snowball:
-#  target: empty
-#  attack_stat: magic
-#  range: 5
-#  aoe_size: 0
-#  damage: 0
-#  effects:
-#    - type: Summon
-#      to_summon: Snowball
-#  mp: -1
-#  prompt: Summon an animated snowball to protect you.
-#  animation: summon
-#
-#
-##Terramancer Skills
-#Obsidian sword:
-#  target: enemy
-#  attack_stat: attack
-#  range: 1
-#  aoe_size: 0
-#  damage:
-#    num_dice: 2
-#    dice_size: 6
-#  mp: 0
-#  prompt: Basic attack.
-#  animation: basic
-#
-#
-#Whirlwind:
-#  target: enemy
-#  attack_stat: attack
-#  range: 0
-#  aoe_size: 2
-#  damage:
-#    num_dice: 1
-#    dice_size: 10
-#  mp: 0
-#  prompt: Attack all nearby units with your weapon.
-#  animation: basic
-#
-#
-#Stone Armor:
-#  target: friendly
-#  attack_stat: attack
-#  range: 0
-#  aoe_size: 2
-#  damage: 0
-#  is_beneficial: 1
-#  effects:
-#    - type: Armored
-#      magnitude: 2
-#      duration: 4
-#  mp: 0
-#  prompt: You are protected by swirling stones. Raises defense and resistance.
-#  animation: armor
-#
-#
-#Rock Toss:
-#  target: enemy
-#  attack_stat: attack
-#  range: 5
-#  aoe_size: 0
-#  damage:
-#    num_dice: 1
-#    dice_size: 10
-#  effects:
-#    - type: Push
-#      magnitude: 4
-#  mp: 1
-#  prompt: Telekinetically toss a large rock for damage and push.
-#  animation: rock toss
-#
-#
+
+
+#Pyromancer Skills
+Focusing staff:
+  attack_stat: attack
+  range: 2
+  aoe_size: 0
+  damage:
+    num_dice: 1
+    dice_size: 6
+  mp: 0
+  prompt: Basic attack.
+  animation: punch
+
+
+Flash Freeze:
+  attack_stat: magic
+  range: 7
+  aoe_size: 0
+  damage:
+    num_dice: 2
+    dice_size: 8
+  status_effects:
+    - type: Slow
+      duration: 3
+      modifiers:
+        - stat: move
+          value: 2
+  mp: 0
+  prompt: Damages enemy and inflicts slow.
+  animation: freeze
+
+Ice Spear:
+  attack_stat: magic
+  range: 7
+  aoe_size: 0
+  damage:
+    num_dice: 1
+    dice_size: 10
+  move_effects:
+    - type: push
+      distance: 3
+  mp: 1
+  prompt: Skewer enemy for damage and push.
+  animation: ice toss
+
+Pyrokinesis:
+  attack_stat: magic
+  range: 6
+  aoe_size: 2
+  damage:
+    num_dice: 2
+    dice_size: 5
+  status_effects:
+    - type: Burning
+      damage: 2
+      duration: 3
+  mp: 1
+  prompt: Damages units and inflicts Burning.
+  animation: fire ball
+
+Life Drain:
+  damage_type: drain
+  attack_stat: magic
+  range: 5
+  aoe_size: 0
+  damage:
+    num_dice: 1
+    dice_size: 8
+  mp: 2
+  prompt: Absorbs HP from an enemy.
+  animation: drain
+
+
+Frostburn:
+  attack_stat: magic
+  range: 9
+  aoe_size: 0
+  damage:
+    num_dice: 2
+    dice_size: 6
+  status_effects:
+    - type: Burning
+      damage: 2
+      duration: 4
+    - type: Frostbite
+      damage: 2
+      duration: 4
+  mp: 2
+  prompt: Damages enemy and inflicts Burning and Frostbite.
+  animation: frostfire
+
+Icy Prison:
+  attack_stat: magic
+  range: 7
+  aoe_size: 0
+  damage:
+    num_dice: 1
+    dice_size: 10
+  status_effects:
+    - type: Root
+      duration: 3
+      modifiers:
+        - stat: move
+          value: -99
+  mp: 1
+  prompt: Damages enemy and inflicts Root.
+  animation: freeze
+
+Absolute Zero:
+  attack_stat: magic
+  range: 6
+  aoe_size: 4
+  damage:
+    num_dice: 1
+    dice_size: 6
+  status_effects:
+    - type: Stun
+      duration: 2
+      lose_turn: true
+    - type: Frostbite
+      damage: 3
+      duration: 3
+  mp: 5
+  prompt: Damage in a wide area and inflicts Frostbite, Stun.
+  animation: zero
+
+Fuse Atom:
+  attack_stat: magic
+  range: 0
+  aoe_size: 50
+  targets:
+    friendly:
+      ignored: true
+    enemy:
+      damage:
+        num_dice: 3
+        dice_size: 8
+      status_effects:
+        - type: Radiation
+          damage: 3
+          duration: 5
+      move_effects:
+        - type: push
+          distance: 3
+  mp: 9
+  prompt: Nuclear fire sears all enemies. Causes heavy damage and radiation.
+  animation: splitatom
+
+Smn. Flaming Crows:
+  targets_empty: true
+  range: 5
+  aoe_size: 0
+  add_unit:
+    - Flaming Crows
+  mp: -1
+  prompt: Summon a flock of frenzied flaming crows
+  animation: summon
+
+Summon Snowball:
+  targets_empty: true
+  range: 5
+  aoe_size: 0
+  add_unit:
+    - Snowball
+  mp: -1
+  prompt: Summon a rolling snowball to protect you.
+  animation: summon
+
+
+#Terramancer Skills
+Obsidian sword:
+  attack_stat: attack
+  range: 1
+  aoe_size: 0
+  damage:
+    num_dice: 2
+    dice_size: 6
+  mp: 0
+  prompt: Basic attack.
+  animation: basic
+
+Whirlwind:
+  attack_stat: attack
+  range: 0
+  aoe_size: 2
+  targets:
+    enemy:
+      damage:
+        num_dice: 1
+        dice_size: 10
+    self:
+      ignored: true
+  mp: 0
+  prompt: Attack all nearby units with your weapon.
+  animation: basic
+
+Stone Armor:
+  target: friendly
+  range: 0
+  aoe_size: 2
+  targets:
+    enemy:
+      ignored: true
+    friendly:
+      is_resistable: false
+      status_effects:
+        - type: Armored
+          duration: 4
+          modifiers:
+            - stat: defense
+              value: 2
+  mp: 0
+  prompt: You are protected by swirling stones. Raises defense and resistance.
+  animation: armor
+
+
+Rock Toss:
+  attack_stat: attack
+  range: 5
+  aoe_size: 0
+  damage:
+    num_dice: 1
+    dice_size: 10
+  move_effects:
+    - type: push
+      distance: 4
+      origin: user
+  mp: 1
+  prompt: Telekinetically toss a large rock for damage and push.
+  animation: rock toss
+
+
 #Hornet Swarm:
-#  target: enemy
 #  attack_stat: magic
 #  range: 9
 #  aoe_size: 0
 #  damage:
 #    num_dice: 1
 #    dice_size: 2
-#  effects:
+#  status_effects:
 #    - type: Confound
 #      magnitude: 4
 #      duration: 4
@@ -469,91 +491,101 @@ Skycaller:
 #  mp: 1
 #  prompt: Send angry hornets to injure and lower magic attack.
 #  animation: rock toss
-#
-#
-#Venom Slash:
-#  target: enemy
-#  attack_stat: attack
-#  range: 1
-#  aoe_size: 1
-#  damage:
-#    num_dice: 2
-#    dice_size: 8
-#  effects:
-#    - type: Poison
-#      magnitude: 3
-#      duration: 3
-#    - type: Push
-#      magnitude: 1
-#  mp: 2
-#  prompt: An empowered melee strike that poisons.
-#  animation: venom
-#
-#
-#Thunderbolt:
-#  target: enemy
-#  attack_stat: magic
-#  range: 7
-#  aoe_size: 0
-#  damage:
-#    num_dice: 2
-#    dice_size: 6
-#  effects:
-#    - type: Root
-#      duration: 3
-#  mp: 2
-#  prompt: Damages enemy and inflicts Root.
-#  animation: tbolt
-#
-#
-#Vine Grasp:
-#  target: enemy
-#  attack_stat: magic
-#  range: 9
-#  aoe_size: 0
-#  damage:
-#    num_dice: 2
-#    dice_size: 6
-#  effects:
-#    - type: Pull
-#      magnitude: 9
-#  mp: 1
-#  prompt: Damage and pull a distant enemy to you.
-#  animation: vine
-#
-#
-#Avalanche Strike:
-#  target: enemy
-#  attack_stat: attack
-#  range: 2
-#  aoe_size: 0
-#  damage:
-#    num_dice: 3
-#    dice_size: 12
-#  effects:
-#    - type: Push
-#      magnitude: 8
-#  mp: 3
-#  prompt: Sending an enemy flying with a fully empowered slash.
-#  animation: avalanche
-#
-#
-#Tectonic Break:
-#  target: enemy
-#  attack_stat: attack
-#  range: 0
-#  aoe_size: global
-#  damage:
-#    num_dice: 4
-#    dice_size: 4
-#  effects:
-#    - type: Slow
-#      magnitude: 3
-#      duration: 3
-#  mp: 7
-#  prompt: Damage and slow all enemies with the power of earth.
-#  animation: tectonic
-#
+
+
+Venom Slash:
+  attack_stat: attack
+  range: 1
+  aoe_size: 1
+  targets:
+    enemy:
+      damage:
+        num_dice: 2
+        dice_size: 8
+      status_effects:
+        - type: Poison
+          damage: 3
+          duration: 3
+      move_effects:
+        - type: push
+          distance: 1
+    self:
+      ignored: true
+  mp: 2
+  prompt: An empowered melee strike that poisons.
+  animation: venom
+
+
+Thunderbolt:
+  attack_stat: magic
+  range: 7
+  aoe_size: 0
+  damage:
+    num_dice: 2
+    dice_size: 6
+  status_effects:
+    - type: Root
+      duration: 3
+      modifiers:
+        - stat: move
+          value: -99
+  mp: 2
+  prompt: Damages enemy and inflicts Root.
+  animation: tbolt
+
+
+Vine Grasp:
+  attack_stat: magic
+  range: 9
+  aoe_size: 0
+  damage:
+    num_dice: 2
+    dice_size: 6
+  move_effects:
+    - type: pull
+      distance: 9
+      origin: user
+  mp: 1
+  prompt: Damage and pull a distant enemy to you.
+  animation: vine
+
+
+Avalanche Strike:
+  attack_stat: attack
+  range: 2
+  aoe_size: 0
+  damage:
+    num_dice: 3
+    dice_size: 12
+  move_effects:
+    - type: push
+      distance: 8
+  mp: 3
+  prompt: Sending an enemy flying with a fully empowered slash.
+  animation: avalanche
+
+
+Tectonic Break:
+  attack_stat: magic
+  range: 0
+  aoe_size: 50
+  targets:
+    enemy:
+      damage:
+        num_dice: 4
+        dice_size: 4
+      status_effects:
+        - type: Slow
+          duration: 3
+          modifiers:
+            - stat: move
+              value: 1
+    friendly:
+      ignored: true
+  mp: 7
+  prompt: Damage and slow all enemies with the power of earth.
+  animation: tectonic
+
 Ascendance:
   range: 0
   aoe_size: 0
@@ -571,52 +603,32 @@ Ascendance:
          value: 4
        - stat: move
          value: 2
-      continuous: 0
       duration: 4
   mp: 7
   prompt: Massively increase physical attack, move, and defenses.
   animation: ascend
-#
-#Summon Spring Wind:
-#  target: empty
-#  attack_stat: magic
-#  range: 5
-#  aoe_size: 0
-#  damage: 0
-#  effects:
-#    - type: Summon
-#      to_summon: Spring Wind
-#  mp: -1
-#  prompt: Summon a healing spirit to heal your injuries.
-#  animation: summon
-#
-#Summon Stegosaur:
-#  target: empty
-#  attack_stat: magic
-#  range: 5
-#  aoe_size: 0
-#  damage: 0
-#  effects:
-#    - type: Summon
-#      to_summon: Stegosaur
-#  mp: -1
-#  prompt: Summon a stegosaur to crush your foes.
-#  animation: summon
 
+Summon Spring Wind:
+  targets_empty: true
+  range: 5
+  aoe_size: 0
+  add_unit:
+    - Spring Wind
+  mp: -1
+  prompt: Summon a healing spirit to heal your injuries.
+  animation: summon
+
+Summon Stegosaur:
+  targets_empty: true
+  range: 5
+  aoe_size: 0
+  add_unit:
+    - Stegosaur
+  mp: -1
+  prompt: Summon a stegosaur to crush your foes.
+  animation: summon
 
 #Summon skills:
-
-White sword:
-  attack_stat: attack
-  range: 1
-  aoe_size: 0
-  damage:
-    num_dice: 1
-    dice_size: 8
-  mp: 0
-  prompt: Basic attack.
-  animation: basic
-
 Meteor Punch:
   attack_stat: attack
   range: 1
@@ -678,204 +690,205 @@ Cosmic Barrage:
   mp: 3
   prompt: Highly damaging cosmic projectiles.
   animation: fire ball
-#
-#Snowball Crush:
-#  target: enemy
-#  attack_stat: attack
-#  range: 1
-#  aoe_size: 0
-#  damage:
-#    num_dice: 1
-#    dice_size: 8
-#  effects:
-#    - type: Slow
-#      magnitude: 2
-#      duration: 1
-#  mp: 0
-#  prompt: Damage and slow an enemy.
-#  animation: punch
-#
-#Snowball Slam:
-#  target: enemy
-#  attack_stat: attack
-#  range: 1
-#  aoe_size: 0
-#  damage:
-#    num_dice: 2
-#    dice_size: 6
-#  effects:
-#    - type: Push
-#      magnitude: 6
-#  mp: 2
-#  prompt: Damage and push enemy a long way.
-#  animation: punch
-#
-#Swarm:
-#  target: enemy
-#  attack_stat: attack
-#  range: 1
-#  aoe_size: 0
-#  damage:
-#    num_dice: 2
-#    dice_size: 6
-#  effects:
-#    - type: Burning
-#      magnitude: 2
-#      duration: 3
-#  mp: 0
-#  prompt: Basic.
-#  animation: bite
-#
-#Talon Frenzy:
-#  target: enemy
-#  attack_stat: magic
-#  range: 0
-#  aoe_size: 3
-#  damage:
-#    num_dice: 2
-#    dice_size: 6
-#  effects:
-#    - type: Burning
-#      magnitude: 2
-#      duration: 3
-#  mp: 3
-#  prompt: Shred nearby enemies in a frenzied swarm.
-#  animation: fire ball
-#
-#Tail Swipe:
-#  target: enemy
-#  attack_stat: attack
-#  range: 0
-#  aoe_size: 1
-#  damage:
-#    num_dice: 1
-#    dice_size: 4
-#  effects:
-#    - type: Push
-#      magnitude: 2
-#  mp: 0
-#  prompt: Damage and push enemies.
-#  animation: punch
-#
-#Megastomp:
-#  target: enemy
-#  attack_stat: attack
-#  range: 0
-#  aoe_size: 2
-#  damage:
-#    num_dice: 1
-#    dice_size: 10
-#  effects:
-#    - type: Slow
-#      magnitude: 2
-#      duration: 3
-#  mp: 3
-#  prompt: Damage and slow nearby enemies.
-#  animation: punch
-#
-#Skelestomp:
-#  target: enemy
-#  attack_stat: attack
-#  range: 1
-#  aoe_size: 2
-#  damage:
-#    num_dice: 1
-#    dice_size: 10
-#  effects:
-#    - type: Slow
-#      magnitude: 2
-#      duration: 3
-#  mp: 3
-#  prompt: Damage and slow nearby enemies.
-#  animation: punch
-#
-#
-#Tail Slam:
-#  target: enemy
-#  attack_stat: attack
-#  range: 1
-#  aoe_size: 1
-#  damage:
-#    num_dice: 1
-#    dice_size: 6
-#  mp: 0
-#  prompt: Damage and push enemies.
-#  animation: punch
-#
-#
-#Breeze Blow:
-#  target: enemy
-#  attack_stat: attack
-#  range: 1
-#  aoe_size: 0
-#  damage:
-#    num_dice: 1
-#    dice_size: 2
-#  mp: 0
-#  prompt: Basic.
-#  animation: basic
-#
-#Soothing Breeze:
-#  target: friendly
-#  attack_stat: magic
-#  range: 2
-#  aoe_size: 0
-#  is_beneficial: 1
-#  damage:
-#    fixed_damage: -5
-#  mp: 0
-#  prompt: Heal a friendly target.
-#  animation: heal
-#
-#Healstorm:
-#  target: friendly
-#  attack_stat: magic
-#  range: 0
-#  aoe_size: 2
-#  damage:
-#    fixed_damage: -3
-#  is_beneficial: 1
-#  effects:
-#    - type: Regen|Poison
-#      magnitude: 3
-#      duration: 3
-#  mp: 4
-#  prompt: Regenerate all nearby allies, poison all enemies.
-#  animation: heal
-#
-#
-#Bone Toss:
-#  target: enemy
-#  attack_stat: magic
-#  range: 4
-#  aoe_size: 1
-#  damage:
-#    num_dice: 1
-#    dice_size: 10
-#  mp: 0
-#  prompt: Basic attack.
-#  animation: basic ranged
-#
-#Poison Breath:
-#  target: enemy
-#  attack_stat: magic
-#  range: 5
-#  aoe_size: 2
-#  damage:
-#    num_dice: 2
-#    dice_size: 6
-#  effects:
-#    - type: Poison
-#      magnitude: 2
-#      duration: 4
-#  mp: 3
-#  prompt: Basic attack.
-#  animation: poison
-#
+
+Snowball Crush:
+  attack_stat: attack
+  range: 1
+  aoe_size: 0
+  damage:
+    num_dice: 1
+    dice_size: 8
+  status_effects:
+    - type: Slow
+      duration: 1
+      modifiers:
+       - value: 1
+         stat: move
+
+  mp: 0
+  prompt: Damage and slow an enemy.
+  animation: punch
+
+Snowball Slam:
+  attack_stat: attack
+  range: 1
+  aoe_size: 0
+  damage:
+    num_dice: 2
+    dice_size: 6
+  move_effects:
+    - type: push
+      distance: 6
+  mp: 2
+  prompt: Damage and push enemy a long way.
+  animation: punch
+
+Swarm:
+  attack_stat: attack
+  range: 1
+  aoe_size: 0
+  damage:
+    num_dice: 2
+    dice_size: 6
+  status_effects:
+    - type: Burning
+      damage: 2
+      duration: 3
+  mp: 0
+  prompt: Basic.
+  animation: bite
+
+Talon Frenzy:
+  attack_stat: magic
+  range: 0
+  aoe_size: 3
+  damage:
+    num_dice: 2
+    dice_size: 6
+  status_effects:
+    - type: Burning
+      damage: 2
+      duration: 3
+  mp: 3
+  prompt: Shred nearby enemies in a frenzied swarm.
+  animation: fire ball
+
+Tail Swipe:
+  attack_stat: attack
+  range: 0
+  aoe_size: 1
+  targets:
+    enemy:
+      damage:
+        num_dice: 1
+        dice_size: 4
+      move_effects:
+        - type: push
+          distance: 2
+    self:
+      ignored: true
+  mp: 0
+  prompt: Damage and push enemies.
+  animation: punch
+
+Megastomp:
+  attack_stat: attack
+  range: 0
+  aoe_size: 2
+  targets:
+    enemy:
+      damage:
+        num_dice: 1
+        dice_size: 10
+      move_effects:
+        - type: Slow
+          duration: 3
+          modifiers:
+            - stat: move
+              value: 2
+    self:
+      ignored: true
+  mp: 3
+  prompt: Damage and slow nearby enemies.
+  animation: punch
+
+Skelestomp:
+  attack_stat: attack
+  range: 0
+  aoe_size: 2
+  targets:
+    enemy:
+      damage:
+        num_dice: 1
+        dice_size: 10
+      move_effects:
+        - type: Slow
+          duration: 3
+          modifiers:
+            - stat: move
+              value: 2
+    self:
+      ignored: true
+  mp: 3
+  prompt: Damage and slow nearby enemies.
+  animation: punch
+
+Breeze Blow:
+  attack_stat: attack
+  range: 1
+  aoe_size: 0
+  damage:
+    num_dice: 1
+    dice_size: 2
+  mp: 0
+  prompt: Basic.
+  animation: basic
+
+Soothing Breeze:
+  attack_stat: magic
+  range: 2
+  aoe_size: 0
+  is_resistable: false
+  damage:
+    fixed_damage: -4
+  mp: 0
+  prompt: Heal a friendly target.
+  animation: heal
+
+Healstorm:
+  attack_stat: magic
+  range: 0
+  aoe_size: 2
+  targets:
+    friendly:
+      damage:
+        fixed_damage: -3
+      is_resistable: false
+      status_effects:
+        - type: Regen
+          damage: -3
+          duration: 3
+    enemy:
+      damage:
+        fixed_damage: 3
+      status_effects:
+        - type: Poison
+          damage: -2
+          duration: 3
+  mp: 4
+  prompt: Regenerate all nearby allies, poison all enemies.
+  animation: heal
+
+
+Bone Toss:
+  attack_stat: magic
+  range: 4
+  aoe_size: 1
+  damage:
+    num_dice: 1
+    dice_size: 10
+  mp: 0
+  prompt: Basic attack.
+  animation: basic ranged
+
+Poison Breath:
+  attack_stat: magic
+  range: 5
+  aoe_size: 2
+  damage:
+    num_dice: 2
+    dice_size: 6
+  status_effects:
+    - type: Poison
+      damage: 2
+      duration: 4
+  mp: 3
+  prompt: Basic attack.
+  animation: poison
+
 
 #Monster skills:
 Bite:
-  target: enemy
   attack_stat: attack
   range: 1
   aoe_size: 0
@@ -887,14 +900,14 @@ Bite:
   animation: bite
 
 Spit ice:
-  target: enemy
+
   attack_stat: magic
   range: 5
   aoe_size: 0
   damage:
     num_dice: 1
     dice_size: 10
-  effects: 
+  status_effects: 
     - type: Frostbite
       magnitude: 2
       duration: 3
@@ -903,14 +916,14 @@ Spit ice:
   animation: basic ranged
 
 Spit poison:
-  target: enemy
+
   attack_stat: magic
   range: 5
   aoe_size: 0
   damage:
     num_dice: 1
     dice_size: 10
-  effects: 
+  status_effects: 
     - type: Poison
       magnitude: 2
       duration: 3
@@ -919,7 +932,7 @@ Spit poison:
   animation: basic ranged
 
 Paper cut:
-  target: enemy
+
   attack_stat: attack
   range: 1
   aoe_size: 0
@@ -931,29 +944,28 @@ Paper cut:
   animation: basic
 
 Paper slam:
-  target: enemy
+
   attack_stat: attack
   range: 1
   aoe_size: 1
   damage:
     num_dice: 1
     dice_size: 8
-  effects: 
-    - type: Push
+  status_effects: 
+    - type: push
       magnitude: 2
   mp: 0
   prompt: Basic attack.
   animation: punch
 
 Blowgun:
-  target: enemy
   attack_stat: attack
   range: 4
   aoe_size: 0
   damage:
     num_dice: 1
     dice_size: 8
-  effects: 
+  status_effects: 
     - type: Poison
       magnitude: 2
       duration: 3
@@ -962,29 +974,29 @@ Blowgun:
   animation: basic ranged
 
 Club:
-  target: enemy
+
   attack_stat: attack
   range: 1
   aoe_size: 0
   damage:
     num_dice: 1
     dice_size: 8
-  effects: 
-    - type: Push
+  status_effects: 
+    - type: push
       magnitude: 1
   mp: 0
   prompt: Basic attack.
   animation: basic
 
 Spore Cloud:
-  target: enemy
+
   attack_stat: magic
   range: 6
   aoe_size: 0
   damage:
     num_dice: 1
     dice_size: 8
-  effects: 
+  status_effects: 
     - type: Dark
       magnitude: 1
       duration: 3
@@ -1006,7 +1018,7 @@ Fungeneration:
   animation: heal
 
 Frenzy:
-  target: enemy
+
   attack_stat: attack
   range: 1
   aoe_size: 0
@@ -1033,14 +1045,14 @@ Frenzy:
 #  animation: drain
 #
 #Cloudkill:
-#  target: enemy
+#
 #  attack_stat: magic
 #  range: 6
 #  aoe_size: 2
 #  damage:
 #    num_dice: 1
 #    dice_size: 8
-#  effects:
+#  status_effects:
 #    - type: Poison
 #      magnitude: 2
 #      duration: 3
@@ -1050,14 +1062,14 @@ Frenzy:
 #
 #
 #Poisonbolt:
-#  target: enemy
+#
 #  attack_stat: magic
 #  range: 8
 #  aoe_size: 0
 #  damage:
 #    num_dice: 2
 #    dice_size: 6
-#  effects:
+#  status_effects:
 #    - type: Poison
 #      magnitude: 3
 #      duration: 3
@@ -1067,14 +1079,14 @@ Frenzy:
 #
 #
 #Shadow Curse:
-#  target: enemy
+#
 #  attack_stat: magic
 #  range: 5
 #  aoe_size: 0
 #  damage:
 #    num_dice: 2
 #    dice_size: 5
-#  effects:
+#  status_effects:
 #    - type: Slow
 #      magnitude: 2
 #      duration: 3
@@ -1084,14 +1096,14 @@ Frenzy:
 #
 #
 #Annihilate:
-#  target: enemy
+#
 #  attack_stat: magic
 #  range: 0
 #  aoe_size: global
 #  damage:
 #    num_dice: 3
 #    dice_size: 6
-#  effects:
+#  status_effects:
 #    - type: Poison
 #      magnitude: 3
 #      duration: 3
@@ -1106,7 +1118,7 @@ Frenzy:
 #  range: 5
 #  aoe_size: 0
 #  damage: 0
-#  effects:
+#  status_effects:
 #    - type: Summon
 #      to_summon: Skelesaur
 #  mp: -1
@@ -1120,7 +1132,7 @@ Frenzy:
 #  range: 5
 #  aoe_size: 0
 #  damage: 0
-#  effects:
+#  status_effects:
 #    - type: Summon
 #      to_summon: Lichdrake
 #  mp: -1

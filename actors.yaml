@@ -26,19 +26,19 @@ actors:
        - Skycaller
        - Summon Meteorman
        - Summon 4DHypercube
-       - Ascendance
+       - Status Test
     descr: A wizard mastering the powers of the cosmos.
 
   Pyromancer:
     character: "@"
-    ai: pyromancer
+    ai: player
     maxhp: 45
-    maxmp: 10
+    maxmp: 99
     weapon: focusing staff
     armor: flaming cloak
     attack: 15
     defense: 17
-    magic: 19
+    magic: 99 #19
     resistance: 20
     agility: 99
     move: 6
@@ -56,18 +56,19 @@ actors:
       - Fuse Atom
       - Smn. Flaming Crows
       - Summon Snowball
+      - Status Test
     descr: A wizard mastering the powers of fire and ice.
 
   Terramancer:
     character: "@"
-    ai: pyromancer
+    ai: player
     maxhp: 60
-    maxmp: 10
+    maxmp: 99 #10
     weapon: obsidian sword
     armor: brigandine
-    attack: 19
+    attack: 99 #19
     defense: 20
-    magic: 19
+    magic: 99 #19
     resistance: 18
     agility: 15
     move: 6
@@ -78,7 +79,7 @@ actors:
       - Whirlwind
       - Stone Armor
       - Rock Toss
-      - Hornet Swarm
+#      - Hornet Swarm
       - Thunderbolt
       - Venom Slash
       - Vine Grasp
@@ -149,8 +150,10 @@ actors:
     resistance: 10
     agility: 20
     move: 6
-    always:
-      - Burning
+    innate_status:
+      - type: Burning
+        damage: 5
+        expires: false
     skillset:
       - Swarm
       - Talon Frenzy

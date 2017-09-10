@@ -16,7 +16,6 @@ def get_neighboring_points(point):
 
 
 def calculate_affected_area(origin, caster_loc, skill, bmap):
-
     all_tiles = set()
     edge_tiles = [origin]
 

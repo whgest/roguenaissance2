@@ -152,4 +152,20 @@ class GoodStatusEnds(BadStatus):
             return {'_format': 'good_status_ends', 'unit': self.unit, 'cause': self.cause_name}
 
 
+class IsDisabled(BadStatus):
+    def __init__(self, unit, cause_name):
+        BadStatus.__init__(self, unit, cause_name)
+
+    def report_entry(self):
+        return {'_format': 'disabled', 'unit': self.unit, 'cause': self.cause_name}
+
+
+class ImmuneToStatus(BadStatus):
+    def __init__(self, unit, cause_name):
+        BadStatus.__init__(self, unit, cause_name)
+
+    def report_entry(self):
+        return {'_format': 'immune', 'unit': self.unit, 'cause': self.cause_name}
+
+
 

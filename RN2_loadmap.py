@@ -24,8 +24,8 @@ class Grass(Terrain):
     def __init__(self):
         Terrain.__init__(self)
         self.name = "Grass"
-        self.fgcolor = "green"
-        self.bgcolor = "gray"
+        self.fgcolor = "forestgreen"
+        self.bgcolor = "gray50"
         self.character = u'√'
         self.movecost = 1
         self.aquatic = 0
@@ -39,8 +39,8 @@ class Stone(Terrain):
     def __init__(self):
         Terrain.__init__(self)
         self.name = "Stone"
-        self.fgcolor = "silver"
-        self.bgcolor = "gray"
+        self.fgcolor = "gray70"
+        self.bgcolor = "gray50"
         self.character = u'.'
         self.movecost = 1
         self.aquatic = 0
@@ -55,7 +55,7 @@ class Lava(Terrain):
         Terrain.__init__(self)
         self.name = "Lava"
         self.fgcolor = "red"
-        self.bgcolor = "maroon"
+        self.bgcolor = "orangered"
         self.character = u'Ξ'
         self.movecost = 1
         self.aquatic = 0
@@ -80,7 +80,7 @@ class Water(Terrain):
     def __init__(self):
         Terrain.__init__(self)
         self.name = "Water"
-        self.fgcolor = "teal"
+        self.fgcolor = "deepskyblue"
         self.bgcolor = "blue"
         self.character = u'≈'
         self.movecost = 3
@@ -96,8 +96,8 @@ class Wall(Terrain):
     def __init__(self):
         Terrain.__init__(self)
         self.name = "Wall"
-        self.fgcolor = "silver"
-        self.bgcolor = "silver"
+        self.fgcolor = "gray70"
+        self.bgcolor = "gray70"
         self.character = " "
         self.movecost = 0
         self.aquatic = 0
@@ -112,8 +112,8 @@ class Goal(Terrain):
     def __init__(self):
         Terrain.__init__(self)
         self.name = "Goal"
-        self.fgcolor = "yellow"
-        self.bgcolor = "gray"
+        self.fgcolor = "gold"
+        self.bgcolor = "gray50"
         self.character = "G"
         self.movecost = 1
         self.aquatic = 0
@@ -128,7 +128,7 @@ class Wood(Terrain):
         Terrain.__init__(self)
         self.name = "Wood"
         self.fgcolor = "black"
-        self.bgcolor = "olive"
+        self.bgcolor = "burlywood4"
         self.character = u"≡"
         self.movecost = 1
         self.aquatic = 0
@@ -143,7 +143,7 @@ class Bridge(Terrain):
         Terrain.__init__(self)
         self.name = "Bridge"
         self.fgcolor = "black"
-        self.bgcolor = "gray"
+        self.bgcolor = "gray50"
         self.character = u"+"
         self.movecost = 1
         self.aquatic = 0
@@ -277,6 +277,7 @@ class BMap:
         for x in range(self.map_size[0]):
             for y in range(self.map_size[1]):
                 all_targetable_tiles.append((x, y))
+
 
 class Tile:
     def __init__(self, x, y):
