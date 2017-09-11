@@ -106,6 +106,8 @@ class Battle:
             return len(set([u.team_id for u in self.all_living_units])) == 1
 
     def check_loss_condition(self):
+        if self.avatar and self.avatar.is_dead:
+            return True
         return False
 
     def update_display(self):
@@ -141,10 +143,10 @@ class Battle:
         self.io.draw_battle_ui(self)
 
         while 1:
+            self.resolve_battle_triggers()
+
             if self.check_victory_conditions():
                 return True
-
-            self.resolve_battle_triggers()
             self.active = self.turn_manager()
 
             self.active.initiate_turn()
@@ -183,7 +185,6 @@ class Battle:
 
             game_over = self.check_loss_condition()
             if game_over:
-                self.io.game_over()
                 return False
 
             time.sleep(DELAY_BETWEEN_TURNS)
@@ -197,8 +198,8 @@ class Battle:
         to_remove = []
         for unit in self.all_living_units:
             if unit.hp <= 0 or unit.is_dead:
-                self.remove_unit(unit)
                 self.event.add_event(RN2_event.KillUnit(unit))
+                self.remove_unit(unit)
                 to_remove.append(unit)
 
         for unit in to_remove:
@@ -284,6 +285,7 @@ class Battle:
     def execute_skill(self, attacker, skill, affected_tiles, origin):
 
         attacker.mp = attacker.mp - self.get_mp_cost(skill, attacker)
+        #print "{} is charged {} MP for {} and now has {}".format(attacker.name, self.get_mp_cost(skill, attacker), skill.name, attacker.mp)
 
         enemy_units_affected, friendly_units_affected, self_unit_affected = self.get_targets_for_area(attacker, affected_tiles, skill)
 
@@ -327,7 +329,7 @@ class Battle:
 
         origin = attacker.coords if effect.origin == "user" else origin
         distance = effect.distance
-        modifier = 1 if effect.move_type == "push" else -1
+        modifier = 1 if effect.type == "push" else -1
         difference = [float(unit.coords[0] - origin[0]), float(unit.coords[1] - origin[1])]
 
         direction = [0, 0] if not any(difference) else [difference[0]/max_abs(difference), difference[1]/max_abs(difference)]
@@ -347,40 +349,29 @@ class Battle:
             return True
         return False
 
-    def validate_ai_turn(self, e, skill_name, target, path):
+    def validate_ai_turn(self, e, skill, target, path):
         destination = path[-1] if len(path) else e.coords
-        print '{0} with HP {5} at {1} moves to tile {4} and chooses skill {2} targeting tile {3}.'.format(e, e.coords, skill_name, target, destination, e.hp)
-        skill = self.skills.get(skill_name)
+        print '{0} with HP {5}, MP {6}, at {1} moves to tile {4} and chooses skill {2} targeting tile {3}.'.format(e, e.coords, skill, target, destination, e.hp, e.mp)
+
         if target:
             target_tile = self.bmap[target[0]][target[1]]
 
-        def move_is_legal():
-            for tile in path:
-                if self.bmap.get_tile_at(tile).actor == e or self.bmap.get_tile_at(tile).is_movable:
-                    continue
-                else:
-                    print "Actor '{0}' returned illegal move. Tile ({1}, {2}) is blocked by {3}.".format(e.name, tile[0], tile[1], self.bmap.get_tile_at(tile).actor)
-                    raise AssertionError
-
-        def skill_is_legal():
-            if not e.mp >= skill.mp:
-                print "Actor '{0}' does not have the MP to cast {1}. MP: {2} Needed: {3}".format(e.name, skill.name, e.mp, skill.mp)
+        for tile in path:
+            if self.bmap.get_tile_at(tile).actor == e or self.bmap.get_tile_at(tile).is_movable:
+                continue
+            else:
+                print "Actor '{0}' returned illegal move. Tile ({1}, {2}) is blocked by {3}.".format(e.name, tile[0], tile[1], self.bmap.get_tile_at(tile).actor)
                 raise AssertionError
 
-            #todo: ensure unit has skill
+        if skill and not e.mp >= self.get_mp_cost(skill, e):
+            print "Actor '{0}' does not have the MP to cast {1}. MP: {2} Needed: {3}".format(e.name, skill.name, e.mp, self.get_mp_cost(skill, e))
+            raise AssertionError
 
-        def target_is_legal():
-            # if skill and skill.target == "empty" and not target_tile.is_movable:
-            #     print "Actor {0} can not use skill {1} on tile ({2}, {3}): Blocked".format(e.name, skill.name, target[0], target[1])
-            #     return
-            # else:
-            #     return True
-            # #todo: check skill range, emptiness for summon skills, etc.
-            return True
+        #todo: ensure unit has skill
 
-        if skill: skill_is_legal()
-        if path: move_is_legal()
-        if target: target_is_legal()
+
+        #todo: check skill range, emptiness for summon skills, etc.
+
 
     def grid_distance(self, actor1, actor2):
         return abs(actor1[0] - actor2[0]) + abs(actor1[1] - actor2[1])

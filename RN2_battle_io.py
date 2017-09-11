@@ -559,7 +559,7 @@ class BattleController(object):
         self.ui.draw_UI()
         self.ui.set_map(battle.bmap)
         self.ui.print_map()
-        self.init_music(battle.music[0])
+        #self.init_music(battle.music[0])
 
     def update(self, state_changes):
         for change in state_changes:
@@ -571,7 +571,6 @@ class BattleController(object):
     def player_turn(self, battle):
         turn = PlayerTurn(self.ui, self.input, battle)
         return turn.get_action()
-
 
 
 

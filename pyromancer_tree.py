@@ -68,7 +68,7 @@ SELF_KILLED = ChanceToKill(-10000)
 
 HEAL_ENEMY = HealDamage(-10)
 HEAL_FRIENDLY = HealDamage(5)
-HEAL_SELF = HealDamage(100)
+HEAL_SELF = HealDamage(500)
 
 
 
@@ -241,6 +241,8 @@ class PyromancerDecisionTree(object):
                         if avg_damage > 0:
                             target_tile_options[tile] += DAMAGE_ENEMY.calculate(avg_damage)
                             target_tile_options[tile] += ENEMY_KILLED.calculate(min_damage, max_damage, loc['actor'])
+                            if skill.targets.enemy.damage.type == "drain":
+                                target_tile_options[tile] += HEAL_SELF.calculate(avg_damage, self.actor)
                         elif avg_damage < 0:
                             target_tile_options[tile] += HEAL_ENEMY.calculate(avg_damage, loc['actor'])
 
@@ -253,6 +255,8 @@ class PyromancerDecisionTree(object):
                         if avg_damage > 0:
                             target_tile_options[tile] += DAMAGE_FRIENDLY.calculate(avg_damage)
                             target_tile_options[tile] += FRIENDLY_KILLED.calculate(min_damage, max_damage, loc['actor'])
+                            if skill.targets.enemy.damage.type == "drain":
+                                target_tile_options[tile] += HEAL_SELF.calculate(avg_damage, self.actor)
                         elif avg_damage < 0:
                             target_tile_options[tile] += HEAL_FRIENDLY.calculate(avg_damage, loc['actor'])
 
@@ -331,7 +335,7 @@ class PyromancerDecisionTree(object):
 
         for s in self.actor.skillset:
             skill_data = self.skills[s]
-            if skill_data.mp > self.actor.mp:
+            if self.battle.get_mp_cost(skill_data, self.actor) > self.actor.mp:
                 continue
 
             skill_value, target_tile = self.determine_best_target_for_skill(skill_data, self.actor, self.threat_map.get_threat_for_tile(self.actor.coords))

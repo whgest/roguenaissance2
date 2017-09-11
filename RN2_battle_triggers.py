@@ -34,6 +34,11 @@ class OnGoalTile(BattleTriggerCondition):
         return self.battle.bmap.get_tile_at(self.battle.avatar.coords).terrain.name == "Goal"
 
 
+class UnitDefeated(BattleTriggerCondition):
+    def check(self):
+        return self.condition not in [u.name for u in self.battle.all_living_units]
+
+
 class AvatarPosition(BattleTriggerCondition):
     def check(self):
         axes = {'x': 0, 'y': 1}
@@ -54,6 +59,7 @@ class AvatarPosition(BattleTriggerCondition):
             return self.battle.avatar.coords[axes[axis]] > int(point)
         else:
             raise NotImplementedError
+
 
 class BattleTrigger(object):
     def __init__(self, data, battle):
@@ -84,5 +90,6 @@ CLASS_MAPPINGS = {
     'on_goal_tile': OnGoalTile,
     'is_turn': IsTurn,
     'add_units': AddUnits,
-    'avatar_position': AvatarPosition
+    'avatar_position': AvatarPosition,
+    'unit_defeated': UnitDefeated
 }

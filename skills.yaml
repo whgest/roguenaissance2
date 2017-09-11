@@ -20,9 +20,9 @@ Status Test:
 #    - type: Burning
 #      damage: 4
 #      duration: 10
-    - type: Poison
+    - type: Stun
+      lose_turn: true
       duration: 2
-      damage: 2
 
   mp: 0
   prompt: test statii
@@ -147,14 +147,7 @@ Time Distortion:
           modifiers:
             - stat: move
               value: 2
-    self:
-      is_resistable: false
-      status_effects:
-        - type: Haste
-          duration: 4
-          modifiers:
-            - stat: move
-              value: 3
+
   mp: 2
   prompt: Bestows Haste on allies, inflicts Slow on enemies.
   animation: heal
@@ -268,7 +261,7 @@ Flash Freeze:
       duration: 3
       modifiers:
         - stat: move
-          value: 2
+          value: -2
   mp: 0
   prompt: Damages enemy and inflicts slow.
   animation: freeze
@@ -439,7 +432,6 @@ Whirlwind:
   animation: basic
 
 Stone Armor:
-  target: friendly
   range: 0
   aoe_size: 2
   targets:
@@ -453,7 +445,9 @@ Stone Armor:
           modifiers:
             - stat: defense
               value: 2
-  mp: 0
+            - stat: resistance
+              value: 2
+  mp: 1
   prompt: You are protected by swirling stones. Raises defense and resistance.
   animation: armor
 
@@ -579,7 +573,7 @@ Tectonic Break:
           duration: 3
           modifiers:
             - stat: move
-              value: 1
+              value: -1
     friendly:
       ignored: true
   mp: 7
@@ -702,7 +696,7 @@ Snowball Crush:
     - type: Slow
       duration: 1
       modifiers:
-       - value: 1
+       - value: -1
          stat: move
 
   mp: 0
@@ -780,12 +774,12 @@ Megastomp:
       damage:
         num_dice: 1
         dice_size: 10
-      move_effects:
+      status_effects:
         - type: Slow
           duration: 3
           modifiers:
             - stat: move
-              value: 2
+              value: -2
     self:
       ignored: true
   mp: 3
@@ -806,7 +800,7 @@ Skelestomp:
           duration: 3
           modifiers:
             - stat: move
-              value: 2
+              value: -2
     self:
       ignored: true
   mp: 3
@@ -853,7 +847,7 @@ Healstorm:
         fixed_damage: 3
       status_effects:
         - type: Poison
-          damage: -2
+          damage: 2
           duration: 3
   mp: 4
   prompt: Regenerate all nearby allies, poison all enemies.
@@ -1026,6 +1020,7 @@ Necrodrain:
   aoe_size: 0
   targets:
     friendly:
+      is_resistable: false
       damage:
         num_dice: 1
         dice_size: 4
@@ -1078,7 +1073,7 @@ Shadow Curse:
   status_effects:
     - type: Slow
       modifiers:
-        - value: 2
+        - value: -2
           stat: move
       duration: 3
   mp: 0

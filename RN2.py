@@ -164,7 +164,7 @@ def main():
     #test mode
     game = Game()
     #game.sound_handler.mute_switch = True
-    game.new_game('Pyromancer', "Sigryn")
+    game.new_game('Astromancer', "Ethelred")
     game.init_battle(3)
     exit()
 

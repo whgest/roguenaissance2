@@ -185,7 +185,8 @@
 
   victory_condition:
     conditions:
-      - condition_type: on_goal_tile
+      - condition_type: unit_defeated
+        condition_value: Belshazzar
 
   tips:
     - Belshazzar's minions can be pushed or pulled into lava for an instant kill, but Belshazzar himself will not be felled so easily.

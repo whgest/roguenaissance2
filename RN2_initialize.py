@@ -176,7 +176,7 @@ class Actor(object):
         self.mp = self.set_base_mp()
         self.coords = 0
         self.is_boss = False
-        self.death_animation = 'deathanim'
+        self.death_animation = data.get('death_animation', 'deathanim')
         self.name = name
         self.team_id = 0
         self.is_dead = 0
@@ -386,6 +386,7 @@ class StandardDamage:
         self.attack_stat = attack_stat
         self.defense_stat = defense_stat
         self.no_damage = True if not data else False
+        self.type = "standard"
 
         if data:
             self.fixed_damage = data.get('fixed_damage', 0)
@@ -440,6 +441,7 @@ class DrainDamage(StandardDamage):
     def __init__(self, data, ident, attack_stat, defense_stat):
         StandardDamage.__init__(self, data, ident, attack_stat, defense_stat)
         self.name = ident
+        self.type = "drain"
 
     def roll_damage(self, attacker):
         inflicted_damage = StandardDamage.roll_damage(self, attacker)
@@ -501,15 +503,15 @@ DEFAULT_DEFENSE_STATS = {
 
 class SkillMoveEffect:
     def __init__(self, data):
-        self.move_type = data.get('type', 'push')
+        self.type = data.get('type', 'push')
         self.origin = data.get('origin', 'user')
         self.distance = data.get('distance')
         self.instant = data.get('instant', False)
 
     @property
     def description(self):
-        preposition = 'from' if self.move_type is 'push' else 'to'
-        return '{0} {1} {2} {3}'.format(self.move_type.capitalize(), self.distance, preposition, self.origin)
+        preposition = 'from' if self.type is 'push' else 'to'
+        return '{0} {1} {2} {3}'.format(self.type.capitalize(), self.distance, preposition, self.origin)
 
 
 class SkillStatusEffectModifier:
@@ -551,6 +553,9 @@ class SkillStatusEffect:
     @property
     def modifier_descriptions(self):
         descriptions = []
+        if self.lose_turn:
+            descriptions.append(
+                {'text': 'for {}t'.format(self.duration), 'is_beneficial': False})
         if self.damage:
             descriptions.append({'text': 'for {0} HP {1}t'.format(abs(self.damage), self.duration), 'is_beneficial': (self.damage < 0)})
         for modifier in self.modifiers:
@@ -633,16 +638,17 @@ class TargetTypes:
         enemy_data.update(targets.get('enemy', {}))
         self.enemy = SkillEffectForTargetType(enemy_data, ident)
 
-        friendly_data = dict(enemy_data)
-        friendly_data.update(targets.get('friendly', {}))
+        friendly_data = dict(data)
+        friendly_data.update(targets.get('friendly', enemy_data))
         self.friendly = SkillEffectForTargetType(friendly_data, ident)
 
-        self_data = dict(friendly_data)
-        self_data.update(targets.get('self', {}))
+        self_data = dict(data)
+        self_data.update(targets.get('self', friendly_data))
         self.self = SkillEffectForTargetType(self_data, ident)
 
         self.special_friendly_effect = bool(targets.get('friendly', False))
         self.special_self_effect = bool(targets.get('self', False))
+
 
 class Skill:
     def __init__(self, ident, data):

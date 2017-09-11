@@ -399,7 +399,7 @@ actors:
     move: 5
     immunities:
       - Terrain
-    deathanim: beldeath
+    death_animation: beldeath
     skillset:
       - Shadow Curse
       - Necrodrain
