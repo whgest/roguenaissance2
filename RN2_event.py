@@ -74,6 +74,17 @@ class KillUnit(BattleEvent):
         ui.animate([self.actor.coords], self.actor.death_animation, self.actor)
 
 
+class KillUnitTerrain(KillUnit):
+    def __init__(self, actor, terrain_name):
+        KillUnit.__init__(self, actor)
+        self.terrain_name = terrain_name
+
+    def report_entry(self):
+        return {'_format': 'terrain_kill', 'unit': self.actor, 'cause': self.terrain_name}
+
+    def animate(self, ui):
+        pass
+
 class AddUnit(BattleEvent):
     def __init__(self, actor):
         BattleEvent.__init__(self)
@@ -168,4 +179,10 @@ class ImmuneToStatus(BadStatus):
         return {'_format': 'immune', 'unit': self.unit, 'cause': self.cause_name}
 
 
+class ImmuneToTerrain(BadStatus):
+    def __init__(self, unit, cause_name):
+        BadStatus.__init__(self, unit, cause_name)
+
+    def report_entry(self):
+        return {'_format': 'immune_terrain', 'unit': self.unit, 'cause': self.cause_name}
 

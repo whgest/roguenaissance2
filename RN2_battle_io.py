@@ -60,7 +60,8 @@ class BattleReport:
             "good_status_ends": BattleReportLine("%unit: No longer affected by %cause.", cause_color='good_status'),
             "bad_status_ends": BattleReportLine("%unit: No longer afflicted by %cause.", cause_color='bad_status'),
             "status_kill": BattleReportLine("%unit: Killed by %cause!", cause_color='bad_status'),
-            "terrain_kill": BattleReportLine("%unit: Falls into %cause!", cause_color='bad_status'),
+            "terrain_kill": BattleReportLine("%unit: Killed by terrain: %cause!", line_color='death'),
+            "immune_terrain": BattleReportLine("%unit: Immune to terrain: %cause!", cause_color='death'),
             "victory": BattleReportLine("%unit achieved victory.", line_color="ally_name")
         }
 
@@ -82,9 +83,12 @@ class BattleReport:
             if word.translate(string_module.maketrans("", ""), self.strip_string) == "%unit":
                 word = word.replace("%unit", unit.name)
                 color = self.colorize_unit_name(unit)
-            elif word.translate(string_module.maketrans("", ""), self.strip_string) == "%cause" and report_obj.cause_color:
+            elif word.translate(string_module.maketrans("", ""), self.strip_string) == "%cause":
                 word = word.replace("%cause", cause)
-                color = report_obj.cause_color
+                try:
+                    color = report_obj.cause_color
+                except AttributeError:
+                    color = report_obj.line_color
             elif word.translate(string_module.maketrans("", ""), self.strip_string) == "%effect" and report_obj.effect_color:
                 word = word.replace("%effect", effect)
                 color = report_obj.effect_color

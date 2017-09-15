@@ -13,6 +13,7 @@ import pygame.mixer
 import pickle
 import copy
 
+
 class RN_Sound():
     def __init__(self, sound, music):
         self.mute_switch = False
@@ -101,15 +102,14 @@ class Game(object):
                     command = e.key
             if command is not None:
                 break
-            import time
-            time.sleep(.01)
+            pygame.time.Clock().tick(60)
 
         if command in self.bindings:
             command = self.bindings[command]
         else:
             return 99
 
-        if command == "exit":
+        if command == RN2_initialize.Q_KEY:
             exit()
         if command == "mute":
             self.sound_handler.mute_switch = not self.sound_handler.mute_switch
@@ -164,7 +164,7 @@ def main():
     #test mode
     game = Game()
     #game.sound_handler.mute_switch = True
-    game.new_game('Astromancer', "Ethelred")
+    game.new_game('Astromancer', "Rianna")
     game.init_battle(3)
     exit()
 

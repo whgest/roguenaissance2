@@ -65,7 +65,7 @@ class BattleTrigger(object):
     def __init__(self, data, battle):
         self.conditions = []
         self.effects = []
-        print data.get('conditions')
+
         for condition in data.get('conditions'):
             condition_class_to_instantiate = CLASS_MAPPINGS[condition['condition_type']]
             self.conditions.append(condition_class_to_instantiate(condition, battle))

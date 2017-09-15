@@ -31,6 +31,9 @@ sound:
   summon: summon.wav
   death: death.wav
   impact: projectileimpact.wav
+  miss: miss.wav
+  slowdown: slowdown.wav
+  longburn: longburn.wav
 
 music:
   silence: silence.ogg

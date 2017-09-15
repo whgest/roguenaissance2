@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from time import sleep
+from  pygame.time import wait as sleep
 import math
 import random
 
@@ -18,7 +18,6 @@ class Animation():
         self.animation()
         self.UI.screen._autoupdate = False
 
-
     def cleanup(self, tiles, clean_tint=True, tint=(0, 0, 0)):
         if type(tiles) is not list:
             tiles = [tiles]
@@ -29,7 +28,7 @@ class Animation():
             self.UI.text(t[0], t[1], display[0], fgcolor=display[1], bgcolor=display[2])
         return
 
-    def flash_tiles(self, tiles, flash_list, reps=1, delay=0.15, fast_update=True, cleanup=True):
+    def flash_tiles(self, tiles, flash_list, reps=1, delay=150, fast_update=True, cleanup=True):
         if fast_update is True:
             self.UI.screen._autoupdate = False
         for i in range(reps):
@@ -45,7 +44,7 @@ class Animation():
             self.UI.screen._autoupdate = True
         return
 
-    def flash_screen(self, color=(255, 255, 255), delay=0.15, reps=1):
+    def flash_screen(self, color=(255, 255, 255), delay=15, reps=1):
         self.UI.screen._autoupdate = False
         for r in range(reps):
             self.UI.tint(color[0], color[1], color[2], self.UI.battle_grid_coords)
@@ -58,7 +57,7 @@ class Animation():
         self.UI.screen._autoupdate = True
         return
 
-    def tint_screen(self, tint, speed=.05, increments=3):
+    def tint_screen(self, tint, speed=5, increments=3):
         r = tint[0]
         g = tint[1]
         b = tint[2]
@@ -72,7 +71,7 @@ class Animation():
             sleep(speed)
 
 
-    def projectile(self, start, end, character_list, color_list, delay=0.05, clear=True):
+    def projectile(self, start, end, character_list, color_list, delay=5, clear=True):
             if type(end) is list:
                 end = end[0]
             clean_list = []
@@ -110,7 +109,7 @@ class Animation():
                 self.cleanup(clean_list)
             return
 
-    def hit(self, tiles, character_list, color_list, reps=1, delay=0.1):
+    def hit(self, tiles, character_list, color_list, reps=1, delay=100):
         if type(tiles) is not list:
             tiles = [tiles]
         color_index = 0
@@ -120,12 +119,12 @@ class Animation():
                 color_index += 1
                 color_index %= len(color_list)
                 for t in tiles:
-                    self.UI.text(t[0], t[1], character_list[j], fgcolor = color, bgcolor = "black")
+                    self.UI.text(t[0], t[1], character_list[j], fgcolor=color, bgcolor="black")
                 sleep(delay)
         self.cleanup(tiles)
         return
 
-    def firework(self, origin, size, character, color, delay=0.05, reverse=False, clean_wait=True, cleanup=True):
+    def firework(self, origin, size, character, color, delay=20, reverse=False, clean_wait=True, cleanup=True):
         self.UI.screen._autoupdate = False
         cleanup_list = []
         x = origin[0]
@@ -262,6 +261,10 @@ class Animation():
             self.game.play_sound("heal")
             self.flash_tiles(self.tiles, [(200, 200, -25), (200, 200, 200)], 3)
 
+        elif self.anim_id == "time":
+            self.game.play_sound("slowdown")
+            self.flash_tiles(self.tiles, [(200, 200, 200), (-200, -200, -200)], 3)
+
         elif self.anim_id == "poison":
             self.game.play_sound("drain")
             self.flash_tiles(self.tiles, [(-50,50,-50), (-50,150,-50)], 3)
@@ -297,7 +300,7 @@ class Animation():
         elif self.anim_id == "zero":
             self.tint_screen((50, 50, 200))
             self.game.play_sound("zero")
-            self.flash_tiles(self.tiles, [(-50, 150, 200), (-100, -150, 200), (200, 200, 200)], 4, delay=0.075)
+            self.flash_tiles(self.tiles, [(-50, 150, 200), (-100, -150, 200), (200, 200, 200)], 4)
             self.tint_screen((0, 0, 0))
 
         elif self.anim_id == "skycaller":
@@ -313,7 +316,7 @@ class Animation():
             self.tint_screen((139, 69, 19))
             self.game.play_sound("quake")
             self.game.play_sound("bigboom")
-            self.firework(self.attacker, 40, u"Ж", "olivedrab1", delay=0.015)
+            self.firework(self.attacker, 40, u"Ж", "olivedrab1")
             self.game.play_sound("surge")
             self.flash_tiles(self.tiles, [(0, -50, -100), (-100, -100, -100)], 4, fast_update=True)
             self.tint_screen((0, 0, 0))
@@ -323,14 +326,14 @@ class Animation():
             self.firework((25, 13), 25, u"∙", "red", reverse=True, clean_wait=False)
             self.game.play_sound("burn3")
             self.game.play_sound("bigboom")
-            self.flash_tiles(self.tiles, [(255,255,255), (255,255,255), (255,-200,-200), (255,-100,-100), (200,-50,-50), (100,0,0), (50,0,0)], 1, fast_update=True, cleanup=True, delay=0.3)
+            self.flash_tiles(self.tiles, [(255,255,255), (255,255,255), (255,-200,-200), (255,-100,-100), (200,-50,-50), (100,0,0), (50,0,0)], 1, fast_update=True, cleanup=True, delay=300)
 
         elif self.anim_id == "avalanche":
             self.game.play_sound("buff")
             self.flash_tiles([self.attacker], [(100, 100, 100), (0, 0, 0)], 4)
-            self.game.play_sound("bighit")
             self.game.play_sound("fall")
-            self.hit(self.tiles, ['/', '\\', '|', 'X'], ['white'], delay=0.15)
+            self.hit(self.tiles, ['/', '\\', '|', 'X'], ['white'])
+            self.game.play_sound("bighit")
             self.flash_screen((139, 69, 19))
             self.game.play_sound('impact')
 
@@ -343,7 +346,7 @@ class Animation():
         elif self.anim_id == "annihilate":
             self.game.play_sound("annihilate")
             self.game.play_sound("worldbreak")
-            self.flash_tiles(self.tiles, [(200,200,200), (-200, -200, -200)], 4, fast_update=True, cleanup=True, delay=0.3)
+            self.flash_tiles(self.tiles, [(200,200,200), (-200, -200, -200)], 4, fast_update=True, cleanup=True, delay=300)
 
         elif self.anim_id == "playerdeath":
             self.game.play_sound("zero")

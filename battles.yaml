@@ -173,6 +173,9 @@
     - ident: Belshazzar
       loc: 25,5
       team_id: 2
+    - ident: Freezefrog
+      loc: 31,23
+      team_id: 2
 
   triggers:
     - conditions:
@@ -189,7 +192,7 @@
         condition_value: Belshazzar
 
   tips:
-    - Belshazzar's minions can be pushed or pulled into lava for an instant kill, but Belshazzar himself will not be felled so easily.
+    - Belshazzar's minions can be pushed or pulled into lava for an instant kill, but Belshazzar himself will not be felled so easily (neither will you!).
     - Belshazzar's MP are used and regenerated just like yours... if you allow him to fully charge, he will unleash a devastating spell.
     - Forcing Belshazzar to drain life from his minions instead of attacking or summoning is one way to turn the fight against him.
 

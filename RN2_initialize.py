@@ -8,7 +8,7 @@ import yaml
 import random
 from RN2_battle_logic import get_neighboring_points, add_points
 import pyromancer_tree
-from RN2_event import EventQueue, DamageOrHeal, GoodStatus, BadStatus, GoodStatusEnds, BadStatusEnds, StatusDamageOrHeal, IsDisabled, ImmuneToStatus
+from RN2_event import EventQueue, DamageOrHeal, GoodStatus, BadStatus, GoodStatusEnds, BadStatusEnds, StatusDamageOrHeal, IsDisabled, ImmuneToStatus, KillUnit
 import itertools
 
 #pygame input constants, NOT ASCII CODES
@@ -241,6 +241,7 @@ class Actor(object):
         self.clear_status()
         self.hp = 0
         self.is_dead = True
+        #self.event.add_event(KillUnit(self))
 
     def is_disabled(self):
         disabling_effects = [effect for effect in self.active_status_effects if effect.status_effect.lose_turn]
@@ -690,6 +691,8 @@ class Skill:
             prompt += " Area: %s" % str(self.aoe_size).capitalize()
 
         return prompt
+
+
 
 
 

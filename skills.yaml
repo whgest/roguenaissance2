@@ -4,25 +4,31 @@ Status Test:
   range: 0
   aoe_size: 0
   status_effects:
-#    - type: Slower
-#      duration: 10
-#      modifiers:
-#        - stat: move
-#          value: -2
+    - type: Slower
+      duration: 10
+      modifiers:
+        - stat: move
+          value: -2
     - type: Slow
       duration: 10
       modifiers:
         - stat: move
           value: -1
-#    - type: Regen
-#      damage: -4
-#      duration: 10
-#    - type: Burning
-#      damage: 4
-#      duration: 10
-    - type: Stun
-      lose_turn: true
-      duration: 2
+    - type: Regen
+      damage: -4
+      duration: 10
+    - type: Burning
+      damage: 4
+      duration: 10
+    - type: Burning
+      damage: 2
+      duration: 9
+    - type: Burning
+      damage: 1
+      duration: 8
+#    - type: Stun
+#      lose_turn: true
+#      duration: 2
 
   mp: 0
   prompt: test statii
@@ -150,7 +156,7 @@ Time Distortion:
 
   mp: 2
   prompt: Bestows Haste on allies, inflicts Slow on enemies.
-  animation: heal
+  animation: time
 
 
 Singularity:
@@ -530,14 +536,14 @@ Thunderbolt:
 
 Vine Grasp:
   attack_stat: magic
-  range: 9
+  range: 7
   aoe_size: 0
   damage:
     num_dice: 2
     dice_size: 6
   move_effects:
     - type: pull
-      distance: 9
+      distance: 7
       origin: user
   mp: 1
   prompt: Damage and pull a distant enemy to you.
@@ -546,15 +552,15 @@ Vine Grasp:
 
 Avalanche Strike:
   attack_stat: attack
-  range: 2
+  range: 1
   aoe_size: 0
   damage:
     num_dice: 3
-    dice_size: 12
+    dice_size: 10
   move_effects:
     - type: push
       distance: 8
-  mp: 3
+  mp: 5
   prompt: Sending an enemy flying with a fully empowered slash.
   animation: avalanche
 
@@ -1012,9 +1018,10 @@ Frenzy:
   prompt: Basic attack.
   animation: basic
 
-#
+
 #Boss skills:
 Necrodrain:
+  attack_stat: magic
   damage_type: drain
   range: 5
   aoe_size: 0
@@ -1023,7 +1030,7 @@ Necrodrain:
       is_resistable: false
       damage:
         num_dice: 1
-        dice_size: 4
+        dice_size: 6
     self:
       ignored: true
     enemy:
@@ -1041,7 +1048,7 @@ Cloudkill:
     dice_size: 8
   status_effects:
     - type: Poison
-      damage: 2
+      damage: 3
       duration: 3
   mp: 1
   prompt: Damages units and inflicts Poison. Range 6, area 2.
@@ -1076,8 +1083,13 @@ Shadow Curse:
         - value: -2
           stat: move
       duration: 3
+    - type: Despair
+      modifiers:
+        - value: -2
+          stat: resistance
+      duration: 3
   mp: 0
-  prompt: Damages enemy and inflicts slow. Range 5.
+  prompt: Damages enemy and inflicts slow and despair. Range 5.
   animation: surge
 
 Annihilate:
@@ -1090,7 +1102,7 @@ Annihilate:
         num_dice: 3
         dice_size: 6
       status_effects:
-        - type: Poison
+        - type: Necrosis
           magnitude: 3
           duration: 3
     friendly:

@@ -1,26 +1,25 @@
 """
 
-Project Roguenaissance 2.0
+Project Roguenaissance 3.0
 Battle System Logic
 by William Hardy Gest
 
-October 2013
+2017
 
 """
 
 import RN2_initialize
 import random
-import time
+import pygame
 import RN2_battle_logic
 import RN2_event
 import RN2_battle_triggers
 
 PLAYER_AI = "player"
-DELAY_BETWEEN_TURNS = 0.2
-
-
-
+DELAY_BETWEEN_TURNS = 1000
 TURN_MARKER = 'turn_marker'
+
+
 class TurnTracker:
     def __init__(self, units):
         self.initiative_list = []
@@ -73,16 +72,11 @@ class Battle:
         self.triggers = []
         self.event = RN2_event.EventQueue()
         self.active = None
-        self.selected_skill = None
         self.skill_index = 0
         self.battle_index = 0
         self.v_top = 0
-        self.move_range = None
         self.report = None
-        self.state_changes = []
         self.targetable_tiles = None
-        self.target_tile = None
-        self.state = ""
         self.kills = 0
         self.bmap = bmap
         self.map_size = (49, 24)
@@ -96,7 +90,8 @@ class Battle:
         for trigger in self.trigger_data:
             self.triggers.append(RN2_battle_triggers.BattleTrigger(trigger, self))
 
-        self.victory_condition = (RN2_battle_triggers.BattleTrigger(self.victory_condition_data, self))
+        if self.victory_condition_data:
+            self.victory_condition = (RN2_battle_triggers.BattleTrigger(self.victory_condition_data, self))
 
     def check_victory_conditions(self):
         if self.victory_condition:
@@ -123,8 +118,9 @@ class Battle:
     @property
     def battle_menu_list(self):
         unit_list = []
-        for unit in self.all_living_units:
-            unit_list.append(unit)
+        for unit in self.turn_tracker.initiative_list:
+            if unit in self.all_living_units:
+                unit_list.append(unit)
         unit_list.reverse()
         unit_list.insert(0, unit_list.pop())  # put active unit at top
 
@@ -172,6 +168,8 @@ class Battle:
                 if destination:
                     self.event.add_event(RN2_event.MoveUnit(self.active, move_path))
 
+                #self.simulate_move(self.active, chosen_skill, target_tile, move_path)
+
             #resolve turn
             if destination:
                 self.move_unit(self.active, destination)
@@ -187,7 +185,8 @@ class Battle:
             if game_over:
                 return False
 
-            time.sleep(DELAY_BETWEEN_TURNS)
+            if not self.active.is_player_controlled:
+                pygame.time.wait(DELAY_BETWEEN_TURNS)
 
     def resolve_battle_triggers(self):
         for trigger in self.triggers:
@@ -199,11 +198,11 @@ class Battle:
         for unit in self.all_living_units:
             if unit.hp <= 0 or unit.is_dead:
                 self.event.add_event(RN2_event.KillUnit(unit))
-                self.remove_unit(unit)
                 to_remove.append(unit)
 
         for unit in to_remove:
             self.all_living_units.remove(unit)
+            self.remove_unit(unit)
 
     def turn_manager(self):
         while 1:
@@ -320,8 +319,6 @@ class Battle:
             self.move_effect_on_unit(attacker, move_effect, target, origin)
 
     def move_effect_on_unit(self, attacker, effect, unit, origin):
-        #todo: somehow reduce move collisions
-
         def max_abs(coords):
             x = coords[0]
             y = coords[1]
@@ -336,13 +333,23 @@ class Battle:
 
         move_step = [int(round(c)) * modifier for c in direction]
 
+        last_valid_tile = tuple(unit.coords)
         for d in range(distance):
-            new_coords = RN2_battle_logic.add_points(unit.coords, move_step)
-            if self.bmap.check_bounds(new_coords) and self.bmap.get_tile_at(new_coords).is_movable:
-                self.event.add_event(RN2_event.MoveUnit(unit, [unit.coords, new_coords]))
-                self.move_unit(unit, new_coords)
-                if new_coords == origin:
-                    break
+            new_coords = RN2_battle_logic.add_points(last_valid_tile, move_step)
+            if not self.bmap.check_bounds(new_coords):
+                break
+            elif self.bmap.get_tile_at(new_coords).terrain.blocking:
+                break
+            elif not self.bmap.get_tile_at(new_coords).actor:
+                last_valid_tile = new_coords
+
+            if last_valid_tile == origin or self.bmap.get_tile_at(last_valid_tile).terrain.ends_forced_movement:
+                break
+
+        if last_valid_tile != unit.coords:
+            self.event.add_event(RN2_event.MoveUnit(unit, [unit.coords, last_valid_tile]))
+            self.move_unit(unit, last_valid_tile)
+            self.resolve_terrain(unit)
 
     def check_bounds(self, coords):
         if 0 > coords[0] or coords[0] > self.map_size[0] or 0 > coords[1] or coords[1] > self.map_size[1]:
@@ -372,10 +379,6 @@ class Battle:
 
         #todo: check skill range, emptiness for summon skills, etc.
 
-
-    def grid_distance(self, actor1, actor2):
-        return abs(actor1[0] - actor2[0]) + abs(actor1[1] - actor2[1])
-
     def get_mp_cost(self, skill, unit):
         if skill.mp == -1:
             num_summons = len([u for u in self.all_living_units if u.summoned_by == unit])
@@ -383,3 +386,115 @@ class Battle:
         else:
             return skill.mp
 
+    def resolve_terrain(self, unit):
+        tile = self.bmap.get_tile_at(unit.coords)
+        if tile.terrain.fatal:
+            if tile.terrain.name not in unit.immunities:
+                unit.kill_actor()
+                self.event.overwrite_last_event(RN2_event.KillUnitTerrain(unit, tile.terrain.name))
+            else:
+                self.event.add_event(RN2_event.ImmuneToTerrain(unit, tile.terrain.name))
+
+    def simulate_move(self, unit, chosen_skill, target_tile, move_path):
+        # copy battle and disconnect it from a functional front end
+        import dummy_ui
+        from timeit import default_timer as timer
+
+        start = timer()
+        simulated_battle = Battle({}, {}, {}, {}, {})
+        simulated_battle.io = dummy_ui.DummyUi()
+        simulated_battle.event = dummy_ui.DummyUi()
+        simulated_battle.active = unit
+        simulated_battle.bmap = self.bmap
+        simulated_battle.turn_tracker = self.turn_tracker
+        simulated_battle.all_living_units = self.all_living_units
+        simulated_battle.actor_data = self.actor_data
+
+        if move_path:
+            simulated_battle.move_unit(simulated_battle.active, move_path[-1])
+
+
+        # todo: replace attack/damage rolls to return the average weighted by chance to hit?
+        if chosen_skill:
+            affected_tiles = RN2_battle_logic.calculate_affected_area(target_tile, simulated_battle.active.coords,
+                                                                      chosen_skill,
+                                                                      simulated_battle.bmap)
+            simulated_battle.execute_skill(simulated_battle.active, chosen_skill, affected_tiles, target_tile)
+
+        simulated_battle.clear_killed()
+        end = timer()
+        print(end - start)
+        print self.score_battle_state(self.active, simulated_battle)
+
+    def score_battle_state(self, active, state):
+        """
+        Based on passed parameters that weight criteria, score a hypothetical battle state for favorability to the AI
+        calling this function
+        :return: A score
+        """
+
+        score = 0
+        unit_priority = 1
+
+        allies = [u for u in state.all_living_units if u.is_ally_of(active)]
+        enemies = [u for u in state.all_living_units if u.is_hostile_to(active)]
+
+        score += active.weights.self_alive if active in state.all_living_units else 0
+
+        score += len(allies) * active.ai.weights.living_allies
+        score += len(enemies) * active.ai.weights.living_enemies
+
+        for enemy in enemies:
+            score += self.score_unit_state(enemy, state, active.ai.weights.enemy_unit) * unit_priority
+
+        for ally in allies:
+            score += self.score_unit_state(ally, state, active.ai.weights.friendly_unit) * unit_priority
+
+        score += self.score_unit_state(active, state, active.ai.weights.self)
+
+        return score
+
+    def score_unit_state(self, unit, state, weights):
+        return weights.calculate(unit)
+
+    class UnitScoreWeightDefaults(object):
+        def __init__(self):
+            self.hp = 1
+            self.mp = 1
+            self.attack = 1
+            self.defense = 1
+            self.agility = 1
+            self.move = 1
+            self.magic = 1
+            self.resistance = 1
+
+            self.total_damage_over_time = 1
+
+        def calculate(self, unit):
+            score = 0
+            score += self.hp * unit.hp
+            score += self.mp * unit.mp
+            score += self.attack * unit.attack
+            score += self.defense * unit.defense
+            score += self.agility * unit.agility
+            score += self.move * unit.move
+            score += self.magic * unit.magic
+            score += self.resistance * unit.resistance
+            score += self.get_damage_over_time_score(unit) * self.total_damage_over_time
+
+            return score
+
+        def get_damage_over_time_score(self, unit):
+            import itertools
+            result = 0
+            keyfunc = lambda x: x.status_effect.type
+            all_dot_effects = [e for e in unit.active_status_effects if e.status_effect.damage]
+
+            if len(all_dot_effects):
+                for key, group in itertools.groupby(all_dot_effects, keyfunc):
+                    effects_of_type = list(group)
+                    effects_of_type.sort(key=lambda x: x.status_effect.damage)
+                    strongest_effect_for_type = effects_of_type.pop()
+                    result += strongest_effect_for_type.status_effect.damage * strongest_effect_for_type.duration
+
+            return result

@@ -4,7 +4,6 @@ import logging
 import RN2_battle_logic
 import time
 import math
-#todo: summons are not considered here
 
 #weight placed on each consideration in action selection. these will serve as "genes" for the first few simple learning AIs
 #needs situational weighting equations based on battle factors (strategic considerations)
@@ -17,6 +16,8 @@ class SimpleCheck:
     def __init__(self, multiplier):
         self.multiplier = multiplier
 
+
+# todo: add summon penalties
 
 class InflictDamage(SimpleCheck):
     def __init__(self, multiplier):
@@ -52,10 +53,10 @@ class HealDamage(SimpleCheck):
 
 
 class SummonCheck(SimpleCheck):
-    def calculate(self, unit, battle, skill):
+    def calculate(self, unit, battle, skill, threat):
         number_of_active_summons = len([u for u in battle.all_living_units if u.summoned_by == unit])
         already_summoned = len([u for u in battle.all_living_units if u.summoned_by == unit and u.name in skill.add_unit])
-        return (1 * self.multiplier) / (1 + number_of_active_summons) - already_summoned * 10
+        return ((1 * self.multiplier) / (1 + number_of_active_summons) - already_summoned * 10) + threat
 
 
 DAMAGE_ENEMY = InflictDamage(10)
@@ -68,9 +69,7 @@ SELF_KILLED = ChanceToKill(-10000)
 
 HEAL_ENEMY = HealDamage(-10)
 HEAL_FRIENDLY = HealDamage(5)
-HEAL_SELF = HealDamage(500)
-
-
+HEAL_SELF = HealDamage(20)
 
 DAMAGE_OVER_TIME_MODIFIER = 0.5
 HEALING_OVER_TIME_MODIFIER = 0.5
@@ -119,6 +118,9 @@ DECREASE_ENEMY_RESISTANCE = -1
 DECREASE_ENEMY_MOVE = -1
 
 ADDITIONAL_ALLY = SummonCheck(500)
+AVOID_THREAT = 10
+
+SUMMON_PRIORITY_MODIFIER = 0.5
 
 class ThreatMap:
     def __init__(self, battle_map):
@@ -143,6 +145,7 @@ class ThreatMap:
 
 class PyromancerDecisionTree(object):
     count = 0
+
     def __init__(self, battle, actor, skills):
         self.battle = battle
         self.actor = actor
@@ -220,6 +223,8 @@ class PyromancerDecisionTree(object):
         return all_tiles
 
     def determine_best_target_for_skill(self, skill, user, user_threat):
+        # todo: for several reasons this function is limited as long as positioning is not considered until an action is selected
+
         enemy_locations = [{'loc': e['unit'].coords, 'actor': e['unit']} for e in self.enemy_list]
         friendly_locations = [{'loc': a['unit'].coords, 'actor': a['unit']} for a in self.friendly_list]
         valid_target_tiles = self.get_valid_tiles(self.actor.coords, self.actor.move, skill, self.battle.bmap)
@@ -230,7 +235,7 @@ class PyromancerDecisionTree(object):
             affected_area = RN2_battle_logic.calculate_affected_area(tile, self.actor.coords, skill, self.battle.bmap)
 
             if skill.add_unit and self.battle.bmap[tile[0]][tile[1]].is_movable:
-                target_tile_options[tile] += ADDITIONAL_ALLY.calculate(user, self.battle, skill)
+                target_tile_options[tile] += ADDITIONAL_ALLY.calculate(user, self.battle, skill, self.threat_map.get_threat_for_tile(tile))
 
             if skill.affects_enemies:
                 for loc in enemy_locations:
@@ -260,15 +265,16 @@ class PyromancerDecisionTree(object):
                         elif avg_damage < 0:
                             target_tile_options[tile] += HEAL_FRIENDLY.calculate(avg_damage, loc['actor'])
 
-            if tuple(self.actor.coords) in affected_area and skill.affects_self:
-                avg_damage = skill.targets.self.damage.get_average_damage(user)
-                min_damage = skill.targets.self.damage.get_minimum_damage(user)
-                max_damage = skill.targets.self.damage.get_maximum_damage(user)
-                if avg_damage > 0:
-                    target_tile_options[tile] += DAMAGE_SELF.calculate(avg_damage)
-                    target_tile_options[tile] += SELF_KILLED.calculate(min_damage, max_damage, self.actor)
-                elif avg_damage < 0:
-                    target_tile_options[tile] += HEAL_SELF.calculate(avg_damage, self.actor)
+            # todo: this block is meaningless as its calc'd before moving
+            # if tuple(self.actor.coords) in affected_area and skill.affects_self:
+            #     avg_damage = skill.targets.self.damage.get_average_damage(user)
+            #     min_damage = skill.targets.self.damage.get_minimum_damage(user)
+            #     max_damage = skill.targets.self.damage.get_maximum_damage(user)
+            #     if avg_damage > 0:
+            #         target_tile_options[tile] += DAMAGE_SELF.calculate(avg_damage)
+            #         target_tile_options[tile] += SELF_KILLED.calculate(min_damage, max_damage, self.actor)
+            #     elif avg_damage < 0:
+            #         target_tile_options[tile] += HEAL_SELF.calculate(avg_damage, self.actor)
 
 
         results = []
@@ -344,7 +350,7 @@ class PyromancerDecisionTree(object):
 
             safest_tile = self.choose_safest_tile(skill=skill_data, loc=target_tile)
 
-            skill_value += safest_tile['threat_level'] * -0.1 #todo: aggression
+            skill_value -= safest_tile['threat_level'] * AVOID_THREAT
             skill_value += RN2_battle_logic.get_adjusted_mp(skill_data.mp, self.friendly_list) * MP_COST
             results.append((skill_value, skill_data.name, target_tile, safest_tile['loc']))
 

@@ -1,19 +1,21 @@
 actors:
   Astromancer:
     character: "@"
-    ai_class: player
+    ai: player
     maxhp: 52
     maxmp: 9
     weapon: white sword
     armor: astral regalia
     attack: 17
-    defense: 19
+    defense: 17
     magic: 20
-    resistance: 19
+    resistance: 18
     agility: 16
     move: 6
+    death_animation: playerdeath
     immunities:
       - Slow
+      - Lava
     skillset:
        - White sword
        - Gravity Surge
@@ -26,24 +28,25 @@ actors:
        - Skycaller
        - Summon Meteorman
        - Summon 4DHypercube
-       - Status Test
     descr: A wizard mastering the powers of the cosmos.
 
   Pyromancer:
     character: "@"
     ai: player
-    maxhp: 45
+    maxhp: 48
     maxmp: 10
     weapon: focusing staff
     armor: flaming cloak
     attack: 15
-    defense: 17
+    defense: 16
     magic: 19
-    resistance: 20
+    resistance: 19
     agility: 16
     move: 5
+    death_animation: playerdeath
     immunities:
       - Burning
+      - Lava
     skillset:
       - Focusing staff
       - Flash Freeze
@@ -56,7 +59,6 @@ actors:
       - Fuse Atom
       - Smn. Flaming Crows
       - Summon Snowball
-      - Status Test
     descr: A wizard mastering the powers of fire and ice.
 
   Terramancer:
@@ -72,8 +74,10 @@ actors:
     resistance: 18
     agility: 17
     move: 6
+    death_animation: playerdeath
     immunities:
       - Poison
+      - Lava
     skillset:
       - Obsidian sword
       - Whirlwind
@@ -90,7 +94,7 @@ actors:
       - Summon Stegosaur
     descr: A wizard mastering the powers of the earth and her creatures.
 
-    #Summoned monsters --:
+  #Summoned monsters --:
   Meteorman:
     character: M
     ai: player
@@ -398,7 +402,7 @@ actors:
     agility: 11
     move: 5
     immunities:
-      - Terrain
+      - Lava
     death_animation: beldeath
     skillset:
       - Shadow Curse

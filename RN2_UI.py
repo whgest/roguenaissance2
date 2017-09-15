@@ -160,6 +160,9 @@ class RN_UI_Class():
         self.screen.update()
         self.sound_handler = sound
         pygame.display.set_caption("ASCIIMANCER")
+
+        print pygame.display.get_driver()
+
         self.cell_size = (self.screen.cellheight, self.screen.cellwidth)
         self.right_menu_coords = (51,1,23,22)
         self.narration_coords = ((1,30,73,13))
@@ -514,18 +517,28 @@ class RN_UI_Class():
 
     def get_status(self, active, max_length=24):
         res = ''
+        statii = {}
         if not active.active_status_effects:
             return res
         else:
             for effect in active.active_status_effects:
-                res += "{}, ".format(effect.status_effect.type)
+                statii[effect.status_effect.type] = effect.status_effect.type
+            statii = statii.values()
+
+            for effect in statii:
+                res += "{}, ".format(effect)
         res = res[:-2]
         if len(res) < max_length:
             return res
         else:
             res = ''
+            statii = {}
             for effect in active.active_status_effects:
-                res += "{}/".format(effect.status_effect.type[:3])
+                statii[effect.status_effect.type] = effect.status_effect.type
+            statii = statii.values()
+
+            for status in statii:
+                res += "{}/".format(status[:3])
             res = res[:-1]
             return res[:max_length]
 

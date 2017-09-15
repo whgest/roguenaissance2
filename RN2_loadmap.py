@@ -18,6 +18,11 @@ class Terrain():
         self.fatal = 0
         self.flammable = 1
 
+    @property
+    # stops forced movement AFTER landing on this tile
+    def ends_forced_movement(self):
+        return self.aquatic or self.fatal
+
 #Terrain types:
 
 class Grass(Terrain):
