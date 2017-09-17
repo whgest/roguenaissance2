@@ -1,4 +1,5 @@
 class EventQueue(object):
+
     queue = []
 
     def add_event(self, event):
@@ -10,6 +11,9 @@ class EventQueue(object):
     def overwrite_last_event(self, event):
         EventQueue.queue.pop()
         self.add_event(event)
+
+    def __deepcopy__(self, memodict={}):
+        pass
 
 
 class BattleEvent(object):

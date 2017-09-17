@@ -167,14 +167,14 @@
   music:
     - boss
 
-  player_start: 30,23
+  player_start: 25,10 #30,23
 
   units:
-    - ident: Belshazzar
+    - ident: Pyromancer
       loc: 25,5
       team_id: 2
     - ident: Freezefrog
-      loc: 31,23
+      loc: 31,10
       team_id: 2
 
   triggers:
@@ -186,10 +186,10 @@
           effect_value:
             - 0
 
-  victory_condition:
-    conditions:
-      - condition_type: unit_defeated
-        condition_value: Belshazzar
+#  victory_condition:
+#    conditions:
+#      - condition_type: unit_defeated
+#        condition_value: Belshazzar
 
   tips:
     - Belshazzar's minions can be pushed or pulled into lava for an instant kill, but Belshazzar himself will not be felled so easily (neither will you!).

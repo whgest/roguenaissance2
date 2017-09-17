@@ -10,6 +10,8 @@ from RN2_battle_logic import get_neighboring_points, add_points
 import pyromancer_tree
 from RN2_event import EventQueue, DamageOrHeal, GoodStatus, BadStatus, GoodStatusEnds, BadStatusEnds, StatusDamageOrHeal, IsDisabled, ImmuneToStatus, KillUnit
 import itertools
+import peerless_ai
+import copy
 
 #pygame input constants, NOT ASCII CODES
 
@@ -77,55 +79,53 @@ ABBREVIATIONS = {
     'agility': "AGI"
 }
 
-
-class ModifiableAttribute(object):
-    def __init__(self, name):
-        self.base_stat = 0
-        self.name = name
-        self.attribute_modifiers = {}
-        self.data = {}
-
-    def __get__(self, instance, owner):
-        return self.get_modified_value(instance)
-
-    def __set__(self, instance, value):
-        self.data[instance] = value[0]
-        if not self.attribute_modifiers:
-            self.attribute_modifiers = value[1]
-
-    def get_modified_value(self, instance):
-        try:
-            base_stat = self.data[instance]
-        except KeyError:
-            pass
-        # modifiers do not stack: only the highest positive and negative ones are used
-        mods = instance.attribute_modifiers[self.name]
-
-        mods.sort(reverse=True)
-
-        try:
-            # positive and negative mods present, take strongest of each
-            if mods[0] * mods[-1] < 0:
-                total_modifier = mods[0] + mods[-1]
-            else:
-                # only strongest takes effect
-                mods.sort(key=lambda x: abs(x), reverse=True)
-                total_modifier = mods[0]
-        except IndexError:
-            total_modifier = 0
-
-        return base_stat + total_modifier
-
-
-class ModifiableMoveAttribute(ModifiableAttribute):
-    def __init__(self, name):
-        ModifiableAttribute.__init__(self, name)
-
-    def get_modified_value(self, instance):
-        if instance.attribute_modifiers['rooted']:
-            return 0
-        else:
-            return super(ModifiableMoveAttribute, self).get_modified_value(instance)
+#
+# class ModifiableAttribute(object):
+#     def __init__(self, name):
+#         self.base_stat = 0
+#         self.name = name
+#         self.attribute_modifiers = {}
+#         self.data = {}
+#
+#     def __get__(self, instance, owner):
+#         return self.get_modified_value(instance)
+#
+#     def __set__(self, instance, value):
+#         self.data[instance] = value[0]
+#         if not self.attribute_modifiers:
+#             self.attribute_modifiers = value[1]
+#
+#     def get_modified_value(self, instance):
+#         base_stat = self.data[instance]
+#
+#         # modifiers do not stack: only the highest positive and negative ones are used
+#         mods = instance.attribute_modifiers[self.name]
+#
+#         mods.sort(reverse=True)
+#
+#         try:
+#             # positive and negative mods present, take strongest of each
+#             if mods[0] * mods[-1] < 0:
+#                 total_modifier = mods[0] + mods[-1]
+#             else:
+#                 # only strongest takes effect
+#                 mods.sort(key=lambda x: abs(x), reverse=True)
+#                 total_modifier = mods[0]
+#         except IndexError:
+#             total_modifier = 0
+#
+#         return base_stat + total_modifier
+#
+#
+# class ModifiableMoveAttribute(ModifiableAttribute):
+#     def __init__(self, name):
+#         ModifiableAttribute.__init__(self, name)
+#
+#     def get_modified_value(self, instance):
+#         if instance.attribute_modifiers['rooted']:
+#             return 0
+#         else:
+#             return super(ModifiableMoveAttribute, self).get_modified_value(instance)
 
 
 class AppliedStatusEffect:
@@ -137,23 +137,22 @@ class AppliedStatusEffect:
     def display(self):
         return '{0} ({1} turns)'.format(self.status_effect.type, self.remaining_duration)
 
+    def __repr__(self):
+        return self.status_effect.type + ' ' + str(self.remaining_duration)
+
 
 class Actor(object):
-    MODIFIABLE_ATTRIBUTES = ["maxhp", "maxmp", "attack", "defense", "magic", "resistance", "agility", "move", "stunned",
-                             "rooted"]
-    attribute_modifiers = {}
-    maxhp = ModifiableAttribute("maxhp")
-    maxmp = ModifiableAttribute("maxmp")
-    attack = ModifiableAttribute("attack")
-    defense = ModifiableAttribute("defense")
-    magic = ModifiableAttribute("magic")
-    resistance = ModifiableAttribute("resistance")
-    agility = ModifiableAttribute("agility")
-    move = ModifiableMoveAttribute("move")
-    stunned = ModifiableAttribute("stunned")
-    rooted = ModifiableAttribute("rooted")
+    # def __deepcopy__(self, memodict={}):
+    #     import dummy_ui, copy
+    #     copy = object.__deepcopy__(self, memodict)
+    #     copy.event = dummy_ui.DummyUi()
+    #     return copy
+
+    MODIFIABLE_ATTRIBUTES = ["maxhp", "maxmp", "attack", "defense", "magic", "resistance", "agility",
+                             "move", "rooted"]
 
     def __init__(self, data, name):
+        self.id = 0
         self.character = data.get('character')
         self.immunities = data.get('immunities', [])
         self.innate_status = data.get('innate_status', [])
@@ -168,8 +167,6 @@ class Actor(object):
 
             setattr(self, "base_" + attribute, base_value)
 
-            setattr(self, attribute, (base_value, self.attribute_modifiers))
-
             self.attribute_modifiers[attribute] = []
 
         self.hp = int(getattr(self, 'base_maxhp'))
@@ -180,7 +177,9 @@ class Actor(object):
         self.name = name
         self.team_id = 0
         self.is_dead = 0
-        self.ai_class = pyromancer_tree.PyromancerDecisionTree
+
+        self.ai_class = peerless_ai.PeerlessAi
+
         self.event = EventQueue()
         self.summoned_by = data.get('summoned_by', None)
 
@@ -188,8 +187,72 @@ class Actor(object):
             for status in self.innate_status:
                 self.apply_status(SkillStatusEffect(status, 'Innate'))
 
+    @property
+    def maxhp(self):
+        return max(0, self.base_maxhp + self.get_modifier_for_stat("maxhp"))
+
+    @property
+    def maxmp(self):
+        return max(0, self.base_maxmp + self.get_modifier_for_stat("maxmp"))
+
+    @property
+    def attack(self):
+        return max(0, self.base_attack + self.get_modifier_for_stat("attack"))
+
+    @property
+    def defense(self):
+        return max(0, self.base_defense + self.get_modifier_for_stat("defense"))
+
+    @property
+    def magic(self):
+        return max(0, self.base_magic + self.get_modifier_for_stat("magic"))
+
+    @property
+    def resistance(self):
+        return max(0, self.base_resistance + self.get_modifier_for_stat("resistance"))
+
+    @property
+    def agility(self):
+        return max(0, self.base_agility + self.get_modifier_for_stat("agility"))
+
+    @property
+    def move(self):
+        if self.get_modifier_for_stat("rooted"):
+            return 0
+        else:
+            return max(0, self.base_move + self.get_modifier_for_stat("move"))
+
+    def current_state(self):
+        state = {}
+        stats = list(['active_status_effects', 'attribute_modifiers', 'hp', 'mp'])
+        for stat in stats:
+            state[stat] = getattr(self, stat)
+
+        return state
+
+    def set_state(self, state):
+        for k, v in state.items():
+            setattr(self, k, v)
+
+    def get_modifier_for_stat(self, stat):
+        mods = self.attribute_modifiers[stat]
+        mods.sort(reverse=True)
+
+        try:
+            # positive and negative mods present, take strongest of each
+            if mods[0] * mods[-1] < 0:
+                total_modifier = mods[0] + mods[-1]
+            else:
+                # only strongest takes effect
+                mods.sort(key=lambda x: abs(x), reverse=True)
+                total_modifier = mods[0]
+        except IndexError:
+            total_modifier = 0
+
+        return total_modifier
+
     def __repr__(self):
-        return self.name
+        return self.name + "@" + hex(id(self))
 
     def display(self):
         return self.character
@@ -213,7 +276,11 @@ class Actor(object):
             self.kill_actor()
 
         if raw_damage:
-            self.event.add_event(DamageOrHeal(self, raw_damage, skill_name))
+            try:
+                self.event.add_event(DamageOrHeal(self, raw_damage, skill_name))
+            except AttributeError:
+                print self, self.event
+                raise AttributeError
 
     def clear_attribute_modifiers(self):
         for attr in self.MODIFIABLE_ATTRIBUTES:
@@ -223,7 +290,7 @@ class Actor(object):
         self.active_status_effects = []
 
     def set_base_mp(self):
-        return max(0, int(math.floor(self.maxmp / 2) - 1))
+        return max(0, int(math.floor(self.base_maxmp / 2) - 1))
 
     def increment_mp(self):
         if self.mp < self.maxmp:
@@ -671,6 +738,9 @@ class Skill:
     def __str__(self):
         return self.name if self.name else self.ident
 
+    def __repr__(self):
+        return self.name if self.name else self.ident
+
     @property
     def affects_enemies(self):
         return not self.targets.enemy.ignored and not self.targets_empty
@@ -691,9 +761,6 @@ class Skill:
             prompt += " Area: %s" % str(self.aoe_size).capitalize()
 
         return prompt
-
-
-
 
 
 def make_actor():
@@ -767,24 +834,4 @@ def set_binds():
 
     return binds
 
-#
-# def attack_roll():
-#     stat = 19
-#     defense = 14
-#     random_roll = random.randint(0, stat)
-#     attack_roll = (stat / 2) + random_roll
-#     if attack_roll >= defense:
-#         return True
-#     else:
-#         return False
-#
-# pass_count = 0
-# fail_count = 0
-# for i in range(10000):
-#     trial = attack_roll()
-#     if trial:
-#         pass_count += 1
-#     else:
-#         fail_count += 1
-#
-# print pass_count/100, '%'
+

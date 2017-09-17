@@ -57,8 +57,7 @@ class TurnTracker:
             return self.get_next_unit()
 
 
-
-class Battle:
+class Battle(object):
     def __init__(self, battle_data, actor_data, skills, bmap, io, persistent_actor=None):
         self.io = io
         self.units = battle_data.get('units', [])
@@ -159,16 +158,14 @@ class Battle:
 
             else:
                 #ai controlled
-                ai = self.active.ai_class(self, self.active, self.skills)
-                skill_name, target_tile, move_path = ai.get_action(self.io.ui)
-                chosen_skill = self.skills.get(skill_name)
+                skill_name, target_tile, move_path = self.active.ai.get_action()
+                chosen_skill = self.skills.get(skill_name) if type(skill_name) is str else skill_name
                 destination = move_path[-1] if move_path else None
 
                 self.validate_ai_turn(self.active, chosen_skill, target_tile, move_path[1:])
                 if destination:
                     self.event.add_event(RN2_event.MoveUnit(self.active, move_path))
 
-                #self.simulate_move(self.active, chosen_skill, target_tile, move_path)
 
             #resolve turn
             if destination:
@@ -197,6 +194,10 @@ class Battle:
         to_remove = []
         for unit in self.all_living_units:
             if unit.hp <= 0 or unit.is_dead:
+                for summon in [u for u in self.all_living_units if u.summoned_by(unit)]:
+                    summon.kill_actor()
+                    self.event.add_event(RN2_event.KillUnit(summon))
+                    to_remove.append(summon)
                 self.event.add_event(RN2_event.KillUnit(unit))
                 to_remove.append(unit)
 
@@ -236,6 +237,8 @@ class Battle:
             actor = RN2_initialize.Actor(stats, name)
             actor.coords = tuple([int(c) for c in unit['loc'].split(",")])
             actor.team_id = unit['team_id']
+            actor.id = 1
+            actor.ai = "player"
 
             self.all_living_units.append(actor)
             self.turn_tracker.add_unit(actor)
@@ -250,9 +253,16 @@ class Battle:
 
             unit.team_id = team_id
 
+            try:
+                unit.id = max([u.id for u in self.all_living_units]) + 1
+            except ValueError:
+                unit.id = 1
+
             unit.coords = loc
             self.bmap[unit.coords[0]][unit.coords[1]].actor = unit
             unit.name = name
+
+            unit.ai = unit.ai_class(self, unit, self.skills)
 
             self.turn_tracker.add_unit(unit)
             self.all_living_units.append(unit)
@@ -288,6 +298,9 @@ class Battle:
 
         enemy_units_affected, friendly_units_affected, self_unit_affected = self.get_targets_for_area(attacker, affected_tiles, skill)
 
+        if not enemy_units_affected and not friendly_units_affected and not self_unit_affected and not skill.add_unit:
+            return False
+
         for unit in enemy_units_affected:
             self.skill_effect_on_unit(attacker, skill.targets.enemy, unit, skill.name, origin)
 
@@ -301,6 +314,8 @@ class Battle:
             empty_tiles = self.bmap.get_empty_tiles(affected_tiles)
             if empty_tiles:
                 self.add_unit(new_unit, random.choice(empty_tiles), attacker.team_id, summoner=attacker)
+
+        return True
 
     def skill_effect_on_unit(self, attacker, skill_target_type_effect, target, skill_name, origin):
         requires_attack_roll = skill_target_type_effect.is_resistable
@@ -333,6 +348,7 @@ class Battle:
 
         move_step = [int(round(c)) * modifier for c in direction]
 
+        # todo: bug-- diagonal pushes push twice as far
         last_valid_tile = tuple(unit.coords)
         for d in range(distance):
             new_coords = RN2_battle_logic.add_points(last_valid_tile, move_step)
@@ -395,106 +411,23 @@ class Battle:
             else:
                 self.event.add_event(RN2_event.ImmuneToTerrain(unit, tile.terrain.name))
 
-    def simulate_move(self, unit, chosen_skill, target_tile, move_path):
-        # copy battle and disconnect it from a functional front end
+
+# todo: move this to peerless ai file
+class SimulatedBattle(Battle):
+    def __init__(self, *args, **kwargs):
+        Battle.__init__(self, *args, **kwargs)
         import dummy_ui
-        from timeit import default_timer as timer
+        self.io = dummy_ui.DummyUi()
+        self.event = dummy_ui.DummyUi()
+        self.turn_tracker = dummy_ui.DummyUi()
 
-        start = timer()
-        simulated_battle = Battle({}, {}, {}, {}, {})
-        simulated_battle.io = dummy_ui.DummyUi()
-        simulated_battle.event = dummy_ui.DummyUi()
-        simulated_battle.active = unit
-        simulated_battle.bmap = self.bmap
-        simulated_battle.turn_tracker = self.turn_tracker
-        simulated_battle.all_living_units = self.all_living_units
-        simulated_battle.actor_data = self.actor_data
+    def skill_effect_on_unit(self, attacker, skill_target_type_effect, target, skill_name, origin):
+        inflicted_damage = skill_target_type_effect.damage.get_average_damage(attacker)
 
-        if move_path:
-            simulated_battle.move_unit(simulated_battle.active, move_path[-1])
+        target.inflict_damage_or_healing(inflicted_damage, skill_name)
 
+        for status_effect in skill_target_type_effect.status_effects:
+            target.apply_status(status_effect)
 
-        # todo: replace attack/damage rolls to return the average weighted by chance to hit?
-        if chosen_skill:
-            affected_tiles = RN2_battle_logic.calculate_affected_area(target_tile, simulated_battle.active.coords,
-                                                                      chosen_skill,
-                                                                      simulated_battle.bmap)
-            simulated_battle.execute_skill(simulated_battle.active, chosen_skill, affected_tiles, target_tile)
-
-        simulated_battle.clear_killed()
-        end = timer()
-        print(end - start)
-        print self.score_battle_state(self.active, simulated_battle)
-
-    def score_battle_state(self, active, state):
-        """
-        Based on passed parameters that weight criteria, score a hypothetical battle state for favorability to the AI
-        calling this function
-        :return: A score
-        """
-
-        score = 0
-        unit_priority = 1
-
-        allies = [u for u in state.all_living_units if u.is_ally_of(active)]
-        enemies = [u for u in state.all_living_units if u.is_hostile_to(active)]
-
-        score += active.weights.self_alive if active in state.all_living_units else 0
-
-        score += len(allies) * active.ai.weights.living_allies
-        score += len(enemies) * active.ai.weights.living_enemies
-
-        for enemy in enemies:
-            score += self.score_unit_state(enemy, state, active.ai.weights.enemy_unit) * unit_priority
-
-        for ally in allies:
-            score += self.score_unit_state(ally, state, active.ai.weights.friendly_unit) * unit_priority
-
-        score += self.score_unit_state(active, state, active.ai.weights.self)
-
-        return score
-
-    def score_unit_state(self, unit, state, weights):
-        return weights.calculate(unit)
-
-    class UnitScoreWeightDefaults(object):
-        def __init__(self):
-            self.hp = 1
-            self.mp = 1
-            self.attack = 1
-            self.defense = 1
-            self.agility = 1
-            self.move = 1
-            self.magic = 1
-            self.resistance = 1
-
-            self.total_damage_over_time = 1
-
-        def calculate(self, unit):
-            score = 0
-            score += self.hp * unit.hp
-            score += self.mp * unit.mp
-            score += self.attack * unit.attack
-            score += self.defense * unit.defense
-            score += self.agility * unit.agility
-            score += self.move * unit.move
-            score += self.magic * unit.magic
-            score += self.resistance * unit.resistance
-            score += self.get_damage_over_time_score(unit) * self.total_damage_over_time
-
-            return score
-
-        def get_damage_over_time_score(self, unit):
-            import itertools
-            result = 0
-            keyfunc = lambda x: x.status_effect.type
-            all_dot_effects = [e for e in unit.active_status_effects if e.status_effect.damage]
-
-            if len(all_dot_effects):
-                for key, group in itertools.groupby(all_dot_effects, keyfunc):
-                    effects_of_type = list(group)
-                    effects_of_type.sort(key=lambda x: x.status_effect.damage)
-                    strongest_effect_for_type = effects_of_type.pop()
-                    result += strongest_effect_for_type.status_effect.damage * strongest_effect_for_type.duration
-
-            return result
+        for move_effect in skill_target_type_effect.move_effects:
+            self.move_effect_on_unit(attacker, move_effect, target, origin)

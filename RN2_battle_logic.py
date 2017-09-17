@@ -61,7 +61,7 @@ def calculate_range(origin, _range, bmap, is_skill=False):
 
         for t in new_edges:
             if bmap.check_bounds(t):
-                tile_is_valid = bmap.get_tile_at(t).is_targetable if is_skill else  bmap.get_tile_at(t).is_movable
+                tile_is_valid = bmap.get_tile_at(t).is_targetable if is_skill else bmap.get_tile_at(t).is_movable
                 if tile_is_valid:
                     edges.append(t)
 

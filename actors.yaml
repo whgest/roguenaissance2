@@ -32,15 +32,15 @@ actors:
 
   Pyromancer:
     character: "@"
-    ai: player
+    ai: pyromancer
     maxhp: 48
     maxmp: 10
     weapon: focusing staff
     armor: flaming cloak
     attack: 15
     defense: 16
-    magic: 19
-    resistance: 19
+    magic: 20
+    resistance: 17
     agility: 16
     move: 5
     death_animation: playerdeath
@@ -56,9 +56,9 @@ actors:
       - Life Drain
       - Frostburn
       - Absolute Zero
-      - Fuse Atom
-      - Smn. Flaming Crows
-      - Summon Snowball
+      #- Fuse Atom
+      #- Smn. Flaming Crows
+      #- Summon Snowball
     descr: A wizard mastering the powers of fire and ice.
 
   Terramancer:
@@ -409,7 +409,7 @@ actors:
       - Necrodrain
       - Cloudkill
       - Poisonbolt
-      - Annihilate
+      #- Annihilate
       - Summon Skelesaur
       - Summon Lichdrake
     descr: An insane necromancer.

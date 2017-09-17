@@ -543,6 +543,9 @@ class PlayerTurn(object):
 
 
 class BattleController(object):
+    def __deepcopy__(self, memodict={}):
+        pass
+
     def __init__(self, ui, sound_handler, input):
         self.report = BattleReport(ui)
         self.ui = ui
