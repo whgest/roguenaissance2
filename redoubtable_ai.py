@@ -6,6 +6,7 @@ import RN2_battle
 import dummy_ui
 import copy
 import random
+import itertools
 
 
 class ThreatMap:
@@ -65,7 +66,7 @@ class UnitScoreWeightDefaults(object):
 
         score += self.is_dead * unit.is_dead
 
-        score += abs(self.preferred_threat_level - threat_map.get_threat_for_tile(unit.coords)) * self.tile_threat
+        #score += abs(self.preferred_threat_level - threat_map.get_threat_for_tile(unit.coords)) * self.tile_threat
 
         return score
 
@@ -152,6 +153,7 @@ class SimulationHandler(object):
         self.active_unit = unit
         self.unit_states = {}
         self.skills = skills
+        self.threat_map = None
 
         simulated_battle = RN2_battle.SimulatedBattle({}, battle.actor_data, {}, copy.deepcopy(battle.bmap), {})
 
@@ -163,7 +165,8 @@ class SimulationHandler(object):
         simulated_battle.active = [u for u in simulated_battle.all_living_units if u.id == self.active_unit.id][0]
 
         # until destination is selected, active's position is unknown for the purpose of simulation
-        simulated_battle.active.coords = [-1, -1]
+        simulated_battle.active.coords = (-1, -1)
+        simulated_battle.bmap.remove_unit(simulated_battle.active)
 
         self.simulated_battle = simulated_battle
         self.reset()
@@ -186,12 +189,14 @@ class SimulationHandler(object):
             unit.event = dummy_ui.DummyUi()
 
         self.simulated_battle.active = [u for u in self.simulated_battle.all_living_units if u.id == self.active_unit.id][0]
-        self.simulated_battle.active.coords = [-1, -1]
+        self.simulated_battle.active.coords = (-1, -1)
+        self.simulated_battle.bmap.remove_unit(self.simulated_battle.active)
 
     def simulate_move(self, chosen_skill, target_tile, affected_tiles, include_actor=False):
         if chosen_skill:
             if include_actor:
-                self.simulated_battle.active.coords = random.choice(affected_tiles)
+                self.simulated_battle.active.coords = random.choice([affected_tiles])[0]
+
             self.simulated_battle.execute_skill(self.simulated_battle.active, chosen_skill, affected_tiles, target_tile)
 
         return self.score_battle_state(self.simulated_battle, self.simulated_battle.active)
@@ -209,19 +214,19 @@ class SimulationHandler(object):
         allies = [u for u in simulated_battle.all_living_units if u.is_ally_of(active) and u.id != active.id]
         enemies = [u for u in simulated_battle.all_living_units if u.is_hostile_to(active)]
 
-        threat_map = self.create_threat_map(allies, enemies)
+        self.threat_map = self.create_threat_map(enemies)
 
         for enemy in enemies:
-            score += active.ai.weights.enemy.calculate(enemy, threat_map) * unit_priority
+            score += active.ai.weights.enemy.calculate(enemy, self.threat_map) * unit_priority
 
         for ally in allies:
-            score += active.ai.weights.friendly.calculate(ally, threat_map) * unit_priority
+            score += active.ai.weights.friendly.calculate(ally, self.threat_map) * unit_priority
 
-        score += active.ai.weights.personal.calculate(active, threat_map)
+        score += active.ai.weights.personal.calculate(active, self.threat_map)
 
         return score
 
-    def create_threat_map(self, allies, enemies):
+    def create_threat_map(self, enemies):
         threat_map = ThreatMap(self.simulated_battle.bmap, self.skills)
         for enemy in enemies:
             threat_map.add_threat(enemy, self.simulated_battle.bmap)
@@ -229,7 +234,7 @@ class SimulationHandler(object):
         return threat_map
 
 
-class Redoubtable_Ai(object):
+class RedoubtableAi(object):
     def __init__(self, battle, actor, skills):
         self.battle = battle
         self.actor = actor
@@ -238,32 +243,12 @@ class Redoubtable_Ai(object):
 
         self.weights = UnitScoreWeights(UnitScoreWeightEnemy(), UnitScoreWeightAlly(), UnitScoreWeightSelf())
 
-    # def get_targets(self):
-    #     friendly_list = []
-    #     enemy_list = []
-    #
-    #     for enemy in self.battle.get_enemies_of(self.actor):
-    #         distance, path = pathfind((self.actor.coords[1], self.actor.coords[0]), (enemy.coords[1], enemy.coords[0]), self.bmap)
-    #         enemy_list.append({"distance": distance, "unit": enemy, "path": path})
-    #
-    #     for ally in self.battle.get_allies_of(self.actor):
-    #         distance, path = pathfind((self.actor.coords[1], self.actor.coords[0]), (ally.coords[1], ally.coords[0]), self.bmap)
-    #         friendly_list.append({"distance": distance, "unit": ally, "path": path})
-    #
-    #     return enemy_list, friendly_list
-    #
-    # def create_threat_map(self):
-    #     threat_map = ThreatMap(self.battle.bmap)
-    #     for enemy in self.enemy_list:
-    #         threat_map.add_threat(enemy["unit"], self.battle.bmap)
-    #
-    #     return threat_map
-
     def evaluate(self):
         start = timer()
         simulation = SimulationHandler(self.actor, self.battle, self.skills)
 
         replace_this_value = self.actor.coords
+        move_range = RN2_battle_logic.calculate_move_range(self.actor, self.battle.bmap)
 
         possible_moves = []
         baseline_score = simulation.simulate_move(None, None, None, None)
@@ -273,77 +258,91 @@ class Redoubtable_Ai(object):
         for skill in [self.skills[s] for s in self.actor.skillset]:
             if self.battle.get_mp_cost(skill, self.actor) > self.actor.mp:
                 continue
+
             # all target tiles reachable by this spell, using up to full movement
             valid_target_tiles = RN2_battle_logic.get_valid_tiles(self.actor.coords, self.actor.move, skill, self.battle.bmap)
 
-            # spells cast on these tiles can reach at least one tile within the move range of actor
-            if skill.aoe_type == 'circular':
-                tiles_can_include_actor = RN2_battle_logic.get_valid_tiles(self.actor.coords, self.actor.move, skill, self.battle.bmap, use_aoe=True)
+            if skill.add_unit:
+                # for skills intended for use on an empty tile (summons only, for now)
+
+                # place summon based on summon's preferred threat
+                for tile in valid_target_tiles:
+                    score = 1
+                    possible_moves.append({'score': score, 'skill': skill, 'target': tile})
+
             else:
-                tiles_can_include_actor = []
+                # for skills intended for use on a unit
 
-            for target_option in valid_target_tiles:
-                # todo: can store this value for a target/range if needed
-                affected_tiles = RN2_battle_logic.calculate_affected_area(target_option,
-                                                                          replace_this_value,
-                                                                          skill,
-                                                                          simulation.simulated_battle.bmap)
+                # if skill.aoe_type == 'circular' and not skill.targets.self.ignored and not skill.targets_empty:
+                #     # spells cast on these tiles can reach at least one tile within the move range of actor
+                #     tiles_can_include_actor = RN2_battle_logic.get_valid_tiles(self.actor.coords, self.actor.move, skill, self.battle.bmap, use_aoe=True)
+                # else:
+                #     tiles_can_include_actor = []
 
-                targets_in_aoe = (simulation.simulated_battle.get_targets_for_area(self.actor, affected_tiles, skill) != ([], [], []))
+                for target_option in valid_target_tiles:
+                    # all tiles within range of this target for this skill
+                    move_options_for_target_and_skill = []
 
-                if targets_in_aoe:
-                    score = simulation.simulate_move(skill, target_option, affected_tiles)
-                    possible_move = {'score': score, 'skill': skill, 'target': target_option, 'actor_included': False}
-                    possible_moves.append(possible_move)
-                    simulation.reset()
+                    for tile in move_range:
+                        if skill and RN2_battle_logic.grid_distance(tile, target_option) > skill.range:
+                            continue
+                        else:
+                            move_options_for_target_and_skill.append(tile)
 
-                if len(tiles_can_include_actor):
-                    score = simulation.simulate_move(skill, target_option, affected_tiles, include_actor=True)
-                    possible_move = {'score': score, 'skill': skill, 'target': target_option, 'actor_included': True}
-                    possible_moves.append(possible_move)
-                    simulation.reset()
+                    affected_tiles = RN2_battle_logic.calculate_affected_area(target_option,
+                                                                              replace_this_value,
+                                                                              skill,
+                                                                              simulation.simulated_battle.bmap)
+
+                    targets_in_aoe = (simulation.simulated_battle.get_targets_for_area(self.actor, affected_tiles, skill) != ([], [], []))
+
+                    # simulate action without actor in aoe, if such an action is possible
+                    move_options_for_target_and_skill_not_in_aoe = set(move_options_for_target_and_skill) - set(affected_tiles)
+
+                    if targets_in_aoe and len(move_options_for_target_and_skill_not_in_aoe):
+                        score = simulation.simulate_move(skill, target_option, affected_tiles)
+
+                        destination = self.evaluate_move(move_options_for_target_and_skill_not_in_aoe, self.actor, simulation.threat_map)
+
+                        possible_move = {'score': score, 'skill': skill,
+                                         'target': target_option, 'destination': destination}
+
+                        # todo: modify score based on destination threat vs preferred threat
+
+                        possible_moves.append(possible_move)
+                        simulation.reset()
+
+                    # simulate action with actor in aoe, if such an action is possible
+                    move_options_for_target_and_skill_inside_aoe = set(move_options_for_target_and_skill) & set(affected_tiles)
+
+                    if len(move_options_for_target_and_skill_inside_aoe) and not skill.targets.self.ignored and not skill.targets_empty:
+                        score = simulation.simulate_move(skill, target_option, affected_tiles, include_actor=True)
+
+                        destination = self.evaluate_move(move_options_for_target_and_skill_inside_aoe, self.actor, simulation.threat_map)
+
+                        possible_move = {'score': score, 'skill': skill, 'target': target_option,
+                                         'actor_included': True, 'destination': destination}
+
+                        # todo: modify score based on destination threat vs preferred threat
+
+                        possible_moves.append(possible_move)
+                        simulation.reset()
 
         end = timer()
         print 'evaluate run time:', (end - start), 'seconds:', len(possible_moves), 'results.'
         return possible_moves
-    #
-    # def choose_safest_tile(self, skill=None, loc=None):
-    #     results = []
-    #     success = False
-    #     for tile in self.move_range:
-    #         if skill and RN2_battle_logic.grid_distance(tile, loc) > skill.range:
-    #             continue
-    #         else:
-    #             results.append({'threat_level': self.threat_map.get_threat_for_tile(tile), 'loc': tile})
-    #             success = True
-    #
-    #     if not success:
-    #         print "No possible path to tile: ", loc
-    #         exit()
-    #
-    #     results.sort()
-    #     return results[0]
-    #
-    # def advance_towards_enemy(self):
-    #     #todo: attack or retreat based on aggression level
-    #     advance_paths = []
-    #     for n in self.enemy_list:
-    #         path = pathfind((self.actor.coords[1], self.actor.coords[0]), (n['unit'].coords[1], n['unit'].coords[0]), self.battle.bmap)[1]
-    #         value = n['unit'].priority_value - len(path)
-    #         dist = min(len(path), self.actor.move) - 1
-    #
-    #         if path and dist >= 0:
-    #             if path[dist] == n['unit'].coords:
-    #                 dist -= 1
-    #
-    #             advance_paths.append((value, path[dist]))
-    #
-    #     advance_paths.sort(reverse=True)
-    #
-    #     if advance_paths:
-    #         return advance_paths[0]
-    #     else:
-    #         return (0, (self.actor.coords[1], self.actor.coords[0]))
+
+    def evaluate_move(self, tiles_to_evaluate, actor, threat_map):
+        keyfunc = lambda x: abs(threat_map.get_threat_for_tile(x) - actor.ai.weights.personal.preferred_threat_level)
+        tiles_to_evaluate = sorted(tiles_to_evaluate, key=keyfunc)
+
+        eval_tiles = {}
+        for k, g in itertools.groupby(tiles_to_evaluate, keyfunc):
+            eval_tiles[k] = list(g)
+
+        best = min(eval_tiles.keys())
+
+        return random.choice(eval_tiles[best])
 
     def get_action(self):
         possible_moves = self.evaluate()
@@ -355,8 +354,9 @@ class Redoubtable_Ai(object):
             print possible_moves[:10]
 
             if chosen_action.get('destination'):
-                path = pathfind((self.actor.coords[1], self.actor.coords[0]), (chosen_action['destination'][1],
-                                                                               chosen_action['destination'][0]), self.battle.bmap)
+                path = pathfind((self.actor.coords[1], self.actor.coords[0]),
+                                (chosen_action['destination'][1], chosen_action['destination'][0]),
+                                self.battle.bmap)
             else:
                 path = [0, [self.actor.coords]]
 

@@ -263,7 +263,7 @@ class BMap:
     def place_unit(self, unit, coords):
         tile = self.get_tile_at(coords)
         if tile.actor:
-            print "Tile {0} is occupied by {1}".format(coords, tile.actor)
+            print "'Cant place {0}: Tile {1} is occupied by {2}".format(unit, coords, tile.actor)
             raise KeyError
 
         tile.actor = unit
@@ -299,6 +299,9 @@ class Tile:
             return getattr(self.terrain, name)
         else:
             return getattr(self, name)
+
+    def __repr__(self):
+        print "Tile containing {}, {}".format(self.terrain.name, self.actor)
 
     @property
     def is_movable(self):

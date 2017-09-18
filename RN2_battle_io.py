@@ -14,8 +14,6 @@ from RN2_initialize import (ACTIVATE, CANCEL, PASS_TURN, HELP_MENU, STATUS_DISPL
                             MUTE_SOUND, EXIT, DOWN, LEFT, RIGHT, UP, INVALID, F1, F2, F3, F4, F5, F6, F7, F8, F9, F10,
                             F11, F12)
 
-logging.basicConfig(filename="logs/rn_debug.log", filemode="w+", level=logging.DEBUG)
-
 
 class BattleReportLine:
     def __init__(self, string, cause_color='', effect_color='', line_color=''):

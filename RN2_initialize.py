@@ -179,7 +179,7 @@ class Actor(object):
         self.team_id = 0
         self.is_dead = 0
 
-        self.ai_class = redoubtable_ai.Redoubtable_Ai
+        self.ai_class = redoubtable_ai.RedoubtableAi
 
         self.event = EventQueue()
         self.summoned_by = data.get('summoned_by', None)

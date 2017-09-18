@@ -48,7 +48,7 @@ def calculate_skill_range(unit, skill, bmap):
     return calculate_range(unit.coords, skill.range, bmap, is_skill=True)
 
 
-def calculate_range(origin, _range, bmap, is_skill=False):
+def calculate_range(origin, _range, bmap, is_skill=False, target_requires_empty=False):
     origin = tuple(origin)
     all_tiles = {origin}
     edges = [origin]
@@ -67,6 +67,10 @@ def calculate_range(origin, _range, bmap, is_skill=False):
                     edges.append(t)
 
     all_tiles.update(edges)
+
+    if target_requires_empty:
+        all_tiles = [t for t in all_tiles if bmap.get_tile_at(t).is_movable]
+
     return all_tiles
 
 

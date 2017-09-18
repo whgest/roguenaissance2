@@ -25,7 +25,7 @@ actors:
        - Singularity
        - Meteor
        - Gamma Ray
-       #- Skycaller
+       - Skycaller
        - Summon Meteorman
        - Summon 4DHypercube
     descr: A wizard mastering the powers of the cosmos.
@@ -56,9 +56,9 @@ actors:
       - Life Drain
       - Frostburn
       - Absolute Zero
-      #- Fuse Atom
-      #- Smn. Flaming Crows
-      #- Summon Snowball
+      - Fuse Atom
+      - Smn. Flaming Crows
+      - Summon Snowball
     descr: A wizard mastering the powers of fire and ice.
 
   Terramancer:
@@ -88,7 +88,7 @@ actors:
       - Venom Slash
       - Vine Grasp
       - Avalanche Strike
-      #- Tectonic Break
+      - Tectonic Break
       - Ascendance
       - Summon Spring Wind
       - Summon Stegosaur
@@ -373,23 +373,6 @@ actors:
       - Fungeneration
     descr: A myconid shaman. Somewhat magic resistant. Heals.
 
-#  Piranha school:
-#    character: p
-#    color: red
-#    ai: aquatic
-#    maxhp: 15
-#    maxmp: 0
-#    attack: 25
-#    defense: 7
-#    magic: 0
-#    resistance: 7
-#    agility: 25
-#    move: 7
-#    immunities: Aquatic
-#    skillset:
-#      - Frenzy
-#    descr: A school of vicious piranha.
-
   Belshazzar:
     character: "%"
     ai: pyromancer
@@ -409,7 +392,7 @@ actors:
       - Necrodrain
       - Cloudkill
       - Poisonbolt
-      #- Annihilate
+      - Annihilate
       - Summon Skelesaur
       - Summon Lichdrake
     descr: An insane necromancer.
