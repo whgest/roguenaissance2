@@ -6,6 +6,7 @@ import RN2_AI
 import itertools
 
 
+
 def add_points(coord, change):
     return tuple(sum(x) for x in zip(coord, change))
 
@@ -77,3 +78,33 @@ def get_adjusted_mp(mp, friendlies):
 def grid_distance(actor1, actor2):
     return abs(actor1[0] - actor2[0]) + abs(actor1[1] - actor2[1])
 
+
+def get_valid_tiles(origin, move_range, skill, bmap, use_aoe=False):
+        origin = tuple(origin)
+        all_tiles = {origin}
+        edges = [origin]
+        for m in range(move_range):
+            edge_neighbors = set()
+            for t in edges:
+                edge_neighbors.update(get_neighboring_points(t))
+
+            all_tiles.update(edges)
+            new_edges = edge_neighbors.difference(all_tiles)
+
+            for t in new_edges:
+                if bmap.check_bounds(t) and bmap.get_tile_at(t).is_movable:
+                    edges.append(t)
+
+        _range = skill.aoe_size if use_aoe else skill.range
+
+        for s in range(_range):
+            all_tiles, new_edges = skill.aoe.get_next_aoe_range(all_tiles, edges, origin)
+
+            edges = set()
+            for t in new_edges:
+                if bmap.check_bounds(t) and bmap.get_tile_at(t).is_targetable:
+                    edges.add(t)
+
+        all_tiles.update(edges)
+
+        return all_tiles

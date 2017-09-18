@@ -11,6 +11,7 @@ import pyromancer_tree
 from RN2_event import EventQueue, DamageOrHeal, GoodStatus, BadStatus, GoodStatusEnds, BadStatusEnds, StatusDamageOrHeal, IsDisabled, ImmuneToStatus, KillUnit
 import itertools
 import peerless_ai
+import redoubtable_ai
 import copy
 
 #pygame input constants, NOT ASCII CODES
@@ -178,7 +179,7 @@ class Actor(object):
         self.team_id = 0
         self.is_dead = 0
 
-        self.ai_class = peerless_ai.PeerlessAi
+        self.ai_class = redoubtable_ai.Redoubtable_Ai
 
         self.event = EventQueue()
         self.summoned_by = data.get('summoned_by', None)

@@ -25,7 +25,7 @@ actors:
        - Singularity
        - Meteor
        - Gamma Ray
-       - Skycaller
+       #- Skycaller
        - Summon Meteorman
        - Summon 4DHypercube
     descr: A wizard mastering the powers of the cosmos.
@@ -88,7 +88,7 @@ actors:
       - Venom Slash
       - Vine Grasp
       - Avalanche Strike
-      - Tectonic Break
+      #- Tectonic Break
       - Ascendance
       - Summon Spring Wind
       - Summon Stegosaur
