@@ -6,7 +6,6 @@ import RN2_AI
 import itertools
 
 
-
 def add_points(coord, change):
     return tuple(sum(x) for x in zip(coord, change))
 

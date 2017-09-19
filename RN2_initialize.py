@@ -225,7 +225,7 @@ class Actor(object):
 
     def current_state(self):
         state = {}
-        stats = list(['active_status_effects', 'attribute_modifiers', 'hp', 'mp'])
+        stats = list(['active_status_effects', 'attribute_modifiers', 'hp', 'mp', "coords"])
         for stat in stats:
             state[stat] = getattr(self, stat)
 
