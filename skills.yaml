@@ -261,7 +261,7 @@ Flash Freeze:
   aoe_size: 0
   damage:
     num_dice: 2
-    dice_size: 8
+    dice_size: 6
   status_effects:
     - type: Slow
       duration: 3
@@ -292,7 +292,7 @@ Pyrokinesis:
   aoe_size: 2
   damage:
     num_dice: 2
-    dice_size: 5
+    dice_size: 6
   status_effects:
     - type: Burning
       damage: 2
@@ -474,23 +474,19 @@ Rock Toss:
   animation: rock toss
 
 
-#Hornet Swarm:
-#  attack_stat: magic
-#  range: 9
-#  aoe_size: 0
-#  damage:
-#    num_dice: 1
-#    dice_size: 2
-#  status_effects:
-#    - type: Confound
-#      magnitude: 4
-#      duration: 4
-#    - type: Swarm
-#      magnitude: 2
-#      duration: 4
-#  mp: 1
-#  prompt: Send angry hornets to injure and lower magic attack.
-#  animation: rock toss
+Hornet Swarm:
+  targets_empty: true
+  range: 1
+  aoe_size: 7
+  add_minion:
+    - Hornet
+    - Hornet
+    - Hornet
+    - Hornet
+    - Hornet
+  mp: 3
+  prompt: Send angry hornets to injure and lower magic attack.
+  animation: summon
 
 
 Venom Slash:
@@ -885,6 +881,39 @@ Poison Breath:
   prompt: Basic attack.
   animation: poison
 
+Venomous Bite:
+  attack_stat: attack
+  range: 1
+  aoe_size: 0
+  damage:
+    num_dice: 1
+    dice_size: 6
+  status_effects:
+    - type: Poison
+      damage: 4
+      duration: 2
+  mp: 0
+  prompt: Basic attack.
+  animation: bite
+
+Sting:
+  attack_stat: attack
+  range: 1
+  aoe_size: 0
+  targets:
+    enemy:
+      damage:
+        fixed_damage: 1
+      status_effects:
+        - type: Confound
+          modifiers:
+            - stat: magic
+              value: -2
+            - stat: attack
+              value: -2
+  mp: 0
+  prompt: Basic attack.
+  animation: bite
 
 #Monster skills:
 Bite:
@@ -934,7 +963,11 @@ Paper cut:
   aoe_size: 0
   damage:
     num_dice: 1
-    dice_size: 12
+    dice_size: 8
+  move_effects:
+    - type: push
+      distance: 6
+      origin: user
   mp: 0
   prompt: Basic attack.
   animation: basic
@@ -1124,6 +1157,19 @@ Summon Skelesaur:
   prompt: Summon a stegosaur to crush your foes.
   animation: summon
 
+Summon Serpents:
+  targets_empty: true
+  range: 5
+  aoe_size: 6
+  add_unit:
+    - Serpent
+    - Serpent
+    - Serpent
+    - Serpent
+    - Serpent
+  mp: 2
+  prompt: Summon a plague of venomous snakes.
+  animation: summon
 
 Summon Lichdrake:
   targets_empty: true

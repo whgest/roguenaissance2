@@ -167,10 +167,10 @@
   music:
     - boss
 
-  player_start: 25,10 #30,23
+  player_start: 30,23
 
   units:
-    - ident: Pyromancer
+    - ident: Belshazzar
       loc: 25,5
       team_id: 2
     - ident: Freezefrog

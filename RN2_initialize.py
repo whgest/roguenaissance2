@@ -143,16 +143,10 @@ class AppliedStatusEffect:
 
 
 class Actor(object):
-    # def __deepcopy__(self, memodict={}):
-    #     import dummy_ui, copy
-    #     copy = object.__deepcopy__(self, memodict)
-    #     copy.event = dummy_ui.DummyUi()
-    #     return copy
-
     MODIFIABLE_ATTRIBUTES = ["maxhp", "maxmp", "attack", "defense", "magic", "resistance", "agility",
                              "move", "rooted"]
 
-    def __init__(self, data, name):
+    def __init__(self, data, name, event=None):
         self.id = 0
         self.character = data.get('character')
         self.immunities = data.get('immunities', [])
@@ -181,7 +175,7 @@ class Actor(object):
 
         self.ai_class = redoubtable_ai.RedoubtableAi
 
-        self.event = EventQueue()
+        self.event = event
         self.summoned_by = data.get('summoned_by', None)
 
         if self.innate_status:
@@ -225,7 +219,7 @@ class Actor(object):
 
     def current_state(self):
         state = {}
-        stats = list(['active_status_effects', 'attribute_modifiers', 'hp', 'mp', "coords"])
+        stats = list(['active_status_effects', 'attribute_modifiers', 'hp', 'mp', "coords", "is_dead"])
         for stat in stats:
             state[stat] = getattr(self, stat)
 
@@ -729,6 +723,7 @@ class Skill:
         self.aoe_type = data.get('aoe_type', 'circular')
         self.aoe = AOE_TYPES[self.aoe_type]()
         self.add_unit = data.get('add_unit', [])
+        self.add_minion = data.get('add_minion', [])
         self.mp = data.get('mp', 0)
         self.mp_cost_type = data.get('mp_cost_type')
         self.prompt = data.get('prompt')

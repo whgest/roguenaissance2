@@ -35,8 +35,6 @@ actors:
     ai: pyromancer
     maxhp: 48
     maxmp: 10
-    weapon: focusing staff
-    armor: flaming cloak
     attack: 15
     defense: 16
     magic: 20
@@ -63,7 +61,7 @@ actors:
 
   Terramancer:
     character: "@"
-    ai: player
+    ai: redoubtable
     maxhp: 60
     maxmp: 10
     weapon: obsidian sword
@@ -83,7 +81,7 @@ actors:
       - Whirlwind
       - Stone Armor
       - Rock Toss
-#      - Hornet Swarm
+      - Hornet Swarm
       - Thunderbolt
       - Venom Slash
       - Vine Grasp
@@ -145,7 +143,7 @@ actors:
 
   Flaming Crows:
     character: C
-    ai: player
+    ai: desperate_attack
     maxhp: 45
     maxmp: 3
     attack: 20
@@ -167,7 +165,7 @@ actors:
   Spring Wind:
     character: w
     color: lime
-    ai: player
+    ai: healer
     maxhp: 20
     maxmp: 4
     attack: 1
@@ -185,7 +183,6 @@ actors:
 
   Stegosaur:
     character: S
-    color: lime
     ai: player
     maxhp: 50
     maxmp: 3
@@ -200,6 +197,19 @@ actors:
       - Megastomp
     descr: A rampaging dinosaur.
 
+  Hornet:
+    character: "*"
+    ai: desperate_attack
+    maxhp: 1
+    attack: 18
+    defense: 0
+    magic: 0
+    resistance: 0
+    agility: 0
+    move: 7
+    skillset:
+      - Sting
+    descr: A stinging insect.
 
   Skelesaur:
     character: K
@@ -236,12 +246,27 @@ actors:
       - Poison Breath
     descr: An undead wyrmling.
 
+  Serpent:
+    character: s
+    ai: desperate_attack
+    maxhp: 1
+    maxmp: 0
+    attack: 18
+    defense: 0
+    magic: 0
+    resistance: 0
+    agility: 15
+    move: 5
+    skillset:
+      - Venomous Bite
+    descr: A venomous slithering snake.
+
 
   # Monsters --:
   Rabid duckbunny:
     character: d
     color: red
-    ai: weakest
+    ai: desperate_attack
     maxhp: 40
     maxmp: 0
     attack: 18
@@ -274,7 +299,7 @@ actors:
   Dire roach:
     character: r
     color: red
-    ai: weakest
+    ai: desperate_attack
     maxhp: 30
     maxmp: 0
     attack: 18
@@ -282,7 +307,7 @@ actors:
     magic: 0
     resistance: 11
     agility: 20
-    move: 6
+    move: 9
     immunities:
       - Radiation
     skillset:
@@ -359,7 +384,7 @@ actors:
   Fungal sporemage:
     character: m
     color: red
-    ai: support
+    ai: healer
     maxhp: 30
     maxmp: 3
     attack: 11
@@ -375,7 +400,7 @@ actors:
 
   Belshazzar:
     character: "%"
-    ai: pyromancer
+    ai: mage
     maxhp: 55
     maxmp: 10
     attack: 25
@@ -393,7 +418,7 @@ actors:
       - Cloudkill
       - Poisonbolt
       - Annihilate
-      - Summon Skelesaur
-      - Summon Lichdrake
+      - Summon Serpents
+      #- Summon Lichdrake
     descr: An insane necromancer.
 

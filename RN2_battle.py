@@ -166,7 +166,6 @@ class Battle(object):
                 if destination:
                     self.event.add_event(RN2_event.MoveUnit(self.active, move_path))
 
-
             #resolve turn
             if destination:
                 self.move_unit(self.active, destination)
@@ -194,7 +193,7 @@ class Battle(object):
         to_remove = []
         for unit in self.all_living_units:
             if unit.hp <= 0 or unit.is_dead:
-                for summon in [u for u in self.all_living_units if u.summoned_by(unit)]:
+                for summon in [u for u in self.all_living_units if u.summoned_by == unit]:
                     summon.kill_actor()
                     self.event.add_event(RN2_event.KillUnit(summon))
                     to_remove.append(summon)
@@ -202,8 +201,11 @@ class Battle(object):
                 to_remove.append(unit)
 
         for unit in to_remove:
-            self.all_living_units.remove(unit)
-            self.remove_unit(unit)
+            try:
+                self.all_living_units.remove(unit)
+                self.remove_unit(unit)
+            except ValueError:
+                self.remove_unit(unit)
 
     def turn_manager(self):
         while 1:
@@ -234,7 +236,7 @@ class Battle(object):
 
             name = ident if not unit.get('name') else unit.get('name')
 
-            actor = RN2_initialize.Actor(stats, name)
+            actor = RN2_initialize.Actor(stats, name, event=self.event)
             actor.coords = tuple([int(c) for c in unit['loc'].split(",")])
             actor.team_id = unit['team_id']
             actor.id = 1
@@ -249,7 +251,7 @@ class Battle(object):
         if self.bmap.get_tile_at(loc).is_movable:
             stats = self.actor_data[name]
             stats['summoned_by'] = summoner
-            unit = RN2_initialize.Actor(stats, name)
+            unit = RN2_initialize.Actor(stats, name, event=self.event)
 
             unit.team_id = team_id
 
@@ -262,7 +264,10 @@ class Battle(object):
             self.bmap[unit.coords[0]][unit.coords[1]].actor = unit
             unit.name = name
 
-            unit.ai = unit.ai_class(self, unit, self.skills)
+            if unit.summoned_by and unit.summoned_by.ai == "player":
+                unit.ai = "player"
+            else:
+                unit.ai = unit.ai_class(self, unit, self.skills)
 
             self.turn_tracker.add_unit(unit)
             self.all_living_units.append(unit)
@@ -298,9 +303,6 @@ class Battle(object):
 
         enemy_units_affected, friendly_units_affected, self_unit_affected = self.get_targets_for_area(attacker, affected_tiles, skill)
 
-        if not enemy_units_affected and not friendly_units_affected and not self_unit_affected and not skill.add_unit:
-            return False
-
         for unit in enemy_units_affected:
             self.skill_effect_on_unit(attacker, skill.targets.enemy, unit, skill.name, origin)
 
@@ -315,7 +317,10 @@ class Battle(object):
             if empty_tiles:
                 self.add_unit(new_unit, random.choice(empty_tiles), attacker.team_id, summoner=attacker)
 
-        return True
+        for new_unit in skill.add_minion:
+            empty_tiles = self.bmap.get_empty_tiles(affected_tiles)
+            if empty_tiles:
+                self.add_unit(new_unit, random.choice(empty_tiles), attacker.team_id)
 
     def skill_effect_on_unit(self, attacker, skill_target_type_effect, target, skill_name, origin):
         requires_attack_roll = skill_target_type_effect.is_resistable
@@ -378,6 +383,8 @@ class Battle(object):
 
         if target:
             target_tile = self.bmap[target[0]][target[1]]
+        else:
+            target_tile = None
 
         for tile in path:
             if self.bmap.get_tile_at(tile).actor == e or self.bmap.get_tile_at(tile).is_movable:
@@ -390,10 +397,10 @@ class Battle(object):
             print "Actor '{0}' does not have the MP to cast {1}. MP: {2} Needed: {3}".format(e.name, skill.name, e.mp, self.get_mp_cost(skill, e))
             raise AssertionError
 
-        #todo: ensure unit has skill
-
-
         #todo: check skill range, emptiness for summon skills, etc.
+        if skill and target and destination and RN2_battle_logic.grid_distance(destination, target) > skill.range:
+            print "Actor '{0}' cannot reach target {1} with skill {2}. Range: {3}, Distance: {4}".format(e.name, target, skill.name, skill.range, RN2_battle_logic.grid_distance(destination, target))
+            raise AssertionError
 
     def get_mp_cost(self, skill, unit):
         if skill.mp == -1:
@@ -412,7 +419,7 @@ class Battle(object):
                 self.event.add_event(RN2_event.ImmuneToTerrain(unit, tile.terrain.name))
 
 
-# todo: move this to peerless ai file
+# todo: move this to ai file
 class SimulatedBattle(Battle):
     def __init__(self, *args, **kwargs):
         Battle.__init__(self, *args, **kwargs)
@@ -431,3 +438,8 @@ class SimulatedBattle(Battle):
 
         for move_effect in skill_target_type_effect.move_effects:
             self.move_effect_on_unit(attacker, move_effect, target, origin)
+
+    def add_unit(self, name, loc, team_id, summoner=None):
+        import dummy_ui
+        Battle.add_unit(self, name, loc, team_id, summoner)
+        self.all_living_units[-1].event = dummy_ui.DummyUi()

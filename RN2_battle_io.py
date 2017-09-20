@@ -320,8 +320,11 @@ class InSkillsMenu(PlayerTurnState):
             return TARGET_SKILL
 
     def activate_state(self):
-        skill_to_display = self.skills[self.unit.skillset[1:][self.skill_menu_index]]
-        self.print_selected_skill_prompt(skill_to_display)
+        if len(self.unit.skillset) > 1:
+            skill_to_display = self.skills[self.unit.skillset[1:][self.skill_menu_index]]
+            self.print_selected_skill_prompt(skill_to_display)
+        else:
+            self.input_error("No usable skills. This unit can only attack.")
 
     def cancel(self):
         return MOVE_CHARACTER
