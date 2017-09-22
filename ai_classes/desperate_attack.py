@@ -13,6 +13,8 @@ class UnitScoreWeightEnemy(redoubtable_ai.UnitScoreWeightEnemyDefaults):
         self.total_damage_over_time = -80
 
         self.is_dead = 5000
+        self.attack = -100
+        self.magic = -100
 
 
 class UnitScoreWeightSelf(redoubtable_ai.UnitScoreWeightDefaults):

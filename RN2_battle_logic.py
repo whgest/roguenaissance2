@@ -48,6 +48,8 @@ def calculate_skill_range(unit, skill, bmap):
 
 
 def calculate_range(origin, _range, bmap, is_skill=False, target_requires_empty=False):
+    import timeit
+    start = timeit.default_timer()
     origin = tuple(origin)
     all_tiles = {origin}
     edges = [origin]
@@ -70,6 +72,8 @@ def calculate_range(origin, _range, bmap, is_skill=False, target_requires_empty=
     if target_requires_empty:
         all_tiles = [t for t in all_tiles if bmap.get_tile_at(t).is_movable]
 
+    end = timeit.default_timer()
+    print end-start
     return all_tiles
 
 

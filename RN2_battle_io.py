@@ -376,6 +376,15 @@ class InBattleOverview(PlayerTurnState):
         self.ui.highlight_active(self.list[self.index], False)
         self.index += 1
 
+    def legend(self):
+        PlayerTurnState.legend(self)
+        return self.cancel()
+
+    def help_menu(self):
+        PlayerTurnState.help_menu(self)
+        return self.cancel()
+
+
 
 class TargetSkill(PlayerTurnState):
     def __init__(self, ui, unit, bmap, player_selections, battle):

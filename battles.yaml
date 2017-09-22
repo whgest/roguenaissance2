@@ -170,7 +170,7 @@
   player_start: 30,23
 
   units:
-    - ident: Belshazzar
+    - ident: Astromancer
       loc: 25,5
       team_id: 2
     - ident: Freezefrog
@@ -257,11 +257,11 @@
     - Good luck suckaaaaa
 
 5:
-  map: bridge
+  map: blank
   music:
     - battle1a
     - battle1b
-  player_start: 12,12
+  player_start: 25,12
   victory_condition:
     conditions:
       - condition_type: on_goal_tile

@@ -519,7 +519,7 @@ class LineAttack():
             return coords[0] * -1, coords[1] * -1
 
         if edges:
-            last_line_tile = edges[-1]
+            last_line_tile = list(edges)[-1]
         else:
             return all_tiles, []
 
@@ -539,7 +539,7 @@ class LineAttack():
 
 
 class CircularAttack():
-    def get_next_aoe_range(self, all_tiles, edges, caster_loc):
+    def get_next_aoe_range(self, all_tiles, edges, _):
         edge_neighbors = set()
         for t in edges:
             edge_neighbors.update(get_neighboring_points(t))
@@ -548,9 +548,47 @@ class CircularAttack():
         new_edges = edge_neighbors.difference(all_tiles)
         return all_tiles, new_edges
 
+
+class ConeAttack():
+    def get_next_aoe_range(self, all_tiles, edges, caster_loc):
+        def negative_coords(coords):
+            return coords[0] * -1, coords[1] * -1
+
+        if edges:
+            last_line_tile = list(edges[-1])
+        else:
+            return all_tiles, []
+
+        #Subtract caster loc from last_line_tile to determine direction
+        point_diff = add_points(last_line_tile, negative_coords(caster_loc))
+        if point_diff[0]:
+            direction = (point_diff[0] / abs(point_diff[0]), 0)
+        elif point_diff[1]:
+            direction = (0, point_diff[1] / abs(point_diff[1]))
+        else:
+            direction = (0, 0)
+
+        next_points = []
+        step = max(1, int((len(edges)/2.0) + 0.5))
+
+        for i in range(step):
+            along_x = (direction[0])
+            along_y = (direction[1])
+            if along_y:
+                next_points.append(add_points(last_line_tile, add_points(direction, (i+1, 0))))
+                next_points.append(add_points(last_line_tile, add_points(direction, (-i-1, 0))))
+            if along_x:
+                next_points.append(add_points(last_line_tile, add_points(direction, (0, i + 1))))
+                next_points.append(add_points(last_line_tile, add_points(direction, (0, -i - 1))))
+
+        next_points.append(add_points(last_line_tile, direction))
+        new_edges = next_points
+        return all_tiles, new_edges
+
 AOE_TYPES = {
     'line': LineAttack,
-    'circular': CircularAttack
+    'circular': CircularAttack,
+    'cone': ConeAttack
 }
 
 DAMAGE_TYPES = {
@@ -691,8 +729,16 @@ class SkillEffectForTargetType:
         else:
             return False
 
-    def is_beneficial(self):
-        pass
+    @property
+    def is_harmful(self):
+        """
+        A method for AI to determine whether a skill effect is totally harmful and can be skipped for eval on friendly targets
+        """
+        healing = self.damage and (getattr(self.damage, 'dice_size', 0) < 0 or getattr(self.damage, 'fixed_damage', 0) < 0)
+        healing_over_time = len([s for s in self.status_effects if s.damage and s.damage < 0])
+        stat_boosts = len([s for s in self.status_effects if s.modifiers and len([m for m in s.modifiers if m.value > 0])])
+
+        return not healing and not healing_over_time and not stat_boosts
 
 
 class TargetTypes:

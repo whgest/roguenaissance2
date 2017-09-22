@@ -3,7 +3,7 @@ actors:
     character: "@"
     ai: player
     maxhp: 52
-    maxmp: 9
+    maxmp: 90
     weapon: white sword
     armor: astral regalia
     attack: 17
@@ -17,17 +17,17 @@ actors:
       - Slow
       - Lava
     skillset:
-       - White sword
+       #- White sword
        - Gravity Surge
-       - Zodiac Curse
-       - Time Distortion
-       - Soothing Starlight
-       - Singularity
-       - Meteor
+       #- Zodiac Curse
+       #- Time Distortion
+       #- Soothing Starlight
+       #- Singularity
+       #- Meteor
        - Gamma Ray
-       - Skycaller
-       - Summon Meteorman
-       - Summon 4DHypercube
+       #- Skycaller
+       #- Summon Meteorman
+       #- Summon 4DHypercube
     descr: A wizard mastering the powers of the cosmos.
 
   Pyromancer:

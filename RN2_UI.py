@@ -201,6 +201,7 @@ class RN_UI_Class():
         self.select_color = self.ui_colors['select_color']
         self.screen.font = pygame.font.Font('assets/lucon.ttf', 20)
 
+
     @staticmethod
     def wait_for_keypress():
         pygcurse.waitforkeypress()
@@ -254,6 +255,12 @@ class RN_UI_Class():
         else:
             self.menutext(x, y, s, fgcolor=fgcolor)
 
+    def right_menu_header(self, s):
+        if len(s) > 23:
+            return
+        spacing = int((23 - len(s))/2)
+        self.menutext(51, 0, spacing * u"═" + s + spacing * u"═")
+
     def blank(self, area):
         for y in range (area[3]):
             self.text(area[0], y+area[1], " "*area[2], bgcolor=self.gradient(y+area[1], self.menu_base_color, self.menu_gradient))
@@ -291,7 +298,7 @@ class RN_UI_Class():
 
     def print_legend(self, unit_list, legend_list):
         self.blank(self.right_menu_coords)
-        self.menutext(59, 0, "LEGEND:")
+        self.right_menu_header("LEGEND")
         line_count = 1
         self.menutext(51, line_count, "UNITS:")
         line_count += 1
@@ -310,6 +317,7 @@ class RN_UI_Class():
 
     def print_stats(self, unit):
         self.blank(self.right_menu_coords)
+        self.right_menu_header("CHARACTER")
         stats_list = ["attack", "defense", "magic", "resistance", "agility", "move"]
         self.menutext(51, 1, unit.name + ":")
         self.menutext(51, 3, self.fix_spacing("HP:" + str(unit.hp) + "/" + str(unit.maxhp), 23, ":"))
@@ -349,7 +357,7 @@ class RN_UI_Class():
     
     def show_help(self):
         self.blank(self.right_menu_coords)
-        self.menutext(51, 1, "HELP:")
+        self.right_menu_header("HELP")
         self.menutext(51, 3, "arrow keys = move")
         self.menutext(51, 4, "a = basic attack")
         self.menutext(51, 5, "s = use magic/skills")
@@ -370,7 +378,7 @@ class RN_UI_Class():
 
     def draw_skills_menu(self, skills, skill_index):
         self.blank(self.right_menu_coords)
-        self.menutext(59, 0, "SKILLS")
+        self.right_menu_header("SKILLS")
 
         for i, skill in enumerate(skills):
             self.menutext(51, (1+i), 'F' + str(i+1) + ': ')
@@ -571,7 +579,7 @@ class RN_UI_Class():
 
         self.blank(self.right_menu_coords)
         num_chars = 10
-        self.menutext(58, 0, "UNIT LIST")
+        self.right_menu_header("UNIT LIST")
         self.menutext(51, 1, "Turn " + str(turn_count) + "        " + str(len(battle_menu_list)) + " units")
         visible_index = battle_index - v_top
         if visible_index >= num_chars:
@@ -661,7 +669,7 @@ class RN_UI_Class():
         self.blank((self.right_menu_coords))
 
         center_space = (20 - len(skill.name)) / 2
-        self.right_menu_text(59, 0, 'TARGET')
+        self.right_menu_header("TARGET")
         self.right_menu_text(51, 2, (" "*center_space) + '--{0}--'.format(skill.name), fgcolor=self.textcolors['skill'])
 
         line_to_print = 4
@@ -734,7 +742,7 @@ class RN_UI_Class():
 
         self.blank(self.right_menu_coords)
         center_space = (20 - len(skill.name)) / 2
-        self.menutext(59, 0, 'TARGET')
+        self.right_menu_header("TARGET")
         self.menutext(51, 2, (" "*center_space) + '--{0}--'.format(skill.name), fgcolor=self.textcolors['skill'])
 
         line_to_print = 4

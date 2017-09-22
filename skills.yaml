@@ -82,15 +82,16 @@ Summon 4DHypercube:
 
 Gravity Surge:
   attack_stat: magic
-  range: 5
-  aoe_size: 1
+  range: 1
+  aoe_size: 2
+  aoe_type: cone
   damage:
     num_dice: 2
     dice_size: 4
   move_effects:
     - type: push
       origin: target
-      distance: 3
+      distance: 5
   mp: 0
   prompt: Damage enemies and pushes 3 spaces from spell origin.
   animation: surge
@@ -476,8 +477,9 @@ Rock Toss:
 
 Hornet Swarm:
   targets_empty: true
+  aoe_type: cone
   range: 1
-  aoe_size: 7
+  aoe_size: 5
   add_minion:
     - Hornet
     - Hornet
@@ -737,7 +739,8 @@ Swarm:
 Talon Frenzy:
   attack_stat: magic
   range: 0
-  aoe_size: 3
+  aoe_type: cone
+  aoe_size: 2
   damage:
     num_dice: 2
     dice_size: 6
@@ -899,7 +902,7 @@ Venomous Bite:
 Sting:
   attack_stat: attack
   range: 1
-  aoe_size: 0
+  aoe_size: 1
   targets:
     enemy:
       damage:
@@ -911,6 +914,9 @@ Sting:
               value: -2
             - stat: attack
               value: -2
+    self:
+      damage:
+        fixed_damage: 1
   mp: 0
   prompt: Basic attack.
   animation: bite
@@ -1159,7 +1165,7 @@ Summon Skelesaur:
 
 Summon Serpents:
   targets_empty: true
-  range: 5
+  range: 3
   aoe_size: 6
   add_unit:
     - Serpent

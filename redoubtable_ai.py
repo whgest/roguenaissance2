@@ -23,9 +23,9 @@ class ThreatMap:
 
     def add_threat(self, threat, bmap):
         skills = [self.skills[s] for s in threat.skillset]
-        skills.sort(key=lambda x: (x.range + x.aoe_size) / max(1, x.mp), reverse=True)
+        skills.sort(key=lambda x: min(12, (x.range + x.aoe_size)) / max(1, x.mp), reverse=True)
 
-        # todo: pretty big eff hit here
+        # todo: catastrophic eff hit here
         threat_tiles = RN2_battle_logic.get_valid_tiles(threat.coords, threat.move, skills[0], bmap, use_aoe=True)
         for t in threat_tiles:
             if self.tmap[t[0]][t[1]] > 0:
@@ -175,6 +175,9 @@ class SimulationHandler(object):
         self.skills = skills
         self.threat_map = None
 
+        self.total_time_creating_threat_maps = 0
+        self.times_recreating_threat_map = 0
+
         simulated_battle = RN2_battle.SimulatedBattle({}, battle.actor_data, {}, copy.deepcopy(battle.bmap), {})
 
         simulated_battle.all_living_units = copy.deepcopy(battle.all_living_units)
@@ -221,12 +224,14 @@ class SimulationHandler(object):
 
             self.simulated_battle.execute_skill(self.simulated_battle.active, chosen_skill, affected_tiles, target_tile)
 
-        #print 'scoring', chosen_skill, '@', target_tile
-        return self.score_battle_state(self.simulated_battle, self.simulated_battle.active)
+        has_move_effects = chosen_skill and (chosen_skill.targets.enemy.move_effects or chosen_skill.targets.friendly.move_effects or chosen_skill.targets.self.move_effects)
+        recreate_threat_map = chosen_skill and (has_move_effects or chosen_skill.add_unit or chosen_skill.add_minion)
 
-    def score_battle_state(self, simulated_battle, active):
+        return self.score_battle_state(self.simulated_battle, self.simulated_battle.active, recreate_threat_map)
+
+    def score_battle_state(self, simulated_battle, active, recreate_threat_map=False):
         """
-        Based on passed parameters that weight criteria, score a hypothetical battle state for favorability to the AI
+        Based on passed parameters that weight criteria, score a hypothetical battle state for favorabilitiousness to the AI
         calling this function
         :return: A score
         """
@@ -236,7 +241,12 @@ class SimulationHandler(object):
         allies = [u for u in simulated_battle.all_living_units if u.is_ally_of(active) and u.id != active.id]
         enemies = [u for u in simulated_battle.all_living_units if u.is_hostile_to(active)]
 
-        self.threat_map = self.create_threat_map(enemies)
+        if recreate_threat_map or not self.threat_map:
+            start = timer()
+            self.threat_map = self.create_threat_map(enemies)
+            end = timer()
+            self.total_time_creating_threat_maps += (end-start)
+            self.times_recreating_threat_map += 1
 
         for enemy in enemies:
             score += active.ai.weights.enemy.calculate(enemy, self.threat_map) * active.ai.weights.get_priority_for_unit(enemy)
@@ -297,7 +307,8 @@ class RedoubtableAi(object):
 
         advance_to = sorted(enemy_list, key=lambda x: self.weights.get_priority_for_unit(x['unit']), reverse=True)[0]
 
-        advance_path = advance_to['path'][:self.actor.move]
+        # ensure no invalid tiles in advance path
+        advance_path = list(set(advance_to['path'][:self.actor.move]) & set(move_range))
         if advance_path:
             eval_move = self.evaluate_move(advance_path, self.actor,
                                            simulation.threat_map)
@@ -376,10 +387,9 @@ class RedoubtableAi(object):
                         simulation.reset()
 
                     # simulate action with actor in aoe, if such an action is possible
-                    # todo: eff: filter out moving to every possible square targeting self with harmful abilities
                     move_options_for_target_and_skill_inside_aoe = set(move_options_for_target_and_skill) & set(affected_tiles)
 
-                    if len(move_options_for_target_and_skill_inside_aoe) and not skill.targets.self.ignored and not skill.targets_empty:
+                    if len(move_options_for_target_and_skill_inside_aoe) and not skill.targets.self.ignored and not skill.targets_empty and not skill.targets.self.is_harmful:
                         score = simulation.simulate_move(skill, target_option, affected_tiles, include_actor=True)
 
                         eval_move = self.evaluate_move(move_options_for_target_and_skill_inside_aoe, self.actor, simulation.threat_map)
@@ -393,8 +403,15 @@ class RedoubtableAi(object):
                         possible_moves.append(possible_move)
                         simulation.reset()
 
+                        # printme = {}
+                        # keyfunc = lambda x: x['skill'].ident
+                        # for k, g in itertools.groupby(possible_moves, keyfunc):
+                        #     printme[k] = list(g)
+                        # print printme
+
         end = timer()
-        print 'evaluate run time:', (end - start), 'seconds:', len(possible_moves), 'results.\n'
+        print 'evaluate run time:', (end - start), 'seconds:', len(possible_moves), 'results.'
+        print 'total_time_creating_threat_maps', simulation.total_time_creating_threat_maps, simulation.times_recreating_threat_map, 'times', simulation.total_time_creating_threat_maps/simulation.times_recreating_threat_map, 'per run'
         return possible_moves
 
     def evaluate_move(self, tiles_to_evaluate, actor, threat_map):
