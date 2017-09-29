@@ -252,13 +252,13 @@ class Animation():
             self.flash_tiles(self.tiles, [(-50,-50,125), (125,-50,-50)], 4)
 
         elif self.anim_id == "push":
-            self.projectile(self.attacker, self.tiles, ["-", "\\", "|", "/" ], ["white"])
+            self.projectile(self.attacker, self.tiles, ["-", "\\", "|", "/"], ["white"])
             self.game.play_sound("bighit")
             self.hit(self.tiles, ["*", "o", "O"], ["white"])
             return
 
         elif self.anim_id == "heal":
-            self.game.play_sound("heal")
+            self.game.play_sound("holy2")
             self.flash_tiles(self.tiles, [(200, 200, -25), (200, 200, 200)], 3)
 
         elif self.anim_id == "time":

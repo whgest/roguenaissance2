@@ -34,6 +34,7 @@ sound:
   miss: miss.wav
   slowdown: slowdown.wav
   longburn: longburn.wav
+  holy2: holy2.wav
 
 music:
   silence: silence.ogg

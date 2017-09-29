@@ -13,10 +13,20 @@ class ThreatMap:
     def __init__(self, battle_map, skills):
         self.tmap = []
         self.skills = skills
+        self.battle_map = battle_map
+
+        self.stored_values = {}
+
+        self.reset()
+
+        self.dynamic_c = 0
+
+    def reset(self):
+        self.tmap = []
         for x in range(50):
             self.tmap.append([])
             for y in range(25):
-                if not battle_map[x][y].terrain.movable:
+                if not self.battle_map[x][y].terrain.movable:
                     self.tmap[x].append(0)
                 else:
                     self.tmap[x].append(1)
@@ -25,8 +35,21 @@ class ThreatMap:
         skills = [self.skills[s] for s in threat.skillset]
         skills.sort(key=lambda x: min(12, (x.range + x.aoe_size)) / max(1, x.mp), reverse=True)
 
-        # todo: catastrophic eff hit here
-        threat_tiles = RN2_battle_logic.get_valid_tiles(threat.coords, threat.move, skills[0], bmap, use_aoe=True)
+        if self.stored_values.get(threat.coords) and self.stored_values[threat.coords].get(threat.move) and self.stored_values[threat.coords][threat.move].get(skills[0].range):
+            threat_tiles = self.stored_values[threat.coords][threat.move][skills[0].range]
+            self.dynamic_c += 1
+        else:
+            threat_tiles = RN2_battle_logic.get_valid_tiles(threat.coords, threat.move, skills[0], bmap, use_aoe=True)
+
+            if not self.stored_values.get(threat.coords):
+                self.stored_values[threat.coords] = {}
+                self.stored_values[threat.coords][threat.move] = {}
+
+            elif not self.stored_values[threat.coords].get(threat.move):
+                self.stored_values[threat.coords][threat.move] = {}
+
+            self.stored_values[threat.coords][threat.move][skills[0].range] = threat_tiles
+
         for t in threat_tiles:
             if self.tmap[t[0]][t[1]] > 0:
                 self.tmap[t[0]][t[1]] += 1
@@ -155,6 +178,7 @@ class AiWeightsDefault(object):
 
         # scores to prioritize units within above categories
         self.is_summon = 0.5
+        self.is_minion = 0.2
         self.can_heal = 1.5
         self.can_summon = 1.5
         # todo: for summons: summon already exists
@@ -164,6 +188,7 @@ class AiWeightsDefault(object):
         priority_modifier *= self.is_summon if unit.summoned_by else 1
         priority_modifier *= self.can_heal if [self.skills[s] for s in unit.skillset if self.skills[s].targets.friendly.damage.get_average_damage(unit) < 1] else 1
         priority_modifier *= self.can_summon if [self.skills[s] for s in unit.skillset if self.skills[s].add_unit] else 1
+        priority_modifier *= self.is_minion if unit.is_minion else 1
 
         return priority_modifier
 
@@ -243,7 +268,7 @@ class SimulationHandler(object):
 
         if recreate_threat_map or not self.threat_map:
             start = timer()
-            self.threat_map = self.create_threat_map(enemies)
+            self.create_threat_map(enemies)
             end = timer()
             self.total_time_creating_threat_maps += (end-start)
             self.times_recreating_threat_map += 1
@@ -265,11 +290,13 @@ class SimulationHandler(object):
         return score
 
     def create_threat_map(self, enemies):
-        threat_map = ThreatMap(self.simulated_battle.bmap, self.skills)
-        for enemy in enemies:
-            threat_map.add_threat(enemy, self.simulated_battle.bmap)
+        if not self.threat_map:
+            self.threat_map = ThreatMap(self.simulated_battle.bmap, self.skills)
+        else:
+            self.threat_map.reset()
 
-        return threat_map
+        for enemy in enemies:
+            self.threat_map.add_threat(enemy, self.simulated_battle.bmap)
 
 
 class RedoubtableAi(object):
@@ -389,7 +416,7 @@ class RedoubtableAi(object):
                     # simulate action with actor in aoe, if such an action is possible
                     move_options_for_target_and_skill_inside_aoe = set(move_options_for_target_and_skill) & set(affected_tiles)
 
-                    if len(move_options_for_target_and_skill_inside_aoe) and not skill.targets.self.ignored and not skill.targets_empty and not skill.targets.self.is_harmful:
+                    if len(move_options_for_target_and_skill_inside_aoe) and not skill.targets.self.ignored and not skill.targets_empty and not (skill.targets.self.is_harmful and not targets_in_aoe):
                         score = simulation.simulate_move(skill, target_option, affected_tiles, include_actor=True)
 
                         eval_move = self.evaluate_move(move_options_for_target_and_skill_inside_aoe, self.actor, simulation.threat_map)
@@ -403,15 +430,10 @@ class RedoubtableAi(object):
                         possible_moves.append(possible_move)
                         simulation.reset()
 
-                        # printme = {}
-                        # keyfunc = lambda x: x['skill'].ident
-                        # for k, g in itertools.groupby(possible_moves, keyfunc):
-                        #     printme[k] = list(g)
-                        # print printme
-
         end = timer()
         print 'evaluate run time:', (end - start), 'seconds:', len(possible_moves), 'results.'
         print 'total_time_creating_threat_maps', simulation.total_time_creating_threat_maps, simulation.times_recreating_threat_map, 'times', simulation.total_time_creating_threat_maps/simulation.times_recreating_threat_map, 'per run'
+        print 'stored values used {} times.\n'.format(simulation.threat_map.dynamic_c)
         return possible_moves
 
     def evaluate_move(self, tiles_to_evaluate, actor, threat_map):

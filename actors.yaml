@@ -207,6 +207,7 @@ actors:
     resistance: 0
     agility: 0
     move: 7
+    is_minion: true
     skillset:
       - Sting
     descr: A stinging insect.

@@ -167,11 +167,11 @@ class Actor(object):
         self.hp = int(getattr(self, 'base_maxhp'))
         self.mp = self.set_base_mp()
         self.coords = 0
-        self.is_boss = False
         self.death_animation = data.get('death_animation', 'deathanim')
         self.name = name
         self.team_id = 0
         self.is_dead = 0
+        self.is_minion = data.get('is_minion', False)
 
         self.ai_class = redoubtable_ai.RedoubtableAi
 
@@ -513,6 +513,19 @@ class DrainDamage(StandardDamage):
         return inflicted_damage
 
 
+class SharedDamage(StandardDamage):
+    def __init__(self, data, ident, attack_stat, defense_stat):
+        StandardDamage.__init__(self, data, ident, attack_stat, defense_stat)
+        self.name = ident
+        self.type = "shared"
+
+    def roll_damage(self, attacker):
+        inflicted_damage = StandardDamage.roll_damage(self, attacker)
+        attacker.inflict_damage_or_healing(inflicted_damage, self.name)
+
+        return inflicted_damage
+
+
 class LineAttack():
     def get_next_aoe_range(self, all_tiles, edges, caster_loc):
         def negative_coords(coords):
@@ -593,7 +606,8 @@ AOE_TYPES = {
 
 DAMAGE_TYPES = {
     'standard': StandardDamage,
-    'drain': DrainDamage
+    'drain': DrainDamage,
+    'shared': SharedDamage
 }
 
 DEFAULT_DEFENSE_STATS = {

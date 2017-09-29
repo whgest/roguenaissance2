@@ -264,14 +264,17 @@ class Battle(object):
             self.bmap[unit.coords[0]][unit.coords[1]].actor = unit
             unit.name = name
 
-            if unit.summoned_by and unit.summoned_by.ai == "player":
-                unit.ai = "player"
-            else:
-                unit.ai = unit.ai_class(self, unit, self.skills)
+            self.initialize_unit_ai(unit)
 
             self.turn_tracker.add_unit(unit)
             self.all_living_units.append(unit)
             self.event.add_event(RN2_event.AddUnit(unit))
+
+    def initialize_unit_ai(self, unit):
+        if unit.summoned_by and unit.summoned_by.ai == "player":
+            unit.ai = "player"
+        else:
+            unit.ai = unit.ai_class(self, unit, self.skills)
 
     def get_allies_of(self, actor):
         return list([x for x in self.all_living_units if x.team_id == actor.team_id and x != actor])
@@ -443,3 +446,6 @@ class SimulatedBattle(Battle):
         import dummy_ui
         Battle.add_unit(self, name, loc, team_id, summoner)
         self.all_living_units[-1].event = dummy_ui.DummyUi()
+
+    def initialize_unit_ai(self, unit):
+        pass

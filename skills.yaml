@@ -479,7 +479,7 @@ Hornet Swarm:
   targets_empty: true
   aoe_type: cone
   range: 1
-  aoe_size: 5
+  aoe_size: 7
   add_minion:
     - Hornet
     - Hornet
@@ -902,21 +902,20 @@ Venomous Bite:
 Sting:
   attack_stat: attack
   range: 1
-  aoe_size: 1
+  aoe_size: 0
   targets:
     enemy:
+      damage_type: shared
       damage:
         fixed_damage: 1
       status_effects:
         - type: Confound
+          duration: 2
           modifiers:
             - stat: magic
               value: -2
             - stat: attack
               value: -2
-    self:
-      damage:
-        fixed_damage: 1
   mp: 0
   prompt: Basic attack.
   animation: bite

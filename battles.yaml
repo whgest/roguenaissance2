@@ -170,7 +170,7 @@
   player_start: 30,23
 
   units:
-    - ident: Astromancer
+    - ident: Pyromancer
       loc: 25,5
       team_id: 2
     - ident: Freezefrog
@@ -206,7 +206,7 @@
 
   units:
     -
-      ident: Astromancer
+      ident: Pyromancer
       loc: 21,12
       team_id: 1
     -
