@@ -84,10 +84,12 @@ class Game(object):
     def new_game(self, class_name, name):
         self.saved_data = SaveGame({'saved_character': {'class_name': class_name, 'name': name}})
         self.persistent_actor = self.saved_data.saved_character
+        self.persistent_actor.score = self.saved_data.score
 
     def load_saved_game(self, saved_data):
         self.saved_data = SaveGame(saved_data)
         self.persistent_actor = self.saved_data.saved_character
+        self.persistent_actor.score = self.saved_data.score
 
     def auto_save(self):
         fin = open(self.saved_data.saved_character.name + ".sav", 'w')
@@ -164,14 +166,14 @@ def main():
     #test mode
     game = Game()
     #game.sound_handler.mute_switch = True
-    game.new_game('Terramancer', "HARDANIUS")
-    game.init_battle(3)
+    game.new_game('Astromancer', "HARDANIUS")
+    game.init_battle(1)
     exit()
 
     while 1:
         game = Game()
         done = False
-        game.sound_handler.mute_switch = True
+        #game.sound_handler.mute_switch = True
         game.sound_handler.play_music("title")
         load = False
         hero = None
@@ -197,17 +199,21 @@ def main():
             game.ui.display_intro(game.text["battle" + str(game.saved_data.current_battle)])
             victory = game.init_battle(game.saved_data.current_battle)
             if not victory:
+                game.sound_handler.play_music("gameover")
                 retry = game.ui.display_game_over(game.maps["gameover"], game.battles[game.saved_data.current_battle]['tips'], game.input, game.sound_handler)
                 if not retry:
                     break
                 else:
                     continue
+
             game.saved_data.current_battle += 1
             if game.saved_data.current_battle > game.num_battles:
                 game.sound_handler.play_music("ending")
                 game.ui.display_ending(game.input, game.saved_data, game.text['ending'])
                 break
+
             game.auto_save()
+
 
 
 if __name__ == "__main__":

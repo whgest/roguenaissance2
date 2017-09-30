@@ -1001,8 +1001,14 @@ class RN_UI_Class():
     def get_hero_name(self, y):
         self.text(2, y, " "*19, bgcolor="white")
         self.screen.cursor = (2, y)
-        hero_name = self.screen.input(maxlength=17, minlength=3,
-                                      fgcolor="black", bgcolor="white", whitelistchars=string.ascii_letters)
+        done = False
+        while not done:
+            self.screen.cursor = (2, y)
+            hero_name = self.screen.input(maxlength=17,
+                                          fgcolor="black", bgcolor="white", whitelistchars=string.ascii_letters)
+            if len(hero_name) > 2:
+                break
+
         return hero_name.title()
 
     def get_saved_games(self):
@@ -1060,15 +1066,15 @@ class RN_UI_Class():
 
         self.title_text(10, 4, "ALDEBARAN ACADEMY FINAL EXAM SCORE:")
         sleep(1)
-        self.title_text(10, 8, "TURNS TAKEN:                         " + str(saved_data.score['turns_taken']), fgcolor='yellow')
+        self.title_text(10, 8, "TURNS TAKEN:                         " + str(saved_data.score.turns_taken), fgcolor=self.textcolors['bad_status'])
         sleep(1)
-        self.title_text(10, 9, "PERSONAL DAMAGE RECIEVED:            " + str(saved_data.score['damage_taken']), fgcolor='yellow')
+        self.title_text(10, 9, "PERSONAL DAMAGE RECIEVED:            " + str(saved_data.score.damage_taken), fgcolor=self.textcolors['bad_status'])
         sleep(1)
-        self.title_text(10, 10, "ENEMIES SLAIN:                       " + str(saved_data.score['enemies_killed']), fgcolor='aqua')
-        sleep(3)
-        score = 500 - (saved_data.score['turns_taken'] * 4.5) - (saved_data.score['damage_taken'] * 2) + (saved_data.score['enemies_killed'] * 10)
+        self.title_text(10, 10, "ENEMIES SLAIN:                       " + str(saved_data.score.enemies_killed), fgcolor=self.textcolors['good_status'])
+        sleep(2)
+        score = 500 - (saved_data.score.turns_taken * 4.5) - (saved_data.score.damage_taken * 2) + (saved_data.score.enemies_killed * 10)
         self.title_text(10, 18, "FINAL SCORE:                         " + str(score))
-        sleep(3)
+        sleep(2)
         grade = "F"
         if score < 200:
             grade = "D"
@@ -1080,7 +1086,7 @@ class RN_UI_Class():
             grade = "A"
         if score > 450:
             grade = "S"
-        self.title_text(10, 20, "GRADE:                                 " + grade, fgcolor="lime")
+        self.title_text(10, 20, "GRADE:                                 " + grade, fgcolor=self.textcolors['heal'])
         try:
             fin = open("highscores.dat", "a")
         except IOError:
@@ -1090,7 +1096,7 @@ class RN_UI_Class():
         fin.close()
 
         sleep(1)
-        self.text_wrapper(ending_text, 3, 30, fgcolor="yellow")
+        self.text_wrapper(ending_text, 3, 30, fgcolor=self.textcolors['bad_status'])
 
         while 1:
             self.screen.update()
@@ -1111,7 +1117,7 @@ class RN_UI_Class():
         self.title_text(10, 4, "High Scores:")
 
         if not highscores:
-            self.title_text(10, 8, "No high scores yet.", fgcolor="yellow")
+            self.title_text(10, 8, "No high scores yet.", fgcolor=self.textcolors['bad_status'])
         else:
             highscores = highscores.splitlines()
             line_count = 0
@@ -1128,19 +1134,11 @@ class RN_UI_Class():
                 line_count += 1
                 if line_count > 40:
                     break
+            self.screen.update()
 
         while 1:
-            self.screen.update()
             command = input()
             if command:
                 break
 
         return
-
-# def main():
-#     RN_UI = RN_UI_Class()
-#     RN_UI.draw_UI()
-#     pygcurse.waitforkeypress()
-#
-# if __name__ == "__main__":
-#     main()

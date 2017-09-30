@@ -3,13 +3,13 @@ actors:
     character: "@"
     ai: player
     maxhp: 52
-    maxmp: 90
+    maxmp: 9
     weapon: white sword
     armor: astral regalia
     attack: 17
     defense: 17
     magic: 20
-    resistance: 18
+    resistance: 0
     agility: 16
     move: 6
     death_animation: playerdeath
@@ -17,17 +17,17 @@ actors:
       - Slow
       - Lava
     skillset:
-       #- White sword
+       - White sword
        - Gravity Surge
-       #- Zodiac Curse
-       #- Time Distortion
-       #- Soothing Starlight
-       #- Singularity
-       #- Meteor
+       - Zodiac Curse
+       - Time Distortion
+       - Soothing Starlight
+       - Singularity
+       - Meteor
        - Gamma Ray
-       #- Skycaller
-       #- Summon Meteorman
-       #- Summon 4DHypercube
+       - Skycaller
+       - Summon Meteorman
+       - Summon 4DHypercube
     descr: A wizard mastering the powers of the cosmos.
 
   Pyromancer:
@@ -66,7 +66,7 @@ actors:
     maxmp: 10
     weapon: obsidian sword
     armor: brigandine
-    attack: 19
+    attack: 20
     defense: 20
     magic: 19
     resistance: 18
@@ -121,8 +121,8 @@ actors:
     agility: 11
     move: 5
     skillset:
-      - Starshards
-      - Cosmic Barrage
+      - Hypersurge
+      - Space Compression
     descr: A mind-shredding shard of extradimensional geometry.
 
   Snowball:
@@ -230,7 +230,7 @@ actors:
     descr: A long-dead dinosaur.
 
 
-  Lichdrake:
+  Lich:
     character: L
     color: red
     ai: damage
@@ -308,7 +308,7 @@ actors:
     magic: 0
     resistance: 11
     agility: 20
-    move: 9
+    move: 8
     immunities:
       - Radiation
     skillset:
@@ -359,7 +359,7 @@ actors:
     attack: 17
     defense: 12
     magic: 10
-    resistance: 14
+    resistance: 12
     agility: 17
     move: 5
     skillset:
@@ -402,7 +402,7 @@ actors:
   Belshazzar:
     character: "%"
     ai: mage
-    maxhp: 55
+    maxhp: 0 #55
     maxmp: 10
     attack: 25
     defense: 12
@@ -420,6 +420,6 @@ actors:
       - Poisonbolt
       - Annihilate
       - Summon Serpents
-      #- Summon Lichdrake
+      - Summon Lich
     descr: An insane necromancer.
 

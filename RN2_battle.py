@@ -16,14 +16,14 @@ import RN2_event
 import RN2_battle_triggers
 
 PLAYER_AI = "player"
-DELAY_BETWEEN_TURNS = 1000
+DELAY_BETWEEN_TURNS = 50
 TURN_MARKER = 'turn_marker'
 
 
 class TurnTracker:
     def __init__(self, units):
         self.initiative_list = []
-        self.turn_count = 0
+        self.turn_count = 1
         self.units = units
         self.top_of_the_order = None
         self.has_rolled_initiative = False
@@ -141,6 +141,8 @@ class Battle(object):
             self.resolve_battle_triggers()
 
             if self.check_victory_conditions():
+                if self.persistent_actor:
+                    self.persistent_actor.score.turns_taken += self.turn_tracker.turn_count
                 return True
             self.active = self.turn_manager()
 
@@ -191,21 +193,21 @@ class Battle(object):
 
     def clear_killed(self):
         to_remove = []
+
         for unit in self.all_living_units:
             if unit.hp <= 0 or unit.is_dead:
                 for summon in [u for u in self.all_living_units if u.summoned_by == unit]:
-                    summon.kill_actor()
-                    self.event.add_event(RN2_event.KillUnit(summon))
                     to_remove.append(summon)
-                self.event.add_event(RN2_event.KillUnit(unit))
                 to_remove.append(unit)
 
+                if self.persistent_actor and unit.team_id != 1:
+                    self.persistent_actor.score.enemies_killed += 1
+
         for unit in to_remove:
-            try:
-                self.all_living_units.remove(unit)
-                self.remove_unit(unit)
-            except ValueError:
-                self.remove_unit(unit)
+            unit.kill_actor()
+            self.event.add_event(RN2_event.KillUnit(unit))
+            self.all_living_units.remove(unit)
+            self.remove_unit(unit)
 
     def turn_manager(self):
         while 1:
@@ -335,6 +337,9 @@ class Battle(object):
 
         target.inflict_damage_or_healing(inflicted_damage, skill_name)
 
+        if self.persistent_actor and target.id == 1 and inflicted_damage > 0:
+            self.persistent_actor.score.damage_taken += inflicted_damage
+
         for status_effect in skill_target_type_effect.status_effects:
             target.apply_status(status_effect)
 
@@ -382,7 +387,7 @@ class Battle(object):
 
     def validate_ai_turn(self, e, skill, target, path):
         destination = path[-1] if len(path) else e.coords
-        print '{0} with HP {5}, MP {6}, at {1} moves to tile {4} and chooses skill {2} targeting tile {3}.'.format(e, e.coords, skill, target, destination, e.hp, e.mp)
+        print '{0} with HP {5}, MP {6}, at {1} moves to tile {4} and chooses skill {2} targeting tile {3}.\n'.format(e, e.coords, skill, target, destination, e.hp, e.mp)
 
         if target:
             target_tile = self.bmap[target[0]][target[1]]

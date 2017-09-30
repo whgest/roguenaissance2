@@ -2,8 +2,7 @@
   intro: battle1
   map: tunnel
   music:
-    - battle1a
-    - battle1b
+    - feld3
 
   player_start: 15,24
 
@@ -45,7 +44,7 @@
   triggers:
     - conditions:
         - condition_type: is_turn
-          condition_value: 0
+          condition_value: 1
       effects:
         - effect_type: add_units
           effect_value:
@@ -54,7 +53,7 @@
 
     - conditions:
         - condition_type: is_turn
-          condition_value: 3
+          condition_value: 4
       effects:
         - effect_type: add_units
           effect_value:
@@ -88,7 +87,6 @@
   map: water
   music:
     - battle2a
-    - battle2b
 
   player_start: 42,22
   units:
@@ -126,7 +124,7 @@
   triggers:
     - conditions:
         - condition_type: is_turn
-          condition_value: 0
+          condition_value: 1
       effects:
         - effect_type: add_units
           effect_value:
@@ -155,11 +153,11 @@
     conditions:
       - condition_type: on_goal_tile
 
-    tips:
-    - Clustered enemies can be crushed with a spell featuring a wide area of effect.
-    - Your strongest spell can only be cast with full MP, but devastates all enemy units.
-    - Summoned monsters have skills too, but they usually need a turn or two to charge up enough MP to use them.
-    - All classes have a defensively oriented summon. Pyromancers and Astromancers also have an offensive summon, and Terramancers a healing summon.
+  tips:
+  - Clustered enemies can be crushed with a spell featuring a wide area of effect.
+  - Your strongest spell can only be cast with full MP, but devastates all enemy units.
+  - Summoned monsters have skills too, but they usually need a turn or two to charge up enough MP to use them.
+  - All classes have a defensively oriented summon. Pyromancers and Astromancers also have an offensive summon, and Terramancers a healing summon.
 
 3:
   intro: battle3
@@ -170,7 +168,7 @@
   player_start: 30,23
 
   units:
-    - ident: Pyromancer
+    - ident: Belshazzar
       loc: 25,5
       team_id: 2
     - ident: Freezefrog
@@ -180,16 +178,16 @@
   triggers:
     - conditions:
        - condition_type: is_turn
-         condition_value: 0
+         condition_value: 1
       effects:
         - effect_type: add_units
           effect_value:
             - 0
 
-#  victory_condition:
-#    conditions:
-#      - condition_type: unit_defeated
-#        condition_value: Belshazzar
+  victory_condition:
+    conditions:
+      - condition_type: unit_defeated
+        condition_value: Belshazzar
 
   tips:
     - Belshazzar's minions can be pushed or pulled into lava for an instant kill, but Belshazzar himself will not be felled so easily (neither will you!).
@@ -200,18 +198,14 @@
 4:
   intro: battle1
   map: bridge
+  player_start: 25,12
   music:
     - battle1a
-    - battle1b
 
   units:
     -
-      ident: Pyromancer
-      loc: 21,12
-      team_id: 1
-    -
-      ident: Freezefrog
-      loc: 23,12
+      ident: Dire roach
+      loc: 1,12
       team_id: 2
 #    -
 #      ident: Rabid duckbunny
@@ -235,23 +229,13 @@
 #      team_id: 2
 
   triggers:
-    - condition:
-        trigger_type: turn
-        trigger_condition: 1
-      effect:
-        type: add_mobs
-        ids:
-          - 0
-          - 1
-          - 2
-          - 3
-          - 4
-          - 5
-
-    - condition:
-        trigger_type: on_goal_tile
-      effect:
-        type: victory
+    - conditions:
+       - condition_type: is_turn
+         condition_value: 1
+      effects:
+        - effect_type: add_units
+          effect_value:
+            - 0
 
   tips:
     - Good luck suckaaaaa

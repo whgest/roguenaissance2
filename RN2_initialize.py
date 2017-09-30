@@ -129,17 +129,7 @@ ABBREVIATIONS = {
 #             return super(ModifiableMoveAttribute, self).get_modified_value(instance)
 
 
-class AppliedStatusEffect:
-    def __init__(self, status, duration):
-        self.status_effect = status
-        self.remaining_duration = duration
 
-    @property
-    def display(self):
-        return '{0} ({1} turns)'.format(self.status_effect.type, self.remaining_duration)
-
-    def __repr__(self):
-        return self.status_effect.type + ' ' + str(self.remaining_duration)
 
 
 class Actor(object):
@@ -271,11 +261,8 @@ class Actor(object):
             self.kill_actor()
 
         if raw_damage:
-            try:
-                self.event.add_event(DamageOrHeal(self, raw_damage, skill_name))
-            except AttributeError:
-                print self, self.event
-                raise AttributeError
+            self.event.add_event(DamageOrHeal(self, raw_damage, skill_name))
+
 
     def clear_attribute_modifiers(self):
         for attr in self.MODIFIABLE_ATTRIBUTES:
@@ -417,30 +404,12 @@ class Actor(object):
 
         self.active_status_effects.remove(applied_status)
 
-        if applied_status.status_effect.is_beneficial:
-            self.event.add_event(GoodStatusEnds(self, applied_status.status_effect.name))
-        else:
-            self.event.add_event(BadStatusEnds(self, applied_status.status_effect.name))
-
-
-class Hero(Actor):
-    def __init__(self, stats, name):
-        Actor.__init__(self, stats, name)
-        self.hclass = ''
-        self.enemy = False
-        self.score = {"killed": 0,
-                      "turns": 0,
-                      "damage": 0}
-        self.current_battle = 1
-        self.class_name = "Mage"
-        self.death_animation = 'playerdeath'
-
-
-class Boss(Actor):
-    def __init__(self, stats, name):
-        Actor.__init__(self, stats, name)
-        self.death_animation = stats['deathanim']
-        self.is_boss = True
+        # only display the 'status ends' event if this was the last active effect of this type
+        if not len([s for s in self.active_status_effects if s.status_effect.type == status.type]):
+            if applied_status.status_effect.is_beneficial:
+                self.event.add_event(GoodStatusEnds(self, applied_status.status_effect.name))
+            else:
+                self.event.add_event(BadStatusEnds(self, applied_status.status_effect.name))
 
 
 class StandardDamage:
@@ -568,7 +537,7 @@ class ConeAttack():
             return coords[0] * -1, coords[1] * -1
 
         if edges:
-            last_line_tile = list(edges[-1])
+            last_line_tile = list(list(edges)[-1])
         else:
             return all_tiles, []
 
@@ -648,6 +617,19 @@ class SkillStatusEffectModifier:
     def is_beneficial(self):
         return True if self.value > 0 else False
 
+
+class AppliedStatusEffect:
+    def __init__(self, status, duration):
+        self.status_effect = status
+        self.remaining_duration = duration
+
+    @property
+    def display(self):
+        #todo: make this use the modifiers and remaining duration and use that for status menu printout
+        return '{0} ({1} turns)'.format(self.status_effect.type, self.remaining_duration)
+
+    def __repr__(self):
+        return self.status_effect.type + ' ' + str(self.remaining_duration)
 
 class SkillStatusEffect:
     def __init__(self, data, skill_ident):

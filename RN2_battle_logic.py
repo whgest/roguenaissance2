@@ -111,3 +111,10 @@ def get_valid_tiles(origin, move_range, skill, bmap, use_aoe=False):
         all_tiles.update(edges)
 
         return all_tiles
+
+# def get_all_tiles_within_distance(origin, distance):
+#     tiles = []
+#     for d in range(1, distance):
+#
+#
+#     return tiles

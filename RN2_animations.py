@@ -190,7 +190,7 @@ class Animation():
             return
 
         elif self.anim_id == "basic ranged":
-            self.projectile(self.attacker, self.tiles, [u"¤"], ["white"])
+            self.projectile(self.attacker, self.tiles, [u"¤"], ["white"], delay=50)
             self.game.play_sound("arrow")
             return
 

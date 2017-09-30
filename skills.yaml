@@ -659,10 +659,11 @@ Magnetize:
   prompt: Attract nearby enemies.
   animation: surge
 
-Starshards:
+Hypersurge:
   attack_stat: magic
-  range: 5
-  aoe_size: 1
+  range: 1
+  aoe_size: 3
+  aoe_type: cone
   damage:
     num_dice: 1
     dice_size: 6
@@ -674,19 +675,23 @@ Starshards:
   prompt: Basic attack.
   animation: dark ball
 
-Cosmic Barrage:
+Space Compression:
   attack_stat: magic
-  range: 5
+  range: 0
   aoe_size: 2
+  damage_type: shared
   damage:
     num_dice: 2
-    dice_size: 4
+    dice_size: 6
   status_effects:
     - type: Radiation
       damage: 2
       duration: 4
+  move_effects:
+    - type: push
+      distance: 6
   mp: 3
-  prompt: Highly damaging cosmic projectiles.
+  prompt: Crush spacetime.
   animation: fire ball
 
 Snowball Crush:
@@ -871,8 +876,9 @@ Bone Toss:
 
 Poison Breath:
   attack_stat: magic
-  range: 5
-  aoe_size: 2
+  range: 1
+  aoe_size: 3
+  aoe_type: cone
   damage:
     num_dice: 2
     dice_size: 6
@@ -1016,7 +1022,7 @@ Club:
     dice_size: 8
   move_effects:
     - type: push
-      distance: 1
+      distance: 4
       origin: user
   mp: 0
   prompt: Basic attack.
@@ -1025,13 +1031,13 @@ Club:
 Spore Cloud:
   attack_stat: magic
   range: 6
-  aoe_size: 0
+  aoe_size: 1
   damage:
     num_dice: 1
     dice_size: 8
   mp: 0
   prompt: Basic attack.
-  animation: basic
+  animation: poisonbolt
 
 Fungeneration:
   attack_stat: magic
@@ -1176,12 +1182,12 @@ Summon Serpents:
   prompt: Summon a plague of venomous snakes.
   animation: summon
 
-Summon Lichdrake:
+Summon Lich:
   targets_empty: true
   range: 5
   aoe_size: 0
   add_unit:
-    - Lichdrake
+    - Lich
   mp: -1
-  prompt: Summon a lichdrake to crush your foes.
+  prompt: Summon a lich to crush your foes.
   animation: summon

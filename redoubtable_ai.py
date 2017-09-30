@@ -136,7 +136,7 @@ class UnitScoreWeightAllyDefaults(UnitScoreWeightDefaults):
     def __init__(self):
         UnitScoreWeightDefaults.__init__(self)
         self.hp = 2
-        self.attack = 4
+        self.attack = 6
         self.defense = 4
         self.move = 5
         self.magic = 4
@@ -154,7 +154,7 @@ class UnitScoreWeightSelfDefaults(UnitScoreWeightDefaults):
     def __init__(self):
         UnitScoreWeightDefaults.__init__(self)
         self.hp = 30
-        self.mp = 30
+        self.mp = 40
         self.attack = 60
         self.defense = 60
         self.move = 80
@@ -334,8 +334,15 @@ class RedoubtableAi(object):
 
         advance_to = sorted(enemy_list, key=lambda x: self.weights.get_priority_for_unit(x['unit']), reverse=True)[0]
 
-        # ensure no invalid tiles in advance path
-        advance_path = list(set(advance_to['path'][:self.actor.move]) & set(move_range))
+        advance_path = advance_to['path'][:self.actor.move+1]
+
+        print advance_path, advance_to
+
+        try:
+            advance_path.remove(advance_to['unit'].coords)
+        except ValueError:
+            pass
+
         if advance_path:
             eval_move = self.evaluate_move(advance_path, self.actor,
                                            simulation.threat_map)
@@ -349,6 +356,17 @@ class RedoubtableAi(object):
 
             # all target tiles reachable by this spell, using up to full movement
             valid_target_tiles = RN2_battle_logic.get_valid_tiles(self.actor.coords, self.actor.move, skill, self.battle.bmap)
+
+            # For non standard aoes dependant on caster position. In all other cases, the position should not be
+            # considered in simulation but is required by the calculation, hence the assignment of position to (-1, -1)
+            valid_target_tiles_with_position = []
+            for t in valid_target_tiles:
+                if skill.aoe_type == 'circular':
+                    valid_target_tiles_with_position.append((t, (-1, -1)))
+                else:
+                    # todo: only works on non standard aoe skills of range 1
+                    positions = RN2_battle_logic.get_neighboring_points(t)
+                    valid_target_tiles_with_position.extend([(t, p) for p in positions if p in move_range])
 
             if skill.add_unit or skill.add_minion:
                 # for skills intended for use on an empty tile (summons only, for now)
@@ -379,18 +397,22 @@ class RedoubtableAi(object):
 
             else:
                 # for skills intended for use on a unit
-                for target_option in valid_target_tiles:
+                for target_option, position in valid_target_tiles_with_position:
+
                     # all tiles within range of this target for this skill
                     move_options_for_target_and_skill = []
 
-                    for tile in move_range:
-                        if skill and RN2_battle_logic.grid_distance(tile, target_option) > skill.range:
-                            continue
-                        else:
-                            move_options_for_target_and_skill.append(tile)
+                    if position == (-1, -1):
+                        for tile in move_range:
+                            if skill and RN2_battle_logic.grid_distance(tile, target_option) > skill.range:
+                                continue
+                            else:
+                                move_options_for_target_and_skill.append(tile)
+                    else:
+                        move_options_for_target_and_skill = [position]
 
                     affected_tiles = RN2_battle_logic.calculate_affected_area(target_option,
-                                                                              replace_this_value,
+                                                                              position,
                                                                               skill,
                                                                               simulation.simulated_battle.bmap)
 
@@ -402,13 +424,17 @@ class RedoubtableAi(object):
                     if targets_in_aoe and len(move_options_for_target_and_skill_not_in_aoe):
                         score = simulation.simulate_move(skill, target_option, affected_tiles)
 
-                        eval_move = self.evaluate_move(move_options_for_target_and_skill_not_in_aoe, self.actor, simulation.threat_map)
-                        score += self.actor.ai.weights.personal.calculate_location_score(eval_move['threat'])
+                        if position == (-1, -1):
+                            eval_move = self.evaluate_move(move_options_for_target_and_skill_not_in_aoe, self.actor, simulation.threat_map)
+                            score += self.actor.ai.weights.personal.calculate_location_score(eval_move['threat'])
+                            destination = eval_move['destination']
 
-                        #print 'score after move (out) to ', eval_move['destination'], score, '\n'
+                        else:
+                            score += self.actor.ai.weights.personal.calculate_location_score(simulation.threat_map.get_threat_for_tile(position))
+                            destination = position
 
                         possible_move = {'score': score, 'skill': skill,
-                                         'target': target_option, 'destination': eval_move['destination']}
+                                         'target': target_option, 'destination': destination}
 
                         possible_moves.append(possible_move)
                         simulation.reset()
@@ -432,8 +458,9 @@ class RedoubtableAi(object):
 
         end = timer()
         print 'evaluate run time:', (end - start), 'seconds:', len(possible_moves), 'results.'
-        print 'total_time_creating_threat_maps', simulation.total_time_creating_threat_maps, simulation.times_recreating_threat_map, 'times', simulation.total_time_creating_threat_maps/simulation.times_recreating_threat_map, 'per run'
-        print 'stored values used {} times.\n'.format(simulation.threat_map.dynamic_c)
+
+        # print 'total_time_creating_threat_maps', simulation.total_time_creating_threat_maps, simulation.times_recreating_threat_map, 'times', simulation.total_time_creating_threat_maps/simulation.times_recreating_threat_map, 'per run'
+        # print 'stored values used {} times.\n'.format(simulation.threat_map.dynamic_c)
         return possible_moves
 
     def evaluate_move(self, tiles_to_evaluate, actor, threat_map):

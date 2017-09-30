@@ -385,7 +385,6 @@ class InBattleOverview(PlayerTurnState):
         return self.cancel()
 
 
-
 class TargetSkill(PlayerTurnState):
     def __init__(self, ui, unit, bmap, player_selections, battle):
         PlayerTurnState.__init__(self, ui, unit, bmap, player_selections, battle)
@@ -576,7 +575,7 @@ class BattleController(object):
         self.ui.draw_UI()
         self.ui.set_map(battle.bmap)
         self.ui.print_map()
-        #self.init_music(battle.music[0])
+        self.init_music(battle.music[0])
 
     def update(self, state_changes):
         for change in state_changes:
