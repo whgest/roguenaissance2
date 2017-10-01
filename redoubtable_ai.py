@@ -199,13 +199,20 @@ class SimulationHandler(object):
         self.unit_states = {}
         self.skills = skills
         self.threat_map = None
+        # this is a reference to the actual unit using this AI, not a cloned simulation
+        self.actual_unit = unit
 
         self.total_time_creating_threat_maps = 0
         self.times_recreating_threat_map = 0
+        self.time_spent_resetting = 0
 
+        # start1 = timer()
         simulated_battle = RN2_battle.SimulatedBattle({}, battle.actor_data, {}, copy.deepcopy(battle.bmap), {})
+        # end1 = timer()
+        # print "Initiating battle class time:", end1-start1
 
         simulated_battle.all_living_units = copy.deepcopy(battle.all_living_units)
+
         for unit in simulated_battle.all_living_units:
             unit.event = dummy_ui.DummyUi()
             self.unit_states[unit.id] = copy.deepcopy(unit.current_state())
@@ -227,6 +234,7 @@ class SimulationHandler(object):
             for r_unit in remove_list:
                 unit_list.remove(r_unit)
 
+        start = timer()
         for unit in self.simulated_battle.all_living_units:
             self.simulated_battle.bmap.remove_unit(unit)
 
@@ -240,6 +248,8 @@ class SimulationHandler(object):
 
         self.simulated_battle.bmap.remove_unit(self.simulated_battle.active)
         self.simulated_battle.active.coords = (-1, -1)
+        end = timer()
+        self.time_spent_resetting += (end - start)
 
     def simulate_move(self, chosen_skill, target_tile, affected_tiles, include_actor=False):
         if chosen_skill:
@@ -251,6 +261,7 @@ class SimulationHandler(object):
 
         has_move_effects = chosen_skill and (chosen_skill.targets.enemy.move_effects or chosen_skill.targets.friendly.move_effects or chosen_skill.targets.self.move_effects)
         recreate_threat_map = chosen_skill and (has_move_effects or chosen_skill.add_unit or chosen_skill.add_minion)
+
 
         return self.score_battle_state(self.simulated_battle, self.simulated_battle.active, recreate_threat_map)
 
@@ -274,16 +285,16 @@ class SimulationHandler(object):
             self.times_recreating_threat_map += 1
 
         for enemy in enemies:
-            score += active.ai.weights.enemy.calculate(enemy, self.threat_map) * active.ai.weights.get_priority_for_unit(enemy)
+            score += self.actual_unit.ai.weights.enemy.calculate(enemy, self.threat_map) * self.actual_unit.ai.weights.get_priority_for_unit(enemy)
 
         #print 'score after enemies', score
 
         for ally in allies:
-            score += active.ai.weights.friendly.calculate(ally, self.threat_map) * active.ai.weights.get_priority_for_unit(ally)
+            score += self.actual_unit.ai.weights.friendly.calculate(ally, self.threat_map) * self.actual_unit.ai.weights.get_priority_for_unit(ally)
 
         #print 'score after friendly', score
 
-        score += active.ai.weights.personal.calculate(active, self.threat_map)
+        score += self.actual_unit.ai.weights.personal.calculate(active, self.threat_map)
 
         #print 'score after personal', score
 
@@ -317,8 +328,9 @@ class RedoubtableAi(object):
     def evaluate(self):
         start = timer()
         simulation = SimulationHandler(self.actor, self.battle, self.skills)
+        end2 = timer()
 
-        replace_this_value = self.actor.coords
+
         move_range = RN2_battle_logic.calculate_move_range(self.actor, self.battle.bmap)
 
         possible_moves = []
@@ -335,8 +347,6 @@ class RedoubtableAi(object):
         advance_to = sorted(enemy_list, key=lambda x: self.weights.get_priority_for_unit(x['unit']), reverse=True)[0]
 
         advance_path = advance_to['path'][:self.actor.move+1]
-
-        print advance_path, advance_to
 
         try:
             advance_path.remove(advance_to['unit'].coords)
@@ -381,7 +391,7 @@ class RedoubtableAi(object):
                             move_options_for_target_and_skill.append(tile)
 
                     affected_tiles = RN2_battle_logic.calculate_affected_area(target_option,
-                                                                              replace_this_value,
+                                                                              (-1, -1),
                                                                               skill,
                                                                               simulation.simulated_battle.bmap)
 
@@ -460,7 +470,10 @@ class RedoubtableAi(object):
         print 'evaluate run time:', (end - start), 'seconds:', len(possible_moves), 'results.'
 
         # print 'total_time_creating_threat_maps', simulation.total_time_creating_threat_maps, simulation.times_recreating_threat_map, 'times', simulation.total_time_creating_threat_maps/simulation.times_recreating_threat_map, 'per run'
-        # print 'stored values used {} times.\n'.format(simulation.threat_map.dynamic_c)
+        #
+        # print 'stored values used {} times.'.format(simulation.threat_map.dynamic_c)
+        # print 'total time resetting: {}\n'.format(simulation.time_spent_resetting)
+        print "simulation handler initiation time:", end2 - start, int((end2-start)/(end-start) * 100), '% of total runtime :('
         return possible_moves
 
     def evaluate_move(self, tiles_to_evaluate, actor, threat_map):
@@ -478,11 +491,21 @@ class RedoubtableAi(object):
     def get_action(self):
         possible_moves = self.evaluate()
 
+
         if possible_moves:
             possible_moves.sort(key=lambda x: x['score'], reverse=True)
+            print possible_moves
             chosen_action = possible_moves[0]
 
-            print possible_moves[:10]
+            possible_moves.sort(key=lambda x: x['skill'])
+            keyfunc = lambda x: x['skill']
+            options_for_each = {}
+            for k, g in itertools.groupby(possible_moves, keyfunc):
+                options_for_each[k] = list(g)
+
+            for k in options_for_each.keys():
+                if len(options_for_each[k]):
+                    print k, 'best:', options_for_each[k][0]
 
             if chosen_action.get('destination'):
                 path = pathfind((self.actor.coords[1], self.actor.coords[0]),

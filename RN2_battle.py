@@ -150,6 +150,7 @@ class Battle(object):
             if not self.active.can_act:
                 continue
 
+            self.event.add_event(RN2_event.StartTurn(self.active))
             self.update_display()
 
             self.state_check() #sanity check for agreement of unit coords and map pos
@@ -176,8 +177,8 @@ class Battle(object):
                 self.event.add_event(RN2_event.UseSkill(self.active, chosen_skill, affected_tiles))
                 self.execute_skill(self.active, chosen_skill, affected_tiles, target_tile)
 
-            self.clear_killed()
             self.update_display()
+            self.clear_killed()
 
             game_over = self.check_loss_condition()
             if game_over:
@@ -206,8 +207,10 @@ class Battle(object):
         for unit in to_remove:
             unit.kill_actor()
             self.event.add_event(RN2_event.KillUnit(unit))
+            self.update_display()
             self.all_living_units.remove(unit)
             self.remove_unit(unit)
+            self.update_display()
 
     def turn_manager(self):
         while 1:

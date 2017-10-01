@@ -47,9 +47,10 @@ music:
   battle2a: battle2a.ogg
   battle2b: battle2b.ogg
   ending: ending.ogg
-  feld3: feld3.ogg
+  feldmed: feldmed.ogg
   victory: victory.ogg
   trans: trans.ogg
   test1: groundbreaking.wav
   test2: annihilate.wav
   boss: boss.ogg
+  jig: jig.ogg

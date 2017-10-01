@@ -2,7 +2,7 @@
   intro: battle1
   map: tunnel
   music:
-    - feld3
+    - feldmed
 
   player_start: 15,24
 
@@ -86,7 +86,7 @@
   intro: battle2
   map: water
   music:
-    - battle2a
+    - jig
 
   player_start: 42,22
   units:

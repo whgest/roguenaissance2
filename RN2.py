@@ -106,14 +106,9 @@ class Game(object):
                 break
             pygame.time.Clock().tick(60)
 
-        if command in self.bindings:
-            command = self.bindings[command]
-        else:
-            return 99
-
         if command == RN2_initialize.Q_KEY:
             exit()
-        if command == "mute":
+        if command == RN2_initialize.M_KEY:
             self.sound_handler.mute_switch = not self.sound_handler.mute_switch
 
             if self.sound_handler.mute_switch:
@@ -121,7 +116,11 @@ class Game(object):
             else:
                 self.sound_handler.deactivate_mute_switch()
 
-        return command
+        if command in self.bindings:
+            command = self.bindings[command]
+            return command
+        else:
+            return 99
 
 
 class SaveData(object):
@@ -165,9 +164,9 @@ class SaveGame(SaveData):
 def main():
     #test mode
     game = Game()
-    #game.sound_handler.mute_switch = True
+    game.sound_handler.mute_switch = True
     game.new_game('Astromancer', "HARDANIUS")
-    game.init_battle(1)
+    game.init_battle(3)
     exit()
 
     while 1:

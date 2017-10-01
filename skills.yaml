@@ -83,7 +83,7 @@ Summon 4DHypercube:
 Gravity Surge:
   attack_stat: magic
   range: 1
-  aoe_size: 2
+  aoe_size: 3
   aoe_type: cone
   damage:
     num_dice: 2
@@ -177,7 +177,7 @@ Singularity:
     - type: pull
       distance: 5
       origin: target
-  mp: 3
+  mp: 4
   prompt: pulls in and roots all enemies in area.
   animation: singularity
 
@@ -537,8 +537,8 @@ Vine Grasp:
   range: 7
   aoe_size: 0
   damage:
-    num_dice: 2
-    dice_size: 6
+    num_dice: 1
+    dice_size: 8
   move_effects:
     - type: pull
       distance: 7
@@ -679,7 +679,6 @@ Space Compression:
   attack_stat: magic
   range: 0
   aoe_size: 2
-  damage_type: shared
   damage:
     num_dice: 2
     dice_size: 6
@@ -703,9 +702,9 @@ Snowball Crush:
     dice_size: 8
   status_effects:
     - type: Slow
-      duration: 1
+      duration: 2
       modifiers:
-       - value: -1
+       - value: -2
          stat: move
 
   mp: 0
@@ -768,7 +767,7 @@ Tail Swipe:
         dice_size: 4
       move_effects:
         - type: push
-          distance: 2
+          distance: 4
     self:
       ignored: true
   mp: 0
@@ -1114,7 +1113,7 @@ Poisonbolt:
   prompt: Damages enemy and inflicts Poison. Range 8.
   animation: poisonbolt
 
-Shadow Curse:
+Horror:
   attack_stat: magic
   range: 5
   aoe_size: 0
@@ -1157,17 +1156,6 @@ Annihilate:
   prompt: Damages all enemies and inflicts poison.
   animation: annihilate
 
-
-Summon Skelesaur:
-  targets_empty: true
-  range: 5
-  aoe_size: 0
-  add_unit:
-    - Skelesaur
-  mp: -1
-  prompt: Summon a stegosaur to crush your foes.
-  animation: summon
-
 Summon Serpents:
   targets_empty: true
   range: 3
@@ -1178,7 +1166,7 @@ Summon Serpents:
     - Serpent
     - Serpent
     - Serpent
-  mp: 2
+  mp: 3
   prompt: Summon a plague of venomous snakes.
   animation: summon
 

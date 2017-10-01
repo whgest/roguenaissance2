@@ -545,8 +545,8 @@ class PlayerTurn(object):
                 self.current_state = new_state
                 try:
                     self.states[self.current_state].activate_state()
-                except KeyError:
-                    continue
+                except KeyError as err:
+                    print err
 
         return self.player_selections.chosen_skill, self.player_selections.target_tile, self.player_selections.destination
 

@@ -136,6 +136,25 @@ class Actor(object):
     MODIFIABLE_ATTRIBUTES = ["maxhp", "maxmp", "attack", "defense", "magic", "resistance", "agility",
                              "move", "rooted"]
 
+    def __deepcopy__(self, memo):
+        deepcopy_method = self.__deepcopy__
+        event = self.event
+        ai_class = self.ai_class
+        ai = self.ai
+
+        self.event = None
+        self.ai_class = None
+        self.ai = None
+
+        self.__deepcopy__ = None
+        cp = copy.deepcopy(self, memo)
+        self.__deepcopy__ = deepcopy_method
+
+        self.event = event
+        self.ai_class = ai_class
+        self.ai = ai
+        return cp
+
     def __init__(self, data, name, event=None):
         self.id = 0
         self.character = data.get('character')
@@ -171,6 +190,7 @@ class Actor(object):
         if self.innate_status:
             for status in self.innate_status:
                 self.apply_status(SkillStatusEffect(status, 'Innate'))
+
 
     @property
     def maxhp(self):
@@ -263,7 +283,6 @@ class Actor(object):
         if raw_damage:
             self.event.add_event(DamageOrHeal(self, raw_damage, skill_name))
 
-
     def clear_attribute_modifiers(self):
         for attr in self.MODIFIABLE_ATTRIBUTES:
             self.attribute_modifiers[attr] = []
@@ -290,7 +309,6 @@ class Actor(object):
         self.clear_status()
         self.hp = 0
         self.is_dead = True
-        #self.event.add_event(KillUnit(self))
 
     def is_disabled(self):
         disabling_effects = [effect for effect in self.active_status_effects if effect.status_effect.lose_turn]
@@ -625,11 +643,18 @@ class AppliedStatusEffect:
 
     @property
     def display(self):
-        #todo: make this use the modifiers and remaining duration and use that for status menu printout
-        return '{0} ({1} turns)'.format(self.status_effect.type, self.remaining_duration)
+        descriptions = []
+
+        for d in self.status_effect.modifier_descriptions:
+            r = {}
+            r['text'] = d['text'][:-3] + u' {}t'.format(self.remaining_duration)
+            r['is_beneficial'] = d['is_beneficial']
+            descriptions.append(r)
+        return descriptions
 
     def __repr__(self):
         return self.status_effect.type + ' ' + str(self.remaining_duration)
+
 
 class SkillStatusEffect:
     def __init__(self, data, skill_ident):

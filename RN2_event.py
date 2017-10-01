@@ -1,3 +1,6 @@
+import pygame.time
+
+
 class EventQueue(object):
 
     queue = []
@@ -38,7 +41,7 @@ class MoveUnit(BattleEvent):
         for move in self.path[1:]:
             ui.move_unit(prev_coords, move, self.actor)
             prev_coords = move
-
+            pygame.time.wait(30)
 
 class UseSkill(BattleEvent):
     def __init__(self, user, skill, affected_tiles):
@@ -89,6 +92,7 @@ class KillUnitTerrain(KillUnit):
     def animate(self, ui):
         pass
 
+
 class AddUnit(BattleEvent):
     def __init__(self, actor):
         BattleEvent.__init__(self)
@@ -106,6 +110,15 @@ class Miss(BattleEvent):
 
     def report_entry(self):
         return {'_format': 'miss', 'unit': self.unit, 'cause': self.cause_name}
+
+
+class StartTurn(BattleEvent):
+    def __init__(self, unit):
+        BattleEvent.__init__(self)
+        self.unit = unit
+
+    def display(self, ui):
+        ui.print_active(self.unit)
 
 
 class DamageOrHeal(BattleEvent):

@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-import logging
 import random
+import copy
 
-#logging.basicConfig(filename="logs/rn_debug(" + time.asctime() + ").log", filemode="w", level=logging.DEBUG)
 
-class Terrain():
+class Terrain(object):
     def __init__(self):
         self.name = "Nothing"
         self.fgcolor = ""
@@ -225,11 +224,24 @@ class Burned(TerrainMod):
         self.priority = 1
 
 
-class BMap:
+class BMap(object):
+    # def __deepcopy__(self, memo):
+    #     import timeit as timer
+    #     start = timer.default_timer()
+    #     deepcopy_method = self.__deepcopy__
+    #
+    #     self.__deepcopy__ = None
+    #     cp = copy.deepcopy(self, memo)
+    #     self.__deepcopy__ = deepcopy_method
+    #     end = timer.default_timer()
+    #     print "copy map time:", end-start
+    #
+    #     return cp
+
     def __init__(self):
         self.contents = []
         self.legend_list = []
-        self.terrain_types = [(".", Grass()), (",", Stone()), ("~", Water()), ("L", Lava()), ("X", Pit()), ("G", Goal()), ("*", Wall()), ("|", Wood()), ("+", Bridge())]
+
         self.map_size = (49, 24)
 
     def __getitem__(self, item):
@@ -284,7 +296,20 @@ class BMap:
                 all_targetable_tiles.append((x, y))
 
 
-class Tile:
+class Tile(object):
+    # def __deepcopy__(self, memo):
+    #     import timeit as timer
+    #     start = timer.default_timer()
+    #     deepcopy_method = self.__deepcopy__
+    #
+    #     self.__deepcopy__ = None
+    #     cp = copy.deepcopy(self, memo)
+    #     self.__deepcopy__ = deepcopy_method
+    #     end = timer.default_timer()
+    #     print "copy tile time:", end-start
+    #
+    #     return cp
+
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -299,9 +324,6 @@ class Tile:
             return getattr(self.terrain, name)
         else:
             return getattr(self, name)
-
-    def __repr__(self):
-        print "Tile containing {}, {}".format(self.terrain.name, self.actor)
 
     @property
     def is_movable(self):
@@ -328,11 +350,12 @@ def load_map(map_data):
 
 
 def analyze_data(character, battle_map, tile):
-    for m in battle_map.terrain_types:     #m is tuple(character, terrain class)
+    terrain_types = [(".", Grass()), (",", Stone()), ("~", Water()), ("L", Lava()), ("X", Pit()), ("G", Goal()),
+                     ("*", Wall()), ("|", Wood()), ("+", Bridge())]
+    for m in terrain_types:
         if character == m[0]:
             tile.terrain = m[1]
     if tile.terrain is None:
-        logging.debug("Tile" + repr(tile.x) + repr(tile.y) + "invalid or not found.")
         raise TypeError
     if (tile.terrain.character, tile.terrain.fgcolor, tile.terrain.bgcolor, tile.terrain.name) not in battle_map.legend_list and tile.terrain.character != " ":  #add to the legend
         battle_map.legend_list.append((tile.terrain.character, tile.terrain.fgcolor, tile.terrain.bgcolor, tile.terrain.name))

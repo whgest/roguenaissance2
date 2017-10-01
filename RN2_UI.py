@@ -349,7 +349,7 @@ class RN_UI_Class():
             }
 
             for effect in unit.active_status_effects:
-                for description in effect.status_effect.modifier_descriptions:
+                for description in effect.display:
                     self.right_menu_text(51, line_count, effect.status_effect.type + ' ' + description['text'],
                                          fgcolor=colors[description['is_beneficial']])
                     line_count += 1
@@ -369,6 +369,11 @@ class RN_UI_Class():
         self.menutext(51, 11, "ESCAPE = cancel action")
         self.menutext(51, 13, "m = toggle music")
         self.menutext(51, 14, "q = exit")
+        self.screen.update()
+
+    def print_active(self, unit):
+        self.menutext(52, 24, " " * 32)
+        self.menutext(52, 24, "ACT: " + unit.name[:18], fgcolor=self.team_colors[unit.team_id])
         self.screen.update()
 
     def fix_spacing(self, s, length, delimiter):
@@ -421,19 +426,17 @@ class RN_UI_Class():
 
     def display_tile(self, tile):
         to_display = {}
-        for attr in ('character', 'fgcolor', 'team_id', 'bgcolor'):
-            if getattr(tile.actor, attr, None):
-                if attr == 'character':
-                    to_display[attr] = getattr(tile.actor, attr)
-                else:
-                    to_display['fgcolor'] = self.team_colors[tile.actor.team_id]
-
-            elif getattr(tile.terrainmod, attr, None):
+        for attr in ('character', 'fgcolor', 'bgcolor'):
+            if getattr(tile.terrainmod, attr, None):
                 to_display[attr] = getattr(tile.terrainmod, attr)
             elif getattr(tile.terrain, attr, None):
                 to_display[attr] = getattr(tile.terrain, attr)
 
-        return (to_display['character'], to_display['fgcolor'], to_display['bgcolor'])
+        if tile.actor:
+            to_display['character'] = getattr(tile.actor, 'character')
+            to_display['fgcolor'] = self.team_colors[tile.actor.team_id]
+
+        return to_display['character'], to_display['fgcolor'], to_display['bgcolor']
 
     def highlight_area(self, highlight, tiles, battle_map, color=None, is_target=False):
         if not color:
@@ -687,7 +690,8 @@ class RN_UI_Class():
 
             if skill_effect_for_target.is_resistable:
                 hit_chance = skill_effect_for_target.get_hit_chance(attacker, defender)
-                self.right_menu_text(51, line_to_print, "Hit Chance: " + str(hit_chance) + "%", fgcolor=self.textcolors["hit_chance"])
+                self.right_menu_text(64, line_to_print, "Hit: " + str(hit_chance) + "%", fgcolor=self.textcolors["hit_chance"])
+                self.right_menu_text(51, line_to_print, self.get_status(defender, max_length=13))
                 line_to_print += 1
 
             line_to_print += (target_spacing)
@@ -1072,7 +1076,7 @@ class RN_UI_Class():
         sleep(1)
         self.title_text(10, 10, "ENEMIES SLAIN:                       " + str(saved_data.score.enemies_killed), fgcolor=self.textcolors['good_status'])
         sleep(2)
-        score = 500 - (saved_data.score.turns_taken * 4.5) - (saved_data.score.damage_taken * 2) + (saved_data.score.enemies_killed * 10)
+        score = 500 - (saved_data.score.turns_taken * 3.5) - (saved_data.score.damage_taken * 1.5) + (saved_data.score.enemies_killed * 10)
         self.title_text(10, 18, "FINAL SCORE:                         " + str(score))
         sleep(2)
         grade = "F"

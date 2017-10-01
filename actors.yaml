@@ -9,7 +9,7 @@ actors:
     attack: 17
     defense: 17
     magic: 20
-    resistance: 0
+    resistance: 17
     agility: 16
     move: 6
     death_animation: playerdeath
@@ -308,7 +308,7 @@ actors:
     magic: 0
     resistance: 11
     agility: 20
-    move: 8
+    move: 6
     immunities:
       - Radiation
     skillset:
@@ -324,7 +324,7 @@ actors:
     attack: 13
     defense: 12
     magic: 18
-    resistance: 0
+    resistance: 13
     agility: 17
     move: 5
     immunities:
@@ -402,19 +402,19 @@ actors:
   Belshazzar:
     character: "%"
     ai: mage
-    maxhp: 0 #55
+    maxhp: 55
     maxmp: 10
     attack: 25
     defense: 12
     magic: 21
-    resistance: 14
+    resistance: 15
     agility: 11
     move: 5
     immunities:
       - Lava
     death_animation: beldeath
     skillset:
-      - Shadow Curse
+      - Horror
       - Necrodrain
       - Cloudkill
       - Poisonbolt
