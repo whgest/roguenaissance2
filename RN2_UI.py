@@ -1,14 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""
-
-Project Roguenaissance 2.0 UI
-by William Hardy Gest
-
-October 2013
-
-"""
-
 import pygame
 import pygcurse
 import time
@@ -782,7 +773,7 @@ class RN_UI_Class():
     def title_screen(self, title, input, sound):
         UI = self
         self.draw_border()
-        UI.title_text(14, 28, "On the \"Roguenaissance 2.0\" RPG Battle Engine")
+        UI.title_text(14, 28, "On the \"Roguenaissance 3.0\" RPG Battle Engine")
         UI.title_text(20, 30, "by William Hardy Gest, 2013-2017")
         title_list = [("New Game", 10), ("Continue", 25), ("High Scores", 42), ("Quit", 60)]
         self.display_title(title)

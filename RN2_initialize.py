@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""
-Roguenaissance 2.0 Game Initializer
-"""
 import math
 import yaml
 import random

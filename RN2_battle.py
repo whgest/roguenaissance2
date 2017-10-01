@@ -1,13 +1,3 @@
-"""
-
-Project Roguenaissance 3.0
-Battle System Logic
-by William Hardy Gest
-
-2017
-
-"""
-
 import RN2_initialize
 import random
 import pygame

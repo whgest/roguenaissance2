@@ -1,12 +1,3 @@
-"""
-
-Project Roguenaissance 2.0
-Battle System Controller
-by William Hardy Gest
-
-October 2013
-
-"""
 import logging
 import string as string_module
 import RN2_battle_logic

@@ -1,5 +1,5 @@
 """
-Project Roguenaissance 2.0 - Pygame/Pygcurses
+Project Roguenaissance 3.0 - Pygame/Pygcurses
 by William Hardy Gest
 """
 
