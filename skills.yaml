@@ -282,7 +282,7 @@ Ice Spear:
     dice_size: 10
   move_effects:
     - type: push
-      distance: 3
+      distance: 5
   mp: 1
   prompt: Skewer enemy for damage and push.
   animation: ice toss
@@ -307,9 +307,13 @@ Life Drain:
   attack_stat: magic
   range: 5
   aoe_size: 0
-  damage:
-    num_dice: 1
-    dice_size: 8
+  targets:
+    enemy:
+      damage:
+        num_dice: 1
+        dice_size: 8
+    friendly:
+      ignored: true
   mp: 2
   prompt: Absorbs HP from an enemy.
   animation: drain
@@ -317,7 +321,7 @@ Life Drain:
 
 Frostburn:
   attack_stat: magic
-  range: 6
+  range: 7
   aoe_size: 0
   damage:
     num_dice: 2
@@ -356,7 +360,7 @@ Absolute Zero:
   aoe_size: 4
   damage:
     num_dice: 1
-    dice_size: 6
+    dice_size: 10
   status_effects:
     - type: Stun
       duration: 2
@@ -486,8 +490,12 @@ Hornet Swarm:
     - Hornet
     - Hornet
     - Hornet
+    - Hornet
+    - Hornet
+    - Hornet
+    - Hornet
   mp: 3
-  prompt: Send angry hornets to injure and lower magic attack.
+  prompt: Send angry hornets to injure and lower magic and attack.
   animation: summon
 
 
@@ -589,21 +597,21 @@ Ascendance:
   aoe_size: 0
   is_resistable: false
   damage:
-    fixed_damage: -8
+    fixed_damage: -6
   status_effects:
     - type: Ascended
       modifiers:
        - stat: attack
          value: 6
        - stat: defense
-         value: 4
+         value: 99
        - stat: resistance
-         value: 4
+         value: 99
        - stat: move
          value: 2
-      duration: 4
+      duration: 3
   mp: 7
-  prompt: Massively increase physical attack, move, and defenses.
+  prompt: Invulnerability and attack/move increased.
   animation: ascend
 
 Summon Spring Wind:
@@ -662,7 +670,7 @@ Magnetize:
 Hypersurge:
   attack_stat: magic
   range: 1
-  aoe_size: 3
+  aoe_size: 2
   aoe_type: cone
   damage:
     num_dice: 1
@@ -675,22 +683,27 @@ Hypersurge:
   prompt: Basic attack.
   animation: dark ball
 
-Space Compression:
+Detonate Spacetime:
   attack_stat: magic
   range: 0
   aoe_size: 2
-  damage:
-    num_dice: 2
-    dice_size: 6
-  status_effects:
-    - type: Radiation
-      damage: 2
-      duration: 4
-  move_effects:
-    - type: push
-      distance: 6
+  damage_type: self_destruct
+  targets:
+    enemy:
+      damage:
+        num_dice: 2
+        dice_size: 6
+      status_effects:
+        - type: Radiation
+          damage: 2
+          duration: 4
+      move_effects:
+        - type: push
+          distance: 6
+    self:
+      ignored: true
   mp: 3
-  prompt: Crush spacetime.
+  prompt: Explode into razor sharp shards of reality.
   animation: fire ball
 
 Snowball Crush:
@@ -742,8 +755,8 @@ Swarm:
 
 Talon Frenzy:
   attack_stat: magic
-  range: 0
-  aoe_type: cone
+  range: 1
+  aoe_type: circular
   aoe_size: 2
   damage:
     num_dice: 2
@@ -862,13 +875,13 @@ Healstorm:
   prompt: Regenerate all nearby allies, poison all enemies.
   animation: heal
 
-Bone Toss:
+Necrobolt:
   attack_stat: magic
   range: 4
-  aoe_size: 1
+  aoe_size: 0
   damage:
     num_dice: 1
-    dice_size: 10
+    dice_size: 8
   mp: 0
   prompt: Basic attack.
   animation: basic ranged
@@ -876,7 +889,7 @@ Bone Toss:
 Poison Breath:
   attack_stat: magic
   range: 1
-  aoe_size: 3
+  aoe_size: 2
   aoe_type: cone
   damage:
     num_dice: 2
@@ -910,12 +923,12 @@ Sting:
   aoe_size: 0
   targets:
     enemy:
-      damage_type: shared
+      damage_type: self_destruct
       damage:
-        fixed_damage: 1
+        fixed_damage: 2
       status_effects:
         - type: Confound
-          duration: 2
+          duration: 3
           modifiers:
             - stat: magic
               value: -2
@@ -1161,6 +1174,7 @@ Summon Serpents:
   range: 3
   aoe_size: 6
   add_unit:
+    - Serpent
     - Serpent
     - Serpent
     - Serpent

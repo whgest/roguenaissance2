@@ -326,7 +326,7 @@ class Battle(object):
             self.event.add_event(RN2_event.Miss(target, skill_name))
             return
 
-        inflicted_damage = skill_target_type_effect.damage.roll_damage(attacker)
+        inflicted_damage = skill_target_type_effect.damage.roll_damage(attacker, target)
 
         target.inflict_damage_or_healing(inflicted_damage, skill_name)
 
@@ -430,7 +430,7 @@ class SimulatedBattle(Battle):
         self.turn_tracker = dummy_ui.DummyUi()
 
     def skill_effect_on_unit(self, attacker, skill_target_type_effect, target, skill_name, origin):
-        inflicted_damage = skill_target_type_effect.damage.get_average_damage(attacker)
+        inflicted_damage = skill_target_type_effect.damage.roll_damage(attacker, target, use_random=False)
 
         target.inflict_damage_or_healing(inflicted_damage, skill_name)
 

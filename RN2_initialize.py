@@ -433,7 +433,7 @@ class StandardDamage:
         self.attack_stat = attack_stat
         self.defense_stat = defense_stat
         self.no_damage = True if not data else False
-        self.type = "standard"
+        self.type = "Damage"
 
         if data:
             self.fixed_damage = data.get('fixed_damage', 0)
@@ -474,41 +474,48 @@ class StandardDamage:
         return self.get_damage_range(attacker)[1]
 
     def get_average_damage(self, attacker):
-        """
-        For use in AI attack evaluation
-        """
         return sum(self.get_damage_range(attacker)) / 2
 
-    def roll_damage(self, attacker):
-        damage_range = self.get_damage_range(attacker)
-        return random.choice(range(damage_range[0], damage_range[1] + 1))
+    def roll_damage(self, attacker, defender, use_random=True):
+        if use_random:
+            damage_range = self.get_damage_range(attacker)
+            return random.choice(range(damage_range[0], damage_range[1] + 1))
+        else:
+            return self.get_average_damage(attacker)
 
 
 class DrainDamage(StandardDamage):
     def __init__(self, data, ident, attack_stat, defense_stat):
         StandardDamage.__init__(self, data, ident, attack_stat, defense_stat)
         self.name = ident
-        self.type = "drain"
+        self.type = "Drain"
 
-    def roll_damage(self, attacker):
-        inflicted_damage = StandardDamage.roll_damage(self, attacker)
+    def roll_damage(self, attacker, defender, use_random=True):
+        if use_random:
+            inflicted_damage = min(StandardDamage.roll_damage(self, attacker, defender), defender.hp)
+        else:
+            inflicted_damage = min(StandardDamage.get_average_damage(self, attacker), defender.hp)
+
         attacker.inflict_damage_or_healing(inflicted_damage * -1, self.name)
 
         return inflicted_damage
 
 
-class SharedDamage(StandardDamage):
+class SelfDestructDamage(StandardDamage):
     def __init__(self, data, ident, attack_stat, defense_stat):
         StandardDamage.__init__(self, data, ident, attack_stat, defense_stat)
         self.name = ident
-        self.type = "shared"
+        self.type = "Self Destruct"
 
-    def roll_damage(self, attacker):
-        inflicted_damage = StandardDamage.roll_damage(self, attacker)
-        attacker.inflict_damage_or_healing(inflicted_damage, self.name)
+    def roll_damage(self, attacker, defender, use_random=True):
+        if use_random:
+            inflicted_damage = min(StandardDamage.roll_damage(self, attacker, defender), defender.hp)
+        else:
+            inflicted_damage = min(StandardDamage.get_average_damage(self, attacker), defender.hp)
+
+        attacker.kill_actor()
 
         return inflicted_damage
-
 
 class LineAttack():
     def get_next_aoe_range(self, all_tiles, edges, caster_loc):
@@ -591,7 +598,7 @@ AOE_TYPES = {
 DAMAGE_TYPES = {
     'standard': StandardDamage,
     'drain': DrainDamage,
-    'shared': SharedDamage
+    'self_destruct': SelfDestructDamage
 }
 
 DEFAULT_DEFENSE_STATS = {
@@ -730,12 +737,12 @@ class SkillEffectForTargetType:
         hit_denominator = getattr(attacker, self.attack_stat)
 
         hit_chance = (hit_numerator / hit_denominator) * 100.0
-        hit_chance = min(100, round(hit_chance, 2))
+        hit_chance = min(100, round(hit_chance, 1))
 
         if hit_chance == 0 or hit_chance == 100:
             hit_chance = int(hit_chance)
 
-        return hit_chance
+        return max(0, hit_chance)
 
     def attack_roll(self, attacker, defender):
         stat = getattr(attacker, self.attack_stat)

@@ -20,7 +20,7 @@ class UnitScoreWeightEnemy(redoubtable_ai.UnitScoreWeightEnemyDefaults):
 class UnitScoreWeightSelf(redoubtable_ai.UnitScoreWeightDefaults):
     def __init__(self):
         redoubtable_ai.UnitScoreWeightDefaults.__init__(self)
-        self.preferred_threat_level = 10
+        self.preferred_threat_level = 750
         self.is_dead = 0
         self.hp = 0
 

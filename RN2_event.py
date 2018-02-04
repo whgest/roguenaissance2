@@ -108,6 +108,9 @@ class Miss(BattleEvent):
         self.unit = unit
         self.cause_name = cause_name
 
+    def display(self, ui):
+        ui.sound_handler.play_sound('miss')
+
     def report_entry(self):
         return {'_format': 'miss', 'unit': self.unit, 'cause': self.cause_name}
 

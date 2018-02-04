@@ -165,15 +165,19 @@
   music:
     - boss
 
-  player_start: 30,23
+  player_start: 25,20
 
   units:
     - ident: Belshazzar
       loc: 25,5
       team_id: 2
     - ident: Freezefrog
-      loc: 31,10
+      loc: 26,5
       team_id: 2
+    - ident: 4D Hypercube
+      loc: 31,23
+      team_id: 1
+
 
   triggers:
     - conditions:

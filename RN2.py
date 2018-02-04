@@ -163,11 +163,11 @@ class SaveGame(SaveData):
 
 def main():
     #test mode
-    game = Game()
-    game.sound_handler.mute_switch = True
-    game.new_game('Astromancer', "HARDANIUS")
-    game.init_battle(3)
-    exit()
+    # game = Game()
+    # game.sound_handler.mute_switch = True
+    # game.new_game('Terramancer', "HARDANIUS")
+    # game.init_battle(3)
+    # exit()
 
     while 1:
         game = Game()

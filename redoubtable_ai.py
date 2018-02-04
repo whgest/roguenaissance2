@@ -26,36 +26,62 @@ class ThreatMap:
         for x in range(50):
             self.tmap.append([])
             for y in range(25):
-                if not self.battle_map[x][y].terrain.movable:
-                    self.tmap[x].append(0)
-                else:
-                    self.tmap[x].append(1)
+                self.tmap[x].append(0)
 
     def add_threat(self, threat, bmap):
-        skills = [self.skills[s] for s in threat.skillset]
-        skills.sort(key=lambda x: min(12, (x.range + x.aoe_size)) / max(1, x.mp), reverse=True)
+        threat_x = threat.coords[0]
+        threat_y = threat.coords[1]
 
-        if self.stored_values.get(threat.coords) and self.stored_values[threat.coords].get(threat.move) and self.stored_values[threat.coords][threat.move].get(skills[0].range):
-            threat_tiles = self.stored_values[threat.coords][threat.move][skills[0].range]
-            self.dynamic_c += 1
-        else:
-            threat_tiles = RN2_battle_logic.get_valid_tiles(threat.coords, threat.move, skills[0], bmap, use_aoe=True)
+        for x in range(50):
+            for y in range(25):
+                self.tmap[x][y] += 75 - (abs(threat_x - x) + abs(threat_y - y))
 
-            if not self.stored_values.get(threat.coords):
-                self.stored_values[threat.coords] = {}
-                self.stored_values[threat.coords][threat.move] = {}
-
-            elif not self.stored_values[threat.coords].get(threat.move):
-                self.stored_values[threat.coords][threat.move] = {}
-
-            self.stored_values[threat.coords][threat.move][skills[0].range] = threat_tiles
-
-        for t in threat_tiles:
-            if self.tmap[t[0]][t[1]] > 0:
-                self.tmap[t[0]][t[1]] += 1
+    # def add_threat(self, threat, bmap):
+    #     skills = [self.skills[s] for s in threat.skillset]
+    #     skills.sort(key=lambda x: min(12, (x.range + x.aoe_size)) / max(1, x.mp), reverse=True)
+    #
+    #     if 0:
+    #         pass
+    #     if self.stored_values.get(threat.coords) and self.stored_values[threat.coords].get(threat.move) and self.stored_values[threat.coords][threat.move].get(skills[0].range):
+    #         threat_tiles = self.stored_values[threat.coords][threat.move][skills[0].range]
+    #         self.dynamic_c += 1
+    #     else:
+    #         threat_tiles = RN2_battle_logic.get_valid_tiles(threat.coords, threat.move, skills[0], bmap, use_aoe=True)
+    #
+    #         if not self.stored_values.get(threat.coords):
+    #             self.stored_values[threat.coords] = {}
+    #             self.stored_values[threat.coords][threat.move] = {}
+    #
+    #         elif not self.stored_values[threat.coords].get(threat.move):
+    #             self.stored_values[threat.coords][threat.move] = {}
+    #
+    #         self.stored_values[threat.coords][threat.move][skills[0].range] = threat_tiles
+    #
+    #     for t in threat_tiles:
+    #         if self.tmap[t[0]][t[1]] > 0:
+    #             self.tmap[t[0]][t[1]] += 1
 
     def get_threat_for_tile(self, coords):
         return self.tmap[coords[0]][coords[1]]
+
+
+class QuadraticWeight(object):
+    def __init__(self, current_value, ideal_value, exponent):
+        self.current_value = current_value
+        self.ideal_value = ideal_value
+        self.exponent = exponent
+
+    def calculate(self):
+        return (self.current_value / self.ideal_value) ** self.exponent
+
+
+class LinearWeight(object):
+    def __init__(self, current_value, ideal_value):
+        self.current_value = min(current_value, ideal_value)
+        self.ideal_value = ideal_value
+
+    def calculate(self):
+        return self.current_value / self.ideal_value
 
 
 class UnitScoreWeightDefaults(object):
@@ -71,7 +97,8 @@ class UnitScoreWeightDefaults(object):
 
         self.total_damage_over_time = 0
 
-        self.is_dead = 0
+        self.is_low_hp = 0
+        self.low_hp_threshold = 0
 
         self.tile_threat = 0
         self.preferred_threat_level = 0
@@ -89,9 +116,9 @@ class UnitScoreWeightDefaults(object):
 
         score += self.get_damage_over_time_score(unit) * self.total_damage_over_time
 
-        score += self.is_dead * unit.is_dead
+        score += self.is_low_hp if (unit.hp / unit.maxhp) * 100 < self.low_hp_threshold else 0
 
-        score += abs(self.preferred_threat_level - threat_map.get_threat_for_tile(unit.coords)) * self.tile_threat
+        score += max(0, 750 - abs(self.preferred_threat_level - threat_map.get_threat_for_tile(unit.coords))) * self.tile_threat
 
         return score
 
@@ -126,34 +153,38 @@ class UnitScoreWeightEnemyDefaults(UnitScoreWeightDefaults):
 
         self.total_damage_over_time = 8
 
-        self.is_dead = 500
+        self.is_low_hp = 100
+        self.low_hp_threshold = 30
 
-        self.tile_threat = 1
-        self.preferred_threat_level = 10
+        # todo: these plusses can acutally make leaving an enemy alive score higher than killing it. rethink how this works to be less confusing and opaque and buggy
+
+        self.tile_threat = 0.01
+        self.preferred_threat_level = 750
 
 
 class UnitScoreWeightAllyDefaults(UnitScoreWeightDefaults):
     def __init__(self):
         UnitScoreWeightDefaults.__init__(self)
         self.hp = 2
-        self.attack = 6
-        self.defense = 4
-        self.move = 5
-        self.magic = 4
-        self.resistance = 4
+        self.attack = 15
+        self.defense = 15
+        self.move = 15
+        self.magic = 15
+        self.resistance = 15
 
         self.total_damage_over_time = -1
 
-        self.is_dead = -100
+        self.is_low_hp = -10
+        self.low_hp_threshold = 30
 
-        self.tile_threat = -100
-        self.preferred_threat_level = 2
+        self.tile_threat = 0.01
+        self.preferred_threat_level = 550
 
 
 class UnitScoreWeightSelfDefaults(UnitScoreWeightDefaults):
     def __init__(self):
         UnitScoreWeightDefaults.__init__(self)
-        self.hp = 30
+        self.hp = 25
         self.mp = 40
         self.attack = 60
         self.defense = 60
@@ -163,8 +194,11 @@ class UnitScoreWeightSelfDefaults(UnitScoreWeightDefaults):
 
         self.total_damage_over_time = -20
 
-        self.is_dead = -10000
-        self.preferred_threat_level = 2
+        self.is_low_hp = -100
+        self.low_hp_threshold = 30
+
+        self.tile_threat = 0.02
+        self.preferred_threat_level = 100
 
 
 class AiWeightsDefault(object):
@@ -176,11 +210,13 @@ class AiWeightsDefault(object):
         self.friendly = friendly
         self.personal = personal
 
+        self.randomness_percentage = 5
+
         # scores to prioritize units within above categories
         self.is_summon = 0.5
-        self.is_minion = 0.2
+        self.is_minion = 0.3
         self.can_heal = 1.5
-        self.can_summon = 1.5
+        self.can_summon = 1.2
         # todo: for summons: summon already exists
 
     def get_priority_for_unit(self, unit):
@@ -262,20 +298,18 @@ class SimulationHandler(object):
         has_move_effects = chosen_skill and (chosen_skill.targets.enemy.move_effects or chosen_skill.targets.friendly.move_effects or chosen_skill.targets.self.move_effects)
         recreate_threat_map = chosen_skill and (has_move_effects or chosen_skill.add_unit or chosen_skill.add_minion)
 
-
         return self.score_battle_state(self.simulated_battle, self.simulated_battle.active, recreate_threat_map)
 
     def score_battle_state(self, simulated_battle, active, recreate_threat_map=False):
         """
         Based on passed parameters that weight criteria, score a hypothetical battle state for favorabilitiousness to the AI
         calling this function
-        :return: A score
         """
 
         score = 0
 
-        allies = [u for u in simulated_battle.all_living_units if u.is_ally_of(active) and u.id != active.id]
-        enemies = [u for u in simulated_battle.all_living_units if u.is_hostile_to(active)]
+        allies = [u for u in simulated_battle.all_living_units if u.is_ally_of(simulated_battle.active) and u.id != active.id]
+        enemies = [u for u in simulated_battle.all_living_units if u.is_hostile_to(simulated_battle.active)]
 
         if recreate_threat_map or not self.threat_map:
             start = timer()
@@ -285,18 +319,12 @@ class SimulationHandler(object):
             self.times_recreating_threat_map += 1
 
         for enemy in enemies:
-            score += self.actual_unit.ai.weights.enemy.calculate(enemy, self.threat_map) * self.actual_unit.ai.weights.get_priority_for_unit(enemy)
-
-        #print 'score after enemies', score
+            score += min(-1, self.actual_unit.ai.weights.enemy.calculate(enemy, self.threat_map) * self.actual_unit.ai.weights.get_priority_for_unit(enemy))
 
         for ally in allies:
-            score += self.actual_unit.ai.weights.friendly.calculate(ally, self.threat_map) * self.actual_unit.ai.weights.get_priority_for_unit(ally)
+            score += max(1, self.actual_unit.ai.weights.friendly.calculate(ally, self.threat_map) * self.actual_unit.ai.weights.get_priority_for_unit(ally))
 
-        #print 'score after friendly', score
-
-        score += self.actual_unit.ai.weights.personal.calculate(active, self.threat_map)
-
-        #print 'score after personal', score
+        score += max(1, self.actual_unit.ai.weights.personal.calculate(active, self.threat_map))
 
         return score
 
@@ -329,7 +357,6 @@ class RedoubtableAi(object):
         start = timer()
         simulation = SimulationHandler(self.actor, self.battle, self.skills)
         end2 = timer()
-
 
         move_range = RN2_battle_logic.calculate_move_range(self.actor, self.battle.bmap)
 
@@ -385,7 +412,7 @@ class RedoubtableAi(object):
 
                     # todo: dry up
                     for tile in move_range:
-                        if skill and RN2_battle_logic.grid_distance(tile, target_option) > skill.range:
+                        if (skill and RN2_battle_logic.grid_distance(tile, target_option) > skill.range) or tile==target_option:
                             continue
                         else:
                             move_options_for_target_and_skill.append(tile)
@@ -469,11 +496,14 @@ class RedoubtableAi(object):
         end = timer()
         print 'evaluate run time:', (end - start), 'seconds:', len(possible_moves), 'results.'
 
-        # print 'total_time_creating_threat_maps', simulation.total_time_creating_threat_maps, simulation.times_recreating_threat_map, 'times', simulation.total_time_creating_threat_maps/simulation.times_recreating_threat_map, 'per run'
+        print 'total_time_creating_threat_maps', simulation.total_time_creating_threat_maps, simulation.times_recreating_threat_map, 'times', simulation.total_time_creating_threat_maps/simulation.times_recreating_threat_map, 'per run'
         #
         # print 'stored values used {} times.'.format(simulation.threat_map.dynamic_c)
         # print 'total time resetting: {}\n'.format(simulation.time_spent_resetting)
         print "simulation handler initiation time:", end2 - start, int((end2-start)/(end-start) * 100), '% of total runtime :('
+        # for possible_move in possible_moves:
+        #     possible_move['score'] *= (random.randint(100 - self.weights.randomness_percentage, 100 + self.weights.randomness_percentage) / 100.0)
+
         return possible_moves
 
     def evaluate_move(self, tiles_to_evaluate, actor, threat_map):
@@ -491,11 +521,13 @@ class RedoubtableAi(object):
     def get_action(self):
         possible_moves = self.evaluate()
 
-
         if possible_moves:
             possible_moves.sort(key=lambda x: x['score'], reverse=True)
-            print possible_moves
-            chosen_action = possible_moves[0]
+            top_score = possible_moves[0]['score']
+
+            top_score_moves = list(filter(lambda x: x['score'] == top_score, possible_moves))
+
+            chosen_action = random.choice(top_score_moves)
 
             possible_moves.sort(key=lambda x: x['skill'])
             keyfunc = lambda x: x['skill']
@@ -505,7 +537,7 @@ class RedoubtableAi(object):
 
             for k in options_for_each.keys():
                 if len(options_for_each[k]):
-                    print k, 'best:', options_for_each[k][0]
+                    print k, len(options_for_each[k]), 'best:', options_for_each[k]
 
             if chosen_action.get('destination'):
                 path = pathfind((self.actor.coords[1], self.actor.coords[0]),

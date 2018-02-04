@@ -691,7 +691,7 @@ class RN_UI_Class():
         if skill_effect_for_target.damage.get_average_damage(attacker):
             is_heal = (skill_effect_for_target.damage.get_average_damage(attacker) < 0)
             color = self.textcolors['heal'] if is_heal else self.textcolors['damage']
-            noun = 'Healing: ' if is_heal else 'Damage: '
+            noun = 'Healing: ' if is_heal else '{}: '.format(skill_effect_for_target.damage.type)
             dmg_range = skill_effect_for_target.damage.get_damage_range(attacker)
 
             if dmg_range[0] != dmg_range[1]:
