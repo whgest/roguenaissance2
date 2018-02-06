@@ -552,7 +552,6 @@ class CircularAttack():
         new_edges = edge_neighbors.difference(all_tiles)
         return all_tiles, new_edges
 
-
 class ConeAttack():
     def get_next_aoe_range(self, all_tiles, edges, caster_loc):
         def negative_coords(coords):
@@ -616,7 +615,7 @@ class SkillMoveEffect:
 
     @property
     def description(self):
-        preposition = 'from' if self.type is 'push' else 'to'
+        preposition = 'from' if self.type == 'push' else 'to'
         return '{0} {1} {2} {3}'.format(self.type.capitalize(), self.distance, preposition, self.origin)
 
 

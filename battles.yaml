@@ -62,7 +62,7 @@
 
     - conditions:
         - condition_type: is_turn
-          condition_value: 5
+          condition_value: 6
       effects:
         - effect_type: add_units
           effect_value:

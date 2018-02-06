@@ -7,6 +7,7 @@ import dummy_ui
 import copy
 import random
 import itertools
+import importlib
 
 
 class ThreatMap:
@@ -35,7 +36,7 @@ class ThreatMap:
         for x in range(50):
             for y in range(25):
                 self.tmap[x][y] += 75 - (abs(threat_x - x) + abs(threat_y - y))
-
+    #
     # def add_threat(self, threat, bmap):
     #     skills = [self.skills[s] for s in threat.skillset]
     #     skills.sort(key=lambda x: min(12, (x.range + x.aoe_size)) / max(1, x.mp), reverse=True)
@@ -126,7 +127,6 @@ class UnitScoreWeightDefaults(object):
         return abs(self.preferred_threat_level - threat_on_tile) * self.tile_threat
 
     def get_damage_over_time_score(self, unit):
-        import itertools
         result = 0
         keyfunc = lambda x: x.status_effect.type
         all_dot_effects = [e for e in unit.active_status_effects if e.status_effect.damage]
@@ -345,7 +345,6 @@ class RedoubtableAi(object):
         self.skills = skills
         self.bmap = battle.bmap
 
-        import importlib
         try:
             ai_data = importlib.import_module('ai_classes.{}'.format(self.actor.ai))
             self.weights = ai_data.AiWeights(ai_data.UnitScoreWeightEnemy(), ai_data.UnitScoreWeightAlly(), ai_data.UnitScoreWeightSelf(), self.skills)
