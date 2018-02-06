@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import random
-import copy
 
 
 class Terrain(object):
@@ -24,6 +23,7 @@ class Terrain(object):
 
 #Terrain types:
 
+
 class Grass(Terrain):
     def __init__(self):
         Terrain.__init__(self)
@@ -38,6 +38,7 @@ class Grass(Terrain):
 
     def terrain_effect(self):
         pass   #something like taking extra fire damage
+
 
 class Stone(Terrain):
     def __init__(self):
@@ -54,6 +55,7 @@ class Stone(Terrain):
     def terrain_effect(self):
         pass   #nothing?
 
+
 class Lava(Terrain):
     def __init__(self):
         Terrain.__init__(self)
@@ -67,6 +69,7 @@ class Lava(Terrain):
         self.movable = 0
         self.fatal = 1
 
+
 class Pit(Terrain):
     def __init__(self):
         Terrain.__init__(self)
@@ -79,6 +82,7 @@ class Pit(Terrain):
         self.targetable = 0
         self.movable = 0
         self.fatal = 1
+
 
 class Water(Terrain):
     def __init__(self):
@@ -96,6 +100,7 @@ class Water(Terrain):
     def terrain_effect(self):
         pass   #no skills, no mana regen, immune to burning, etc.
 
+
 class Wall(Terrain):
     def __init__(self):
         Terrain.__init__(self)
@@ -112,6 +117,7 @@ class Wall(Terrain):
     def terrain_effect(self):
         pass   #bounce back
 
+
 class Goal(Terrain):
     def __init__(self):
         Terrain.__init__(self)
@@ -126,6 +132,7 @@ class Goal(Terrain):
 
     def terrain_effect(self):
         pass   #victory
+
 
 class Wood(Terrain):
     def __init__(self):
@@ -234,7 +241,7 @@ class BMap(object):
     #     cp = copy.deepcopy(self, memo)
     #     self.__deepcopy__ = deepcopy_method
     #     end = timer.default_timer()
-    #     print "copy map time:", end-start
+    #     print("copy map time:", end-start)
     #
     #     return cp
 
@@ -248,7 +255,7 @@ class BMap(object):
         try:
             return self.contents[item]
         except:
-            print item
+            print(item)
             raise IndexError
 
     def append(self, obj):
@@ -258,7 +265,7 @@ class BMap(object):
         try:
             return self.contents[coords[0]][coords[1]]
         except IndexError:
-            print "Invalid coords", coords
+            print("Invalid coords", coords)
             raise ValueError
 
     def get_empty_tiles(self, tiles):
@@ -275,7 +282,7 @@ class BMap(object):
     def place_unit(self, unit, coords):
         tile = self.get_tile_at(coords)
         if tile.actor:
-            print "'Cant place {0}: Tile {1} is occupied by {2}".format(unit, coords, tile.actor)
+            print("'Cant place {0}: Tile {1} is occupied by {2}".format(unit, coords, tile.actor))
             raise KeyError
 
         tile.actor = unit
@@ -297,18 +304,6 @@ class BMap(object):
 
 
 class Tile(object):
-    # def __deepcopy__(self, memo):
-    #     import timeit as timer
-    #     start = timer.default_timer()
-    #     deepcopy_method = self.__deepcopy__
-    #
-    #     self.__deepcopy__ = None
-    #     cp = copy.deepcopy(self, memo)
-    #     self.__deepcopy__ = deepcopy_method
-    #     end = timer.default_timer()
-    #     print "copy tile time:", end-start
-    #
-    #     return cp
 
     def __init__(self, x, y):
         self.x = x
@@ -318,12 +313,12 @@ class Tile(object):
         self.terrainmod = None
 
     def __getattr__(self, name):
-        if self.terrainmod and getattr(self.terrainmod, name):
-            return getattr(self.terrainmod, name)
-        elif self.terrain and getattr(self.terrain, name):
-            return getattr(self.terrain, name)
+        if self.__dict__.get('terrainmod') and hasattr(self.terrainmod, name):
+            return self.terrainmod.__dict__[name]
+        elif self.__dict__.get('terrain') and hasattr(self.terrain, name):
+            return self.terrain.__dict__[name]
         else:
-            return getattr(self, name)
+            return object.__getattribute__(self, name)
 
     @property
     def is_movable(self):
@@ -360,3 +355,4 @@ def analyze_data(character, battle_map, tile):
     if (tile.terrain.character, tile.terrain.fgcolor, tile.terrain.bgcolor, tile.terrain.name) not in battle_map.legend_list and tile.terrain.character != " ":  #add to the legend
         battle_map.legend_list.append((tile.terrain.character, tile.terrain.fgcolor, tile.terrain.bgcolor, tile.terrain.name))
     return tile, battle_map
+

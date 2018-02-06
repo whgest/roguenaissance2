@@ -17,5 +17,5 @@ s = timer()
 add_threat(Bunch(coords=(12,12)))
 e = timer()
 
-print e-s
+print(e-s)
 

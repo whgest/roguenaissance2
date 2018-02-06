@@ -55,10 +55,10 @@ class GridMap(object):
         return slist
     
     def printme(self):
-        """ Print the map to stdout in ASCII
+        """ print(the map to stdout in ASCII)
         """
         for row in range(self.nrows):
             for col in range(self.ncols):
-                print "%s" % ('O' if self.map[row][col] else '.'),
-            print ''
+                print("%s" % ('O' if self.map[row][col] else '.'),)
+            print('')
 

@@ -67,7 +67,7 @@ class PriorityQueueSet(object):
         
             Returns True iff the item was added or updated.
         """
-        if not item in self.set:
+        if item not in self.set:
             self.set[item] = item
             heapq.heappush(self.heap, item)
             return True
@@ -99,10 +99,10 @@ if __name__ == "__main__":
             for k in [3, 5, 2, 2, 99, 23]:
                 pqs.add(k)
             
-            self.assert_(pqs.has_item(3))
-            self.assert_(pqs.has_item(2))
-            self.assert_(pqs.has_item(99))
-            self.assert_(not pqs.has_item(4))
+            self.assertTrue(pqs.has_item(3))
+            self.assertTrue(pqs.has_item(2))
+            self.assertTrue(pqs.has_item(99))
+            self.assertTrue(not pqs.has_item(4))
             self.assertEqual(len(pqs), 5)
             
             self.assertEqual(pqs.pop_smallest(), 2)
@@ -118,13 +118,13 @@ if __name__ == "__main__":
             self.assertRaises(IndexError, pqs.pop_smallest)
             self.assertEqual(len(pqs), 0)
             
-            self.assert_(pqs.add(6))
-            self.assert_(pqs.add(16))
-            self.assert_(pqs.add(2))
+            self.assertTrue(pqs.add(6))
+            self.assertTrue(pqs.add(16))
+            self.assertTrue(pqs.add(2))
             self.assertEqual(pqs.pop_smallest(), 2)
-            self.assert_(not pqs.add(6))
-            self.assert_(not pqs.add(16))
-            self.assert_(pqs.add(2))
+            self.assertTrue(not pqs.add(6))
+            self.assertTrue(not pqs.add(16))
+            self.assertTrue(pqs.add(2))
             self.assertEqual(pqs.pop_smallest(), 2)
             self.assertEqual(pqs.pop_smallest(), 6)
             self.assertEqual(pqs.pop_smallest(), 16)
@@ -139,9 +139,12 @@ if __name__ == "__main__":
                 def __eq__(self, other):
                     return self.value == other.value
                 
-                def __cmp__(self, other):
-                    return cmp(self.cost, other.cost)
-                
+                def __lt__(self, other):
+                    return self.cost < other.cost
+
+                def __gt__(self, other):
+                    return self.cost > other.cost
+
                 def __hash__(self):
                     return hash(self.value)
                     
@@ -154,13 +157,13 @@ if __name__ == "__main__":
             pqs.add(Node('eight', 8))
             self.assertEqual(len(pqs), 3)
             
-            self.assert_(not pqs.add(Node('five', 55)))
+            self.assertTrue(not pqs.add(Node('five', 55)))
             self.assertEqual(len(pqs), 3)
 
-            self.assert_(not pqs.has_item(Node('three', 3)))
-            self.assert_(not pqs.has_item(Node('thirteen', 13)))
-            self.assert_(pqs.has_item(Node('one', 1)))
-            self.assert_(pqs.has_item(Node('five', 5)))
+            self.assertTrue(not pqs.has_item(Node('three', 3)))
+            self.assertTrue(not pqs.has_item(Node('thirteen', 13)))
+            self.assertTrue(pqs.has_item(Node('one', 1)))
+            self.assertTrue(pqs.has_item(Node('five', 5)))
             
             self.assertEqual(pqs.pop_smallest(), Node('one', 1))
             self.assertEqual(pqs.pop_smallest(), Node('five', 5))
@@ -176,9 +179,9 @@ if __name__ == "__main__":
             pqs.add(Node('five', 5))
             pqs.add(Node('one', 1))
             pqs.add(Node('eight', 8))
-            self.assert_(pqs.add(Node('five', 0)))
+            self.assertTrue(pqs.add(Node('five', 0)))
             
-            self.assert_(pqs.has_item(Node('five', 5)))
+            self.assertTrue(pqs.has_item(Node('five', 5)))
             self.assertEqual(len(pqs), 3)
             
             self.assertEqual(pqs.pop_smallest(), Node('five', 0))

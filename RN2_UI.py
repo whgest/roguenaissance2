@@ -152,7 +152,7 @@ class RN_UI_Class():
         self.sound_handler = sound
         pygame.display.set_caption("ASCIIMANCER")
 
-        print pygame.display.get_driver()
+        print(pygame.display.get_driver())
 
         self.cell_size = (self.screen.cellheight, self.screen.cellwidth)
         self.right_menu_coords = (51,1,23,22)
@@ -607,7 +607,7 @@ class RN_UI_Class():
             self.highlight_active(battle_menu_list[battle_index], True)
         except IndexError:
             logging.error("BATTLE MENU GLITCH: " + repr(battle_menu_list))
-            print "SEE LOGS FOR ERROR."
+            print("SEE LOGS FOR ERROR.")
         return v_top
 
     def turn_indication(self, a):
@@ -662,7 +662,7 @@ class RN_UI_Class():
 
         self.blank((self.right_menu_coords))
 
-        center_space = (20 - len(skill.name)) / 2
+        center_space = (20 - len(skill.name)) // 2
         self.right_menu_header("TARGET")
         self.right_menu_text(51, 2, (" "*center_space) + '--{0}--'.format(skill.name), fgcolor=self.textcolors['skill'])
 
@@ -736,7 +736,7 @@ class RN_UI_Class():
             return line_to_print + 1
 
         self.blank(self.right_menu_coords)
-        center_space = (20 - len(skill.name)) / 2
+        center_space = (20 - len(skill.name)) // 2
         self.right_menu_header("TARGET")
         self.menutext(51, 2, (" "*center_space) + '--{0}--'.format(skill.name), fgcolor=self.textcolors['skill'])
 

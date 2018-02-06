@@ -296,7 +296,7 @@ class PyromancerDecisionTree(object):
                 success = True
 
         if not success:
-            print "No possible path to tile: ", loc
+            print("No possible path to tile: ", loc)
             exit()
 
         results.sort()
@@ -355,7 +355,7 @@ class PyromancerDecisionTree(object):
             results.append((skill_value, skill_data.name, target_tile, safest_tile['loc']))
 
         results.sort(reverse=True)
-        print results
+        print(results)
 
         chosen_action = results[0]
         path = pathfind((self.actor.coords[1], self.actor.coords[0]), (chosen_action[3][1], chosen_action[3][0]), self.battle.bmap)

@@ -442,11 +442,11 @@ class StandardDamage:
             self.stat_modify = data.get('stat_modify', True)
 
             if (self.num_dice and not self.dice_size) or (self.dice_size and not self.num_dice):
-                print "Skill {0} must have both num_dice and dice_size to use randomized damage.".format(ident)
+                print("Skill {0} must have both num_dice and dice_size to use randomized damage.".format(ident))
                 raise ValueError
 
             if self.fixed_damage and (self.num_dice or self.dice_size):
-                print "Skill {0} can not have both fixed and randomized damage.".format(ident)
+                print("Skill {0} can not have both fixed and randomized damage.".format(ident))
                 raise ValueError
 
     def get_damage_range(self, attacker):
@@ -460,7 +460,7 @@ class StandardDamage:
             return 0, 0
 
         negative_multiplier = -1 if self.dice_size < 0 or self.fixed_damage < 0 else 1
-        stat_modifier = negative_multiplier * (getattr(attacker, self.attack_stat)/3) if self.attack_stat and self.stat_modify else 0
+        stat_modifier = negative_multiplier * (getattr(attacker, self.attack_stat)//3) if self.attack_stat and self.stat_modify else 0
 
         if self.fixed_damage:
             return self.fixed_damage, self.fixed_damage
@@ -474,7 +474,7 @@ class StandardDamage:
         return self.get_damage_range(attacker)[1]
 
     def get_average_damage(self, attacker):
-        return sum(self.get_damage_range(attacker)) / 2
+        return sum(self.get_damage_range(attacker)) // 2
 
     def roll_damage(self, attacker, defender, use_random=True):
         if use_random:
@@ -530,9 +530,9 @@ class LineAttack():
         #Subtract caster loc from last_line_tile to determine direction
         point_diff = add_points(last_line_tile, negative_coords(caster_loc))
         if point_diff[0]:
-            direction = (point_diff[0] / abs(point_diff[0]), 0)
+            direction = (point_diff[0] // abs(point_diff[0]), 0)
         elif point_diff[1]:
-            direction = (0, point_diff[1] / abs(point_diff[1]))
+            direction = (0, point_diff[1] // abs(point_diff[1]))
         else:
             direction = (0, 0)
 
@@ -565,9 +565,9 @@ class ConeAttack():
         #Subtract caster loc from last_line_tile to determine direction
         point_diff = add_points(last_line_tile, negative_coords(caster_loc))
         if point_diff[0]:
-            direction = (point_diff[0] / abs(point_diff[0]), 0)
+            direction = (point_diff[0] // abs(point_diff[0]), 0)
         elif point_diff[1]:
-            direction = (0, point_diff[1] / abs(point_diff[1]))
+            direction = (0, point_diff[1] // abs(point_diff[1]))
         else:
             direction = (0, 0)
 
@@ -823,7 +823,7 @@ class Skill:
     def skill_prompt(self):
         prompt = self.prompt
         prompt += " Range: %s" % str(self.range)
-        if self.aoe > 1:
+        if self.aoe_size > 1:
             prompt += " Area: %s" % str(self.aoe_size).capitalize()
 
         return prompt
@@ -834,6 +834,7 @@ def make_actor():
         actors_data = yaml.load(actors)
 
     return actors_data['actors']
+
 
 def make_maps():
     with open('maps.yaml') as maps:

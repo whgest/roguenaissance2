@@ -101,7 +101,7 @@ class Battle(object):
     def state_check(self):
         for unit in self.all_living_units:
             if self.bmap.get_tile_at(unit.coords).actor != unit:
-                print self.all_living_units, unit, unit.coords, self.bmap.get_tile_at(unit.coords).actor
+                print(self.all_living_units, unit, unit.coords, self.bmap.get_tile_at(unit.coords).actor)
                 raise AssertionError
 
     @property
@@ -198,7 +198,10 @@ class Battle(object):
             unit.kill_actor()
             self.event.add_event(RN2_event.KillUnit(unit))
             self.update_display()
-            self.all_living_units.remove(unit)
+            try:
+                self.all_living_units.remove(unit)
+            except ValueError:
+                print("{} attempted removal but was not present in list".format(unit.name))
             self.remove_unit(unit)
             self.update_display()
 
@@ -297,7 +300,7 @@ class Battle(object):
     def execute_skill(self, attacker, skill, affected_tiles, origin):
 
         attacker.mp = attacker.mp - self.get_mp_cost(skill, attacker)
-        #print "{} is charged {} MP for {} and now has {}".format(attacker.name, self.get_mp_cost(skill, attacker), skill.name, attacker.mp)
+        #print("{} is charged {} MP for {} and now has {}".format(attacker.name, self.get_mp_cost(skill, attacker), skill.name, attacker.mp))
 
         enemy_units_affected, friendly_units_affected, self_unit_affected = self.get_targets_for_area(attacker, affected_tiles, skill)
 
@@ -380,7 +383,7 @@ class Battle(object):
 
     def validate_ai_turn(self, e, skill, target, path):
         destination = path[-1] if len(path) else e.coords
-        print '{0} with HP {5}, MP {6}, at {1} moves to tile {4} and chooses skill {2} targeting tile {3}.\n'.format(e, e.coords, skill, target, destination, e.hp, e.mp)
+        print('{0} with HP {5}, MP {6}, at {1} moves to tile {4} and chooses skill {2} targeting tile {3}.\n'.format(e, e.coords, skill, target, destination, e.hp, e.mp))
 
         if target:
             target_tile = self.bmap[target[0]][target[1]]
@@ -391,16 +394,16 @@ class Battle(object):
             if self.bmap.get_tile_at(tile).actor == e or self.bmap.get_tile_at(tile).is_movable:
                 continue
             else:
-                print "Actor '{0}' returned illegal move. Tile ({1}, {2}) is blocked by {3}.".format(e.name, tile[0], tile[1], self.bmap.get_tile_at(tile).actor)
+                print("Actor '{0}' returned illegal move. Tile ({1}, {2}) is blocked by {3}.".format(e.name, tile[0], tile[1], self.bmap.get_tile_at(tile).actor))
                 raise AssertionError
 
         if skill and not e.mp >= self.get_mp_cost(skill, e):
-            print "Actor '{0}' does not have the MP to cast {1}. MP: {2} Needed: {3}".format(e.name, skill.name, e.mp, self.get_mp_cost(skill, e))
+            print("Actor '{0}' does not have the MP to cast {1}. MP: {2} Needed: {3}".format(e.name, skill.name, e.mp, self.get_mp_cost(skill, e)))
             raise AssertionError
 
         #todo: check skill range, emptiness for summon skills, etc.
         if skill and target and destination and RN2_battle_logic.grid_distance(destination, target) > skill.range:
-            print "Actor '{0}' cannot reach target {1} with skill {2}. Range: {3}, Distance: {4}".format(e.name, target, skill.name, skill.range, RN2_battle_logic.grid_distance(destination, target))
+            print("Actor '{0}' cannot reach target {1} with skill {2}. Range: {3}, Distance: {4}".format(e.name, target, skill.name, skill.range, RN2_battle_logic.grid_distance(destination, target)))
             raise AssertionError
 
     def get_mp_cost(self, skill, unit):

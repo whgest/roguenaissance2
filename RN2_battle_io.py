@@ -1,5 +1,5 @@
-import logging
 import string as string_module
+import re
 import RN2_battle_logic
 from RN2_initialize import (ACTIVATE, CANCEL, PASS_TURN, HELP_MENU, STATUS_DISPLAY, SKILLS_MENU, LEGEND, BATTLE_OVERVIEW,
                             MUTE_SOUND, EXIT, DOWN, LEFT, RIGHT, UP, INVALID, F1, F2, F3, F4, F5, F6, F7, F8, F9, F10,
@@ -69,18 +69,22 @@ class BattleReport:
 
         for word in word_list:
             color = ''
-            if word.translate(string_module.maketrans("", ""), self.strip_string) == "%unit":
-                word = word.replace("%unit", unit.name)
+            if "%unit" in word:
+                word = re.sub(r"%unit", unit.name, word)
                 color = self.colorize_unit_name(unit)
-            elif word.translate(string_module.maketrans("", ""), self.strip_string) == "%cause":
-                word = word.replace("%cause", cause)
+            elif "%cause" in word:
+                word = re.sub(r"%cause", cause, word)
                 try:
                     color = report_obj.cause_color
                 except AttributeError:
                     color = report_obj.line_color
-            elif word.translate(string_module.maketrans("", ""), self.strip_string) == "%effect" and report_obj.effect_color:
-                word = word.replace("%effect", effect)
-                color = report_obj.effect_color
+            elif "%effect" in word:
+                word = re.sub(r"%effect", effect, word)
+                try:
+                    color = report_obj.effect_color
+                except AttributeError:
+                    color = report_obj.line_color
+
             if not color:
                 color = "text"
             if report_obj.line_color:
@@ -558,7 +562,7 @@ class BattleController(object):
         try:
             self.sound_handler.play_music(music_ident)
         except KeyError:
-            print "Track id {0} not found.".format(music_ident)
+            print("Track id {0} not found.".format(music_ident))
             raise KeyError
 
     def draw_battle_ui(self, battle):

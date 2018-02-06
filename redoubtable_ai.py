@@ -245,7 +245,7 @@ class SimulationHandler(object):
         # start1 = timer()
         simulated_battle = RN2_battle.SimulatedBattle({}, battle.actor_data, {}, copy.deepcopy(battle.bmap), {})
         # end1 = timer()
-        # print "Initiating battle class time:", end1-start1
+        # print("Initiating battle class time:", end1-start1)
 
         simulated_battle.all_living_units = copy.deepcopy(battle.all_living_units)
 
@@ -484,7 +484,7 @@ class RedoubtableAi(object):
                         eval_move = self.evaluate_move(move_options_for_target_and_skill_inside_aoe, self.actor, simulation.threat_map)
                         score += self.actor.ai.weights.personal.calculate_location_score(eval_move['threat'])
 
-                        # print 'score after move (in) to ', eval_move['destination'], score, '\n'
+                        # print('score after move (in) to ', eval_move['destination'], score, '\n')
 
                         possible_move = {'score': score, 'skill': skill, 'target': target_option,
                                          'actor_included': True, 'destination': eval_move['destination']}
@@ -493,13 +493,13 @@ class RedoubtableAi(object):
                         simulation.reset()
 
         end = timer()
-        print 'evaluate run time:', (end - start), 'seconds:', len(possible_moves), 'results.'
+        print('evaluate run time:', (end - start), 'seconds:', len(possible_moves), 'results.')
 
-        print 'total_time_creating_threat_maps', simulation.total_time_creating_threat_maps, simulation.times_recreating_threat_map, 'times', simulation.total_time_creating_threat_maps/simulation.times_recreating_threat_map, 'per run'
+        print('total_time_creating_threat_maps', simulation.total_time_creating_threat_maps, simulation.times_recreating_threat_map, 'times', simulation.total_time_creating_threat_maps/simulation.times_recreating_threat_map, 'per run')
         #
-        # print 'stored values used {} times.'.format(simulation.threat_map.dynamic_c)
-        # print 'total time resetting: {}\n'.format(simulation.time_spent_resetting)
-        print "simulation handler initiation time:", end2 - start, int((end2-start)/(end-start) * 100), '% of total runtime :('
+        # print('stored values used {} times.'.format(simulation.threat_map.dynamic_c))
+        # print('total time resetting: {}\n'.format(simulation.time_spent_resetting))
+        print("simulation handler initiation time:", end2 - start, int((end2-start)/(end-start) * 100), '% of total runtime :(')
         # for possible_move in possible_moves:
         #     possible_move['score'] *= (random.randint(100 - self.weights.randomness_percentage, 100 + self.weights.randomness_percentage) / 100.0)
 
@@ -528,15 +528,16 @@ class RedoubtableAi(object):
 
             chosen_action = random.choice(top_score_moves)
 
-            possible_moves.sort(key=lambda x: x['skill'])
-            keyfunc = lambda x: x['skill']
+            possible_moves.sort(key=lambda x: str(x['skill']))
+            keyfunc = lambda x: str(x['skill'])
             options_for_each = {}
+
             for k, g in itertools.groupby(possible_moves, keyfunc):
                 options_for_each[k] = list(g)
 
             for k in options_for_each.keys():
                 if len(options_for_each[k]):
-                    print k, len(options_for_each[k]), 'best:', options_for_each[k]
+                    print(k, len(options_for_each[k]), 'best:', options_for_each[k])
 
             if chosen_action.get('destination'):
                 path = pathfind((self.actor.coords[1], self.actor.coords[0]),

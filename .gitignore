@@ -10,5 +10,6 @@ logs/rn_debug.log
 *.pyc
 *.sav
 .env/
+.env3/
 .idea/
 highscores.dat

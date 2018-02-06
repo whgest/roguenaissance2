@@ -29,7 +29,7 @@ class RN_Sound():
 
         if queue:
             # self.music_to_queue = music_ident
-            # print 'queueing', self.music[music_ident]
+            # print('queueing', self.music[music_ident])
             # pygame.mixer.music.queue("sound/" + self.music[music_ident])
             return
         else:
@@ -92,7 +92,7 @@ class Game(object):
         self.persistent_actor.score = self.saved_data.score
 
     def auto_save(self):
-        fin = open(self.saved_data.saved_character.name + ".sav", 'w')
+        fin = open(self.saved_data.saved_character.name + ".sav", 'wb')
         pickle.dump(self.saved_data.dehydrate(), fin)
         fin.close()
 
@@ -189,7 +189,7 @@ def main():
             game.new_game(hclass, name)
             game.auto_save()
         else:
-            with open(hero) as fin:
+            with open(hero, 'rb') as fin:
                 saved_hero = pickle.load(fin)
                 game.load_saved_game(saved_hero)
 

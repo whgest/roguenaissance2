@@ -33,7 +33,7 @@ def calculate_affected_area(origin, caster_loc, skill, bmap):
         all_tiles.update(edge_tiles)
 
     except TypeError:
-        print all_tiles, edge_tiles
+        print(all_tiles, edge_tiles)
         exit()
 
     return list(all_tiles)

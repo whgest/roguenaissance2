@@ -62,7 +62,7 @@ class UnitScoreWeightDefaults(object):
         score += self.is_dead * unit.is_dead
 
         score += abs(self.preferred_threat_level - threat_map.get_threat_for_tile(unit.coords)) * self.tile_threat
-        #print unit, unit.coords, abs(self.preferred_threat_level - threat_map.get_threat_for_tile(unit.coords)) * self.tile_threat
+        #print(unit, unit.coords, abs(self.preferred_threat_level - threat_map.get_threat_for_tile(unit.coords)) * self.tile_threat)
 
         return score
 
@@ -175,7 +175,7 @@ class SimulationHandler(object):
         # start = timer()
         reset_units(self.simulated_battle.all_living_units)
         # end = timer()
-        # print 'reset units time:', (end - start)
+        # print('reset units time:', (end - start))
 
         for unit in self.simulated_battle.all_living_units:
             self.simulated_battle.bmap.place_unit(unit, unit.coords)
@@ -209,7 +209,7 @@ class SimulationHandler(object):
         start = timer()
         threat_map = self.create_threat_map(allies, enemies)
         end = timer()
-        #print end-start
+        #print(end-start)
 
         for enemy in enemies:
             score += active.ai.weights.enemy.calculate(enemy, threat_map) * unit_priority
@@ -277,16 +277,16 @@ class PeerlessAi(object):
                         sstart = timer()
                         score = simulation.simulate_move(skill, target_option, move_option, affected_tiles)
                         send = timer()
-                        #print "Time to score:", (send - sstart)
+                        #print("Time to score:", (send - sstart))
                         possible_move = {'score': score, 'skill': skill, 'target': target_option, 'destination': move_option}
                         possible_moves.append(possible_move)
                         tstart = timer()
                         simulation.reset()
                         tend = timer()
-                        #print "Time to reset:", (tend - tstart)
+                        #print("Time to reset:", (tend - tstart))
 
         end = timer()
-        print 'evaluate run time:', (end - start), 'seconds:', len(possible_moves), 'results.'
+        print('evaluate run time:', (end - start), 'seconds:', len(possible_moves), 'results.')
         return possible_moves
 
     def get_action(self):
@@ -296,7 +296,7 @@ class PeerlessAi(object):
             possible_moves.sort(key=lambda x: x['score'], reverse=True)
             chosen_action = possible_moves[0]
 
-            print possible_moves[:10]
+            print(possible_moves[:10])
 
             if chosen_action['destination']:
                 path = pathfind((self.actor.coords[1], self.actor.coords[0]), (chosen_action['destination'][1],

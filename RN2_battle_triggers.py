@@ -48,7 +48,7 @@ class AvatarPosition(BattleTriggerCondition):
             point = self.condition['point']
             operator = self.condition['operator']
         except KeyError as err:
-            print "Avatar Position condition requires axis, point, operator in condition_value"
+            print("Avatar Position condition requires axis, point, operator in condition_value")
             raise err
 
         if operator == '<':
