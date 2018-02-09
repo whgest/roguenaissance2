@@ -83,13 +83,11 @@ actors:
       - Rock Toss
       - Hornet Swarm
       - Thunderbolt
-      - Venom Slash
-      - Vine Grasp
+      - Sunder Earth
       - Avalanche Strike
-      - Tectonic Break
       - Ascendance
       - Summon Spring Wind
-      - Summon Stegosaur
+      - Summon Vine Creeper
     descr: A wizard mastering the powers of the earth and her creatures.
 
   #Summoned monsters --:
@@ -181,21 +179,21 @@ actors:
     descr: A pleasant breeze.
 
 
-  Stegosaur:
-    character: S
+  Vine Creeper:
+    character: V
     ai: player
-    maxhp: 50
-    maxmp: 3
+    maxhp: 27
+    maxmp: 4
     attack: 20
-    defense: 17
+    defense: 15
     magic: 0
     resistance: 10
     agility: 2
     move: 5
     skillset:
-      - Tail Swipe
-      - Megastomp
-    descr: A rampaging dinosaur.
+      - Vine Grasp
+      - Mass Entangle
+    descr: An animated tangle of thorned, grasping vines.
 
   Hornet:
     character: "*"
@@ -405,7 +403,7 @@ actors:
     ai: mage
     maxhp: 55
     maxmp: 10
-    attack: 25
+    attack: 15
     defense: 12
     magic: 21
     resistance: 15
@@ -419,6 +417,7 @@ actors:
       - Necrodrain
       - Cloudkill
       - Poisonbolt
+      - Spectral Shove
       - Annihilate
       - Summon Serpents
       - Summon Lich

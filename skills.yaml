@@ -420,9 +420,22 @@ Obsidian sword:
   attack_stat: attack
   range: 1
   aoe_size: 0
-  damage:
-    num_dice: 2
-    dice_size: 6
+  targets:
+    enemy:
+      damage_type: empower
+      empower:
+        stat: mp
+        value: 1
+      damage:
+        num_dice: 2
+        dice_size: 6
+    friendly:
+      damage_type: standard
+      damage:
+        num_dice: 2
+        dice_size: 6
+    self:
+      ignored: true
   mp: 0
   prompt: Basic attack.
   animation: basic
@@ -434,8 +447,8 @@ Whirlwind:
   targets:
     enemy:
       damage:
-        num_dice: 1
-        dice_size: 10
+        num_dice: 2
+        dice_size: 6
     self:
       ignored: true
   mp: 0
@@ -455,9 +468,9 @@ Stone Armor:
           duration: 4
           modifiers:
             - stat: defense
-              value: 2
+              value: 3
             - stat: resistance
-              value: 2
+              value: 3
   mp: 1
   prompt: You are protected by swirling stones. Raises defense and resistance.
   animation: armor
@@ -494,32 +507,37 @@ Hornet Swarm:
     - Hornet
     - Hornet
     - Hornet
+    - Hornet
+    - Hornet
   mp: 3
   prompt: Send angry hornets to injure and lower magic and attack.
   animation: summon
 
 
-Venom Slash:
+Sunder Earth:
   attack_stat: attack
   range: 1
-  aoe_size: 1
+  aoe_size: 2
+  aoe_type: cone
   targets:
     enemy:
       damage:
         num_dice: 2
         dice_size: 8
-      status_effects:
-        - type: Poison
-          damage: 3
-          duration: 3
       move_effects:
         - type: push
-          distance: 1
+          distance: 4
+      status_effects:
+        - type: Slow
+          duration: 2
+          modifiers:
+            - stat: move
+              value: -3
     self:
       ignored: true
   mp: 2
-  prompt: An empowered melee strike that poisons.
-  animation: venom
+  prompt: An empowered melee strike that send enemies flying and leaves them Slowed.
+  animation: rock toss
 
 
 Thunderbolt:
@@ -535,25 +553,9 @@ Thunderbolt:
       modifiers:
         - stat: move
           value: -99
-  mp: 2
+  mp: 1
   prompt: Damages enemy and inflicts Root.
   animation: tbolt
-
-
-Vine Grasp:
-  attack_stat: magic
-  range: 7
-  aoe_size: 0
-  damage:
-    num_dice: 1
-    dice_size: 8
-  move_effects:
-    - type: pull
-      distance: 7
-      origin: user
-  mp: 1
-  prompt: Damage and pull a distant enemy to you.
-  animation: vine
 
 
 Avalanche Strike:
@@ -567,7 +569,7 @@ Avalanche Strike:
     - type: push
       distance: 8
   mp: 5
-  prompt: Sending an enemy flying with a fully empowered slash.
+  prompt: Focus the raging fury of earth on one enemy.
   animation: avalanche
 
 
@@ -602,14 +604,14 @@ Ascendance:
     - type: Ascended
       modifiers:
        - stat: attack
-         value: 6
+         value: 8
        - stat: defense
          value: 99
        - stat: resistance
          value: 99
        - stat: move
          value: 2
-      duration: 3
+      duration: 4
   mp: 7
   prompt: Invulnerability and attack/move increased.
   animation: ascend
@@ -624,14 +626,14 @@ Summon Spring Wind:
   prompt: Summon a healing spirit to heal your injuries.
   animation: summon
 
-Summon Stegosaur:
+Summon Vine Creeper:
   targets_empty: true
   range: 5
   aoe_size: 0
   add_unit:
-    - Stegosaur
+    - Vine Creeper
   mp: -1
-  prompt: Summon a stegosaur to crush your foes.
+  prompt: Summon a vine creeper to snare your foes.
   animation: summon
 
 #Summon skills:
@@ -917,6 +919,41 @@ Venomous Bite:
   prompt: Basic attack.
   animation: bite
 
+Vine Grasp:
+  attack_stat: attack
+  range: 7
+  aoe_size: 0
+  damage:
+    num_dice: 1
+    dice_size: 8
+  move_effects:
+    - type: pull
+      distance: 7
+      origin: user
+  mp: 0
+  prompt: Damage and pull a distant enemy to you.
+  animation: vine
+
+Mass Entangle:
+  attack_stat: attack
+  range: 0
+  aoe_size: 2
+  damage_type: self_destruct
+  damage:
+    num_dice: 1
+    dice_size: 10
+  status_effects:
+    - type: Root
+      duration: 4
+      modifiers:
+        - stat: move
+          value: -99
+
+  mp: 4
+  prompt: Explode into a tangle of vines, rooting all nearby units.
+  animation: venom
+
+
 Sting:
   attack_stat: attack
   range: 1
@@ -1146,6 +1183,18 @@ Horror:
       duration: 3
   mp: 0
   prompt: Damages enemy and inflicts slow and despair. Range 5.
+  animation: surge
+
+Spectral Shove:
+  attack_stat: magic
+  range: 5
+  aoe_size: 0
+  move_effects:
+  - type: push
+    distance: 4
+    origin: user
+  mp: 1
+  prompt: Push 4
   animation: surge
 
 Annihilate:

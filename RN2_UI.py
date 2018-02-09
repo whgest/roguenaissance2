@@ -57,6 +57,7 @@ class RN_Cursor():
 
         return (to_display['character'], to_display['fgcolor'], to_display['bgcolor'])
 
+
 class IntervalTimer(Thread):
     def __init__(self, stopEvent, interval, func):
         Thread.__init__(self)
@@ -700,6 +701,13 @@ class RN_UI_Class():
                 self.right_menu_text(51, line_to_print, noun + str(abs(dmg_range[0])), fgcolor=color)
 
         line_to_print += 1
+
+        if skill_effect_for_target.empower:
+            self.right_menu_text(51, line_to_print, "{} gains {} {}".format(attacker.name, skill_effect_for_target.empower['value'],
+                                                                            skill_effect_for_target.empower['stat'].upper()),
+                                                                            fgcolor=self.textcolors['heal'])
+            line_to_print += 1
+
         if len(skill_effect_for_target.status_effects) or len(skill_effect_for_target.move_effects):
             self.print_additional_effects(skill_effect_for_target, starting_line=line_to_print)
 
@@ -774,7 +782,7 @@ class RN_UI_Class():
         UI = self
         self.draw_border()
         UI.title_text(14, 28, "On the \"Roguenaissance 3.0\" RPG Battle Engine")
-        UI.title_text(20, 30, "by William Hardy Gest, 2013-2017")
+        UI.title_text(20, 30, "by William Hardy Gest, 2013-2018")
         title_list = [("New Game", 10), ("Continue", 25), ("High Scores", 42), ("Quit", 60)]
         self.display_title(title)
 

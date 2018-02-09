@@ -428,7 +428,7 @@ class Actor(object):
 
 
 class StandardDamage:
-    def __init__(self, data, ident, attack_stat, defense_stat):
+    def __init__(self, data, ident, attack_stat, defense_stat, empower=None):
 
         self.attack_stat = attack_stat
         self.defense_stat = defense_stat
@@ -485,8 +485,8 @@ class StandardDamage:
 
 
 class DrainDamage(StandardDamage):
-    def __init__(self, data, ident, attack_stat, defense_stat):
-        StandardDamage.__init__(self, data, ident, attack_stat, defense_stat)
+    def __init__(self, data, ident, attack_stat, defense_stat, empower=None):
+        StandardDamage.__init__(self, data, ident, attack_stat, defense_stat, empower=None)
         self.name = ident
         self.type = "Drain"
 
@@ -501,8 +501,25 @@ class DrainDamage(StandardDamage):
         return inflicted_damage
 
 
+class EmpowerDamage(StandardDamage):
+    def __init__(self, data, ident, attack_stat, defense_stat, empower=None):
+        StandardDamage.__init__(self, data, ident, attack_stat, defense_stat, empower=None)
+        self.name = ident
+        self.type = "Damage"
+        self.empower = empower
+
+    def roll_damage(self, attacker, defender, use_random=True):
+
+        if self.empower.get('stat') == 'hp':
+            attacker.inflict_damage_or_healing(int(self.empower.get('value')) * -1, self.name)
+        else:
+            attacker.mp = min(int(attacker.mp + self.empower.get('value')), attacker.maxmp)
+
+        return StandardDamage.roll_damage(self, attacker, defender, use_random=use_random)
+
+
 class SelfDestructDamage(StandardDamage):
-    def __init__(self, data, ident, attack_stat, defense_stat):
+    def __init__(self, data, ident, attack_stat, defense_stat, empower={}):
         StandardDamage.__init__(self, data, ident, attack_stat, defense_stat)
         self.name = ident
         self.type = "Self Destruct"
@@ -597,7 +614,8 @@ AOE_TYPES = {
 DAMAGE_TYPES = {
     'standard': StandardDamage,
     'drain': DrainDamage,
-    'self_destruct': SelfDestructDamage
+    'self_destruct': SelfDestructDamage,
+    'empower': EmpowerDamage
 }
 
 DEFAULT_DEFENSE_STATS = {
@@ -704,13 +722,14 @@ class SkillEffectForTargetType:
     def __init__(self, target_type_data, ident):
         self.ignored = target_type_data.get('ignored', False)
         self.damage_type = target_type_data.get('damage_type', 'standard')
+        self.empower = target_type_data.get('empower', {})
         self.is_resistable = target_type_data.get('is_resistable', True)
         self.attack_stat = target_type_data.get('attack_stat')
         self.defense_stat = target_type_data.get('defense_stat')
         if self.attack_stat and not self.defense_stat:
             self.defense_stat = DEFAULT_DEFENSE_STATS[self.attack_stat]
 
-        self.damage = DAMAGE_TYPES[self.damage_type](target_type_data.get('damage'), ident, self.attack_stat, self.defense_stat)
+        self.damage = DAMAGE_TYPES[self.damage_type](target_type_data.get('damage'), ident, self.attack_stat, self.defense_stat, empower=self.empower)
 
         self.status_effects = []
         for s in target_type_data.get('status_effects', []):
