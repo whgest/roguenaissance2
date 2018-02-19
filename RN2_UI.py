@@ -156,13 +156,13 @@ class RN_UI_Class():
         print(pygame.display.get_driver())
 
         self.cell_size = (self.screen.cellheight, self.screen.cellwidth)
-        self.right_menu_coords = (51,1,23,22)
-        self.narration_coords = ((1,30,73,13))
+        self.right_menu_coords = (51, 1, 23, 22)
+        self.narration_coords = (1, 30, 73, 13)
         self.battle_grid_coords = (0, 0, 50, 25)
-        self.menu_base_color = (40,95,173)
-        self.menu_gradient = (2,3,4)
+        self.menu_base_color = (40, 95, 173)
+        self.menu_gradient = (2, 3, 4)
 
-        self.highlight_tint = (125,-120,47)
+        self.highlight_tint = (125, -120, 47)
         self.highlighted_tiles = []
         self.textcolors = {
             "damage": "red2",
@@ -641,6 +641,18 @@ class RN_UI_Class():
             starting_line += 1
 
         return starting_line
+
+    def show_damage_or_heal(self, defender, amount):
+        y_pos = defender.coords[1]
+        x_pos = defender.coords[0] if defender.coords[0] < self.battle_grid_coords[2] - 1 else defender.coords[0] - 1
+
+        if amount < 0:
+            color = self.textcolors['heal']
+        else:
+            color = self.textcolors['damage']
+
+        self.animations.display_damage(x_pos, y_pos, str(abs(amount)), color)
+
 
     def print_target(self, attacker, defenders, skill):
         if (skill.targets.special_friendly_effect and len([d for d in defenders if d.is_ally_of(attacker)]) and len([d for d in defenders if d.is_hostile_to(attacker)])) or \

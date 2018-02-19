@@ -28,6 +28,26 @@ class Animation():
             self.UI.text(t[0], t[1], display[0], fgcolor=display[1], bgcolor=display[2])
         return
 
+    def display_damage(self, x, y, amount, color):
+        digits = len(amount)
+        if digits > 2:
+            amount = amount[:2]
+
+        self.UI.screen._autoupdate = True
+        self.UI.text(x, y, amount, fgcolor=color)
+        sleep(150)
+        try:
+            self.cleanup([(x, y), (x+1, y)])
+        except IndexError:
+            import ipdb
+            ipdb.set_trace()
+            raise
+        self.UI.text(x, max(0, y-1), amount, fgcolor=color)
+        sleep(350)
+
+        self.cleanup([(x, max(0, y-1)), (x+1, max(0, y-1))])
+        self.UI.screen._autoupdate = False
+
     def flash_tiles(self, tiles, flash_list, reps=1, delay=150, fast_update=True, cleanup=True):
         if fast_update is True:
             self.UI.screen._autoupdate = False

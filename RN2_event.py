@@ -131,6 +131,9 @@ class DamageOrHeal(BattleEvent):
         self.amount = amount
         self.cause_name = cause_name
 
+    def display(self, ui):
+        ui.show_damage_or_heal(self.unit, self.amount)
+
     def report_entry(self):
         if self.amount >= 0:
             return {'_format': 'damage', 'unit': self.unit, 'cause': self.cause_name, 'effect': self.amount}

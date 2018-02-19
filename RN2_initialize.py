@@ -788,6 +788,8 @@ class TargetTypes:
     def __init__(self, targets, data, ident):
         enemy_data = dict(data) #copy default data
         enemy_data.update(targets.get('enemy', {}))
+        enemy_data.update(targets.get('enemy', {}))
+        enemy_data.update(targets.get('enemy', {}))
         self.enemy = SkillEffectForTargetType(enemy_data, ident)
 
         friendly_data = dict(data)

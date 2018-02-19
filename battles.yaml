@@ -165,7 +165,7 @@
   music:
     - boss
 
-  player_start: 25,20
+  player_start: 25,19
 
   units:
     - ident: Belshazzar
