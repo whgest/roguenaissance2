@@ -23,6 +23,7 @@ class RN_Sound():
         pygame.mixer.init()
 
     def play_music(self, music_ident, queue=False):
+        #return
         if music_ident == "mute":
             pygame.mixer.music.stop()
             return
@@ -163,11 +164,12 @@ class SaveGame(SaveData):
 
 def main():
     #test mode
-    # game = Game()
-    # game.sound_handler.mute_switch = True
-    # game.new_game('Pyromancer', "HARDANIUS")
-    # game.init_battle(2)
-    # exit()
+    game = Game()
+    game.sound_handler.mute_switch = True
+
+    game.new_game('Terramancer', "HARDANIUS")
+    game.init_battle(1)
+    exit()
 
     while 1:
         game = Game()

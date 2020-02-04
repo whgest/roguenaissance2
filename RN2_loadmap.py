@@ -27,7 +27,7 @@ class Terrain(object):
 class Grass(Terrain):
     def __init__(self):
         Terrain.__init__(self)
-        self.name = "Grass"
+        self.name = "Moss"
         self.fgcolor = "forestgreen"
         self.bgcolor = "gray50"
         self.character = u'√'

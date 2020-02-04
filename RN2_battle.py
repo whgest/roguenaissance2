@@ -5,6 +5,10 @@ import RN2_battle_logic
 import RN2_event
 import RN2_battle_triggers
 
+from RN2_UI import screen_global
+
+SCREEN_GLOBAL = screen_global
+
 PLAYER_AI = "player"
 DELAY_BETWEEN_TURNS = 50
 TURN_MARKER = 'turn_marker'
@@ -170,6 +174,9 @@ class Battle(object):
             self.update_display()
             self.clear_killed()
 
+            if chosen_skill:
+                self.event.add_event(RN2_event.RemoveSkillAnnounce(chosen_skill))
+
             game_over = self.check_loss_condition()
             if game_over:
                 return False
@@ -248,6 +255,7 @@ class Battle(object):
     def add_unit(self, name, loc, team_id, summoner=None):
         if self.bmap.get_tile_at(loc).is_movable:
             stats = self.actor_data[name]
+
             stats['summoned_by'] = summoner
             unit = RN2_initialize.Actor(stats, name, event=self.event)
 
@@ -279,6 +287,20 @@ class Battle(object):
 
     def get_enemies_of(self, actor):
         return list([x for x in self.all_living_units if x.team_id != actor.team_id])
+
+    def get_enemies_of_with_distance(self, actor):
+        result = []
+        enemies = self.get_enemies_of(actor)
+        for e in enemies:
+            result.append({'unit': e, 'distance': RN2_battle_logic.get_distance(e.coords, actor.coords)})
+        return result
+
+    def get_allies_of_with_distance(self, actor):
+        result = []
+        allies = self.get_allies_of(actor)
+        for a in allies:
+            result.append({'unit': a, 'distance': RN2_battle_logic.get_distance(a.coords, actor.coords)})
+        return result
 
     def get_targets_for_area(self, attacker, affected_tiles, skill):
         enemy_units_affected = []
@@ -336,11 +358,14 @@ class Battle(object):
         if self.persistent_actor and target.id == 1 and inflicted_damage > 0:
             self.persistent_actor.score.damage_taken += inflicted_damage
 
-        for status_effect in skill_target_type_effect.status_effects:
-            target.apply_status(status_effect)
-
         for move_effect in skill_target_type_effect.move_effects:
             self.move_effect_on_unit(attacker, move_effect, target, origin)
+
+        if target.hp <= 0:
+            return
+
+        for status_effect in skill_target_type_effect.status_effects:
+            target.apply_status(status_effect)
 
     def move_effect_on_unit(self, attacker, effect, unit, origin):
         def max_abs(coords):

@@ -1,0 +1,217 @@
+basic_attack:
+  map: blank
+  units:
+    -
+      ident: testEnemy
+      loc: 1,2
+      team_id: 2
+    -
+      ident: testomancer
+      loc: 1,3
+      team_id: 1
+
+basic_attack_with_move:
+  map: blank
+  units:
+    -
+      ident: testEnemy
+      loc: 1,2
+      team_id: 2
+    -
+      ident: testomancer
+      loc: 1,8
+      team_id: 1
+
+aoe_attack_at_max_range:
+  map: blank
+  units:
+    -
+      ident: testomancer
+      loc: 1,1
+      team_id: 1
+    -
+      ident: testEnemy
+      loc: 1,15
+      team_id: 2
+
+
+aoe_attack:
+  map: blank
+  units:
+    -
+      ident: testomancer
+      loc: 1,4
+      team_id: 1
+    -
+      ident: testEnemy
+      loc: 5,7
+      team_id: 2
+    -
+      ident: testEnemy
+      loc: 5,1
+      team_id: 2
+
+
+aoe_attack_with_avoidance:
+  map: blank
+  units:
+    -
+      ident: testomancer
+      loc: 5,4
+      team_id: 1
+    -
+      ident: testEnemy
+      loc: 5,7
+      team_id: 2
+    -
+      ident: testEnemy
+      loc: 5,1
+      team_id: 2
+
+
+heal_ally:
+  map: blank
+  units:
+    -
+      ident: testHealer
+      loc: 5,2
+      team_id: 1
+    -
+      ident: testWoundedAlly
+      loc: 5,7
+      team_id: 1
+    -
+      ident: testEnemy
+      loc: 5,1
+      team_id: 2
+
+
+heal_self:
+  map: blank
+  units:
+    -
+      ident: testWoundedHealer
+      loc: 5,2
+      team_id: 1
+    -
+      ident: testEnemy
+      loc: 5,1
+      team_id: 2
+
+
+distant_enemy:
+  map: blank
+  units:
+    -
+      ident: testEnemy
+      loc: 1,1
+      team_id: 1
+    -
+      ident: testomancer
+      loc: 20,1
+      team_id: 2
+
+
+complex_time_check:
+  map: blank
+  units:
+    -
+      ident: Astromancer
+      loc: 20,20
+      team_id: 1
+    -
+      ident: Hornet
+      loc: 20,18
+      team_id: 2
+    -
+      ident: Hornet
+      loc: 19,20
+      team_id: 2
+    -
+      ident: Hornet
+      loc: 17,21
+      team_id: 2
+    -
+      ident: Hornet
+      loc: 15,1
+      team_id: 2
+    -
+      ident: Hornet
+      loc: 16,22
+      team_id: 2
+    -
+      ident: Hornet
+      loc: 20,16
+      team_id: 2
+    -
+      ident: Hornet
+      loc: 26,21
+      team_id: 2
+    -
+      ident: Hornet
+      loc: 20,14
+      team_id: 2
+    -
+      ident: Hornet
+      loc: 27,12
+      team_id: 2
+    -
+      ident: Hornet
+      loc: 20,18
+      team_id: 2
+    -
+      ident: Hornet
+      loc: 19,21
+      team_id: 2
+    -
+      ident: Hornet
+      loc: 17,20
+      team_id: 2
+    -
+      ident: Hornet
+      loc: 13,1
+      team_id: 1
+    -
+      ident: Hornet
+      loc: 14,22
+      team_id: 1
+    -
+      ident: Hornet
+      loc: 20,16
+      team_id: 1
+    -
+      ident: Hornet
+      loc: 25,20
+      team_id: 1
+    -
+      ident: Hornet
+      loc: 29,12
+      team_id: 1
+    -
+      ident: Hornet
+      loc: 25,13
+      team_id: 1
+
+rooted:
+  map: blank
+  units:
+    -
+      ident: rooted
+      loc: 1,1
+      team_id: 1
+    -
+      ident: testEnemy
+      loc: 1,3
+      team_id: 2
+
+summon_placement:
+  map: blank
+  units:
+    -
+      ident: summoner
+      loc: 1,5
+      team_id: 1
+    -
+      ident: testEnemy
+      loc: 1,11
+      team_id: 2

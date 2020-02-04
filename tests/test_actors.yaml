@@ -1,0 +1,217 @@
+testomancer:
+  character: "@"
+  maxhp: 52
+  maxmp: 9
+  weapon: white sword
+  armor: astral regalia
+  attack: 17
+  defense: 17
+  magic: 20
+  resistance: 17
+  agility: 16
+  move: 6
+  death_animation: playerdeath
+  immunities:
+    - Slow
+    - Lava
+  skillset:
+     - Meteor
+     - Zodiac Curse
+     - Soothing Starlight
+  descr: A test wizard
+
+testEnemy:
+  character: d
+  color: red
+  maxhp: 40
+  maxmp: 0
+  attack: 18
+  defense: 14
+  magic: 0
+  resistance: 11
+  agility: 15
+  move: 5
+  skillset:
+    - Bite
+  descr: A test enemy
+
+testHealer:
+  character: d
+  color: red
+  maxhp: 40
+  maxmp: 0
+  attack: 18
+  defense: 14
+  magic: 0
+  resistance: 11
+  agility: 15
+  move: 5
+  skillset:
+    - Soothing Breeze
+    - White sword
+  descr: A test healer
+
+testWoundedHealer:
+  character: d
+  color: red
+  hp: 1
+  maxhp: 40
+  maxmp: 0
+  attack: 18
+  defense: 14
+  magic: 0
+  resistance: 11
+  agility: 15
+  move: 5
+  skillset:
+    - Soothing Breeze
+    - White sword
+  descr: A test healer
+
+testWoundedAlly:
+  character: d
+  color: red
+  hp: 1
+  maxhp: 40
+  maxmp: 0
+  attack: 18
+  defense: 14
+  magic: 0
+  resistance: 11
+  agility: 15
+  move: 5
+  skillset:
+    - Bite
+  descr: A wounded test ally
+
+Belshazzar:
+  character: "%"
+  ai: mage
+  aggression: 0.5
+  maxhp: 55
+  maxmp: 10
+  attack: 15
+  defense: 12
+  magic: 21
+  resistance: 15
+  agility: 11
+  move: 5
+  immunities:
+    - Lava
+  death_animation: beldeath
+  skillset:
+    - Horror
+    - Necrodrain
+    - Cloudkill
+    - Poisonbolt
+    - Spectral Shove
+    - Annihilate
+    - Summon Lich
+  descr: An insane necromancer.
+
+Hornet:
+  character: "*"
+  maxhp: 1
+  attack: 18
+  defense: 0
+  magic: 0
+  resistance: 0
+  agility: 0
+  move: 7
+  skillset:
+    - Sting
+  descr: A stinging insect.
+
+Pyromancer:
+  character: "@"
+  maxhp: 48
+  maxmp: 99
+  attack: 15
+  defense: 16
+  magic: 20
+  resistance: 17
+  agility: 16
+  move: 5
+  death_animation: playerdeath
+  immunities:
+    - Burning
+    - Lava
+  skillset:
+    - Focusing staff
+    - Flash Freeze
+    - Ice Spear
+    - Pyrokinesis
+    - Icy Prison
+    - Life Drain
+    - Frostburn
+    - Absolute Zero
+  descr: A wizard mastering the powers of fire and ice.
+
+rooted:
+  character: "@"
+  maxhp: 48
+  maxmp: 99
+  attack: 15
+  defense: 16
+  magic: 20
+  resistance: 17
+  agility: 16
+  move: 0
+  skillset:
+    - Flash Freeze
+
+summoner:
+  character: "@"
+  maxhp: 48
+  maxmp: 99
+  attack: 15
+  defense: 16
+  magic: 20
+  resistance: 17
+  agility: 16
+  move: 5
+  skillset:
+    - Summon Meteorman
+
+Meteorman:
+  character: M
+  maxhp: 50
+  maxmp: 2
+  attack: 19
+  defense: 16
+  magic: 0
+  resistance: 13
+  agility: 2
+  move: 1
+  skillset:
+    - Meteor Punch
+
+Astromancer:
+  character: "@"
+  ai: player
+  maxhp: 52
+  maxmp: 9
+  weapon: white sword
+  armor: astral regalia
+  attack: 17
+  defense: 17
+  magic: 20
+  resistance: 17
+  agility: 16
+  move: 6
+  death_animation: playerdeath
+  immunities:
+    - Slow
+    - Lava
+  skillset:
+     - White sword
+     - Gravity Surge
+     - Zodiac Curse
+     - Time Distortion
+     - Soothing Starlight
+     - Singularity
+     - Meteor
+     - Gamma Ray
+     - Skycaller
+     - Summon Meteorman
+  descr: A wizard mastering the powers of the cosmos.

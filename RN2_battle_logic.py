@@ -1,11 +1,3 @@
-import RN2_loadmap
-import random
-import time
-import logging
-import RN2_AI
-import itertools
-
-
 def add_points(coord, change):
     return tuple(sum(x) for x in zip(coord, change))
 
@@ -13,6 +5,10 @@ def add_points(coord, change):
 def get_neighboring_points(point):
     neighbors = [(0, 1), (0, -1), (1, 0), (-1, 0)]
     return [add_points(point, n) for n in neighbors]
+
+
+def calculate_area_of_effect(origin, skill, bmap, caster_loc=(-1,-1)):
+    return calculate_affected_area(origin, caster_loc, skill, bmap)
 
 
 def calculate_affected_area(origin, caster_loc, skill, bmap):
@@ -82,7 +78,11 @@ def grid_distance(actor1, actor2):
     return abs(actor1[0] - actor2[0]) + abs(actor1[1] - actor2[1])
 
 
-def get_valid_tiles(origin, move_range, skill, bmap, use_aoe=False):
+def get_distance(p1, p2):
+    return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])
+
+
+def get_targetable_tiles(origin, move_range, skill, bmap, use_aoe=False):
         origin = tuple(origin)
         all_tiles = {origin}
         edges = [origin]
@@ -95,10 +95,13 @@ def get_valid_tiles(origin, move_range, skill, bmap, use_aoe=False):
             new_edges = edge_neighbors.difference(all_tiles)
 
             for t in new_edges:
-                if bmap.check_bounds(t) and bmap.get_tile_at(t).is_movable:
-                    edges.append(t)
+                if bmap.check_bounds(t):
+                    if bmap.get_tile_at(t).is_movable:
+                        edges.append(t)
+                    elif bmap.get_tile_at(t).is_targetable:
+                        all_tiles.add(t)
 
-        _range = skill.aoe_size if use_aoe else skill.range
+        _range = skill.range + skill.aoe_size if use_aoe else skill.range
 
         for s in range(_range):
             all_tiles, new_edges = skill.aoe.get_next_aoe_range(all_tiles, edges, origin)

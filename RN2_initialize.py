@@ -4,10 +4,8 @@ import math
 import yaml
 import random
 from RN2_battle_logic import get_neighboring_points, add_points
-import pyromancer_tree
 from RN2_event import EventQueue, DamageOrHeal, GoodStatus, BadStatus, GoodStatusEnds, BadStatusEnds, StatusDamageOrHeal, IsDisabled, ImmuneToStatus, KillUnit
 import itertools
-import peerless_ai
 import redoubtable_ai
 import copy
 
@@ -129,7 +127,7 @@ ABBREVIATIONS = {
 
 
 
-class Actor(object):
+class Actor:
     MODIFIABLE_ATTRIBUTES = ["maxhp", "maxmp", "attack", "defense", "magic", "resistance", "agility",
                              "move", "rooted"]
 
@@ -170,7 +168,7 @@ class Actor(object):
 
             self.attribute_modifiers[attribute] = []
 
-        self.hp = int(getattr(self, 'base_maxhp'))
+        self.hp = data.get('hp', int(getattr(self, 'base_maxhp')))
         self.mp = self.set_base_mp()
         self.coords = 0
         self.death_animation = data.get('death_animation', 'deathanim')
@@ -178,6 +176,7 @@ class Actor(object):
         self.team_id = 0
         self.is_dead = 0
         self.is_minion = data.get('is_minion', False)
+        self.aggression = data.get('aggression', 1)
 
         self.ai_class = redoubtable_ai.RedoubtableAi
 
@@ -741,6 +740,17 @@ class SkillEffectForTargetType:
 
         self.add_units = []
 
+    @property
+    def has_movement_effects(self):
+        affects_move = False
+        for s in self.status_effects:
+            for m in s.modifiers:
+                if m.stat == 'move':
+                    affects_move = True
+                    break
+
+        return self.move_effects or affects_move
+
     def get_hit_chance(self, attacker, defender):
         """
         To hit formula for all hostile skills is (skillStat/2) + (random integer between 0 and skillStat) vs. defenseStat
@@ -787,6 +797,8 @@ class SkillEffectForTargetType:
 class TargetTypes:
     def __init__(self, targets, data, ident):
         enemy_data = dict(data) #copy default data
+        enemy_data.update(targets.get('enemy', {}))
+        enemy_data.update(targets.get('enemy', {}))
         enemy_data.update(targets.get('enemy', {}))
         self.enemy = SkillEffectForTargetType(enemy_data, ident)
 
@@ -850,30 +862,30 @@ class Skill:
 
 def make_actor():
     with open('actors.yaml') as actors:
-        actors_data = yaml.load(actors)
+        actors_data = yaml.load(actors, Loader=yaml.FullLoader)
 
     return actors_data['actors']
 
 
 def make_maps():
     with open('maps.yaml') as maps:
-        map_data = yaml.load(maps)
+        map_data = yaml.load(maps, Loader=yaml.FullLoader)
         return map_data
 
 def make_text():
     with open('text.yaml') as text:
-        text_data = yaml.load(text)
+        text_data = yaml.load(text, Loader=yaml.FullLoader)
         return text_data
 
 def make_battle():
     with open('battles.yaml') as battles:
-        battle_data = yaml.load(battles)
+        battle_data = yaml.load(battles, Loader=yaml.FullLoader)
         return battle_data
 
 def make_skills():
     skills_dict = {}
     with open('skills.yaml') as skills:
-        skills_data = yaml.load(skills)
+        skills_data = yaml.load(skills, Loader=yaml.FullLoader)
 
     for skill_key in skills_data:
         skill_data = skills_data[skill_key]
@@ -886,7 +898,7 @@ def make_skills():
 
 def make_sound():
     with open('sound.yaml') as sound:
-        sound_data = yaml.load(sound)
+        sound_data = yaml.load(sound, Loader=yaml.FullLoader)
         return sound_data['sound'], sound_data['music']
 
 def set_binds():

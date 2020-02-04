@@ -90,7 +90,7 @@ Gravity Surge:
     dice_size: 4
   move_effects:
     - type: push
-      origin: target
+      origin: user
       distance: 5
   mp: 0
   prompt: Damage enemies and pushes 3 spaces from spell origin.
@@ -612,7 +612,7 @@ Ascendance:
        - stat: move
          value: 2
       duration: 4
-  mp: 7
+  mp: 9
   prompt: Invulnerability and attack/move increased.
   animation: ascend
 
@@ -1229,7 +1229,7 @@ Summon Serpents:
     - Serpent
     - Serpent
     - Serpent
-  mp: 3
+  mp: 4
   prompt: Summon a plague of venomous snakes.
   animation: summon
 

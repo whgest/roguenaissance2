@@ -141,11 +141,13 @@ class RNScrollablePrompt:
         else:
             self.UI.menutext(self.coords[0], self.coords[1], self.prompt_text)
 
+screen_global = pygcurse.PygcurseWindow(75, 45)
 
 class RN_UI_Class():
+
     def __init__(self, sound):
         self.grid_size = (75, 45)
-        self.screen = pygcurse.PygcurseWindow(self.grid_size[0], self.grid_size[1])
+        self.screen = screen_global
         self.cursor = RN_Cursor(self)
         self.scrolling_prompt = RNScrollablePrompt(self)
         self.screen._autoupdate = False
@@ -156,13 +158,13 @@ class RN_UI_Class():
         print(pygame.display.get_driver())
 
         self.cell_size = (self.screen.cellheight, self.screen.cellwidth)
-        self.right_menu_coords = (51,1,23,22)
-        self.narration_coords = ((1,30,73,13))
+        self.right_menu_coords = (51, 1, 23, 22)
+        self.narration_coords = (1, 30, 73, 13)
         self.battle_grid_coords = (0, 0, 50, 25)
-        self.menu_base_color = (40,95,173)
-        self.menu_gradient = (2,3,4)
+        self.menu_base_color = (40, 95, 173)
+        self.menu_gradient = (2, 3, 4)
 
-        self.highlight_tint = (125,-120,47)
+        self.highlight_tint = (125, -120, 47)
         self.highlighted_tiles = []
         self.textcolors = {
             "damage": "red2",
@@ -641,6 +643,39 @@ class RN_UI_Class():
             starting_line += 1
 
         return starting_line
+
+    def show_result_on_map(self, defender, result, color=None):
+        if type(result) is int:
+            if result < 0:
+                fgcolor = self.textcolors['heal']
+            else:
+                fgcolor = self.textcolors['damage']
+            result = str(abs(result))
+        else:
+            fgcolor = color if color else self.textcolors['text']
+
+        length = len(result)
+        right_edge = self.battle_grid_coords[2]
+
+        y_pos = defender.coords[1]
+        x_pos = defender.coords[0] if defender.coords[0] < right_edge - length else defender.coords[0] - length + 1
+
+        self.animations.display_damage(x_pos, y_pos, result, fgcolor)
+
+    def print_skill_announce(self, name):
+        length = len(name) + 2
+        self.text(0, 0, u'╔' + u"═"*length + u'╗', fgcolor="white", bgcolor=self.menu_base_color)
+        self.text(0, 2, u'╚' + u"═"*length + u'╝', fgcolor="white", bgcolor=self.gradient(2, self.menu_base_color, self.menu_gradient))
+        self.text(0, 1, u'║ ' + name + ' ║', fgcolor="white", bgcolor=self.gradient(1, self.menu_base_color, self.menu_gradient))
+
+    def remove_skill_announce(self, name):
+        length = len(name) + 4
+        cleanup = []
+        for i in range(3):
+            for j in range(length):
+                cleanup.extend([(j, i)])
+
+        self.animations.cleanup(cleanup)
 
     def print_target(self, attacker, defenders, skill):
         if (skill.targets.special_friendly_effect and len([d for d in defenders if d.is_ally_of(attacker)]) and len([d for d in defenders if d.is_hostile_to(attacker)])) or \
