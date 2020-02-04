@@ -43,6 +43,7 @@ class MoveUnit(BattleEvent):
             prev_coords = move
             pygame.time.wait(30)
 
+
 class UseSkill(BattleEvent):
     def __init__(self, user, skill, affected_tiles):
         BattleEvent.__init__(self)
@@ -54,7 +55,17 @@ class UseSkill(BattleEvent):
         return {'_format': 'use_skill', 'unit': self.user, 'cause': self.skill.name}
 
     def animate(self, ui):
+        ui.print_skill_announce(self.skill.name)
         ui.animate(self.affected_tiles, self.skill.animation, self.user)
+
+
+class RemoveSkillAnnounce(BattleEvent):
+    def __init__(self, skill):
+        self.skill = skill
+        BattleEvent.__init__(self)
+
+    def animate(self, ui):
+        ui.remove_skill_announce(self.skill.name)
 
 
 class UpdateMap(BattleEvent):
@@ -110,6 +121,7 @@ class Miss(BattleEvent):
 
     def display(self, ui):
         ui.sound_handler.play_sound('miss')
+        ui.show_result_on_map(self.unit, 'MISS')
 
     def report_entry(self):
         return {'_format': 'miss', 'unit': self.unit, 'cause': self.cause_name}
@@ -132,7 +144,9 @@ class DamageOrHeal(BattleEvent):
         self.cause_name = cause_name
 
     def display(self, ui):
-        ui.show_damage_or_heal(self.unit, self.amount)
+        if self.amount >= 0:
+            ui.animations.flash_damaged(self.unit.coords[0], self.unit.coords[1])
+        ui.show_result_on_map(self.unit, self.amount)
 
     def report_entry(self):
         if self.amount >= 0:
@@ -158,6 +172,9 @@ class BadStatus(BattleEvent):
         self.unit = unit
         self.cause_name = cause_name
 
+    def display(self, ui):
+        ui.show_result_on_map(self.unit, '+{}'.format(self.cause_name), color=ui.textcolors['bad_status'])
+
     def report_entry(self):
             return {'_format': 'bad_status', 'unit': self.unit, 'cause': self.cause_name}
 
@@ -165,6 +182,9 @@ class BadStatus(BattleEvent):
 class GoodStatus(BadStatus):
     def __init__(self, unit, cause_name):
         BadStatus.__init__(self, unit, cause_name)
+
+    def display(self, ui):
+        ui.show_result_on_map(self.unit, '+{}'.format(self.cause_name), color=ui.textcolors['good_status'])
 
     def report_entry(self):
             return {'_format': 'good_status', 'unit': self.unit, 'cause': self.cause_name}
@@ -174,6 +194,9 @@ class BadStatusEnds(BadStatus):
     def __init__(self, unit, cause_name):
         BadStatus.__init__(self, unit, cause_name)
 
+    def display(self, ui):
+        ui.show_result_on_map(self.unit, '-{}'.format(self.cause_name), color=ui.textcolors['bad_status'])
+
     def report_entry(self):
             return {'_format': 'bad_status_ends', 'unit': self.unit, 'cause': self.cause_name}
 
@@ -181,6 +204,9 @@ class BadStatusEnds(BadStatus):
 class GoodStatusEnds(BadStatus):
     def __init__(self, unit, cause_name):
         BadStatus.__init__(self, unit, cause_name)
+
+    def display(self, ui):
+        ui.show_result_on_map(self.unit, '-{}'.format(self.cause_name), color=ui.textcolors['good_status'])
 
     def report_entry(self):
             return {'_format': 'good_status_ends', 'unit': self.unit, 'cause': self.cause_name}
@@ -193,6 +219,9 @@ class IsDisabled(BadStatus):
     def report_entry(self):
         return {'_format': 'disabled', 'unit': self.unit, 'cause': self.cause_name}
 
+    def display(self, ui):
+        ui.show_result_on_map(self.unit, '{}'.format(self.cause_name), color=ui.textcolors['text'])
+
 
 class ImmuneToStatus(BadStatus):
     def __init__(self, unit, cause_name):
@@ -200,6 +229,9 @@ class ImmuneToStatus(BadStatus):
 
     def report_entry(self):
         return {'_format': 'immune', 'unit': self.unit, 'cause': self.cause_name}
+
+    def display(self, ui):
+        ui.show_result_on_map(self.unit, 'IMMUNE')
 
 
 class ImmuneToTerrain(BadStatus):
@@ -209,3 +241,5 @@ class ImmuneToTerrain(BadStatus):
     def report_entry(self):
         return {'_format': 'immune_terrain', 'unit': self.unit, 'cause': self.cause_name}
 
+    def display(self, ui):
+        ui.show_result_on_map(self.unit, 'IMMUNE')

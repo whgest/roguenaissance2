@@ -317,7 +317,6 @@ actors:
   Freezefrog:
     character: f
     color: red
-    ai: weakest
     maxhp: 35
     maxmp: 0
     attack: 13
@@ -401,6 +400,7 @@ actors:
   Belshazzar:
     character: "%"
     ai: mage
+    aggression: 0.5
     maxhp: 55
     maxmp: 10
     attack: 15
@@ -419,7 +419,7 @@ actors:
       - Poisonbolt
       - Spectral Shove
       - Annihilate
-      - Summon Serpents
+      #- Summon Serpents
       - Summon Lich
     descr: An insane necromancer.
 

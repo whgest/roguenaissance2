@@ -5,7 +5,6 @@ class UnitScoreWeightAlly(redoubtable_ai.UnitScoreWeightAllyDefaults):
     def __init__(self):
         redoubtable_ai.UnitScoreWeightDefaults.__init__(self)
         self.hp = 50
-        self.total_damage_over_time = -30
 
 
 class UnitScoreWeightEnemy(redoubtable_ai.UnitScoreWeightEnemyDefaults):
@@ -16,6 +15,7 @@ class UnitScoreWeightEnemy(redoubtable_ai.UnitScoreWeightEnemyDefaults):
 class UnitScoreWeightSelf(redoubtable_ai.UnitScoreWeightSelfDefaults):
     def __init__(self):
         redoubtable_ai.UnitScoreWeightSelfDefaults.__init__(self)
+        self.hp = 50
 
 
 class AiWeights(redoubtable_ai.AiWeightsDefault):

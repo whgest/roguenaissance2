@@ -1,5 +1,5 @@
-import gridmap
-import pathfinder
+from gridmap import GridMap
+from pathfinder import PathFinder
 import random
 import logging
 
@@ -11,8 +11,8 @@ def check_bounds(coords):
 
 
 def pathfind(start, end, map):   #return true distance, path
-    pfmap = gridmap.GridMap(25,50)
-    pf = pathfinder.PathFinder(pfmap.successors, pfmap.move_cost, pfmap.move_cost)
+    pfmap = GridMap(25,50)
+    pf = PathFinder(pfmap.successors, pfmap.move_cost, pfmap.move_cost)
     if check_bounds(start) or check_bounds(end):
         logging.debug("Check bounds failed.")
         return 0, []
@@ -70,7 +70,7 @@ class RN_AI_Class():
         elif self.actor.ai == "boss":
             skill, target, path = self.boss_logic()
         else:
-            logging.debug(self.actor.ai + ": invalid AI.")
+            logging.debug(str(self.actor.ai) + ": invalid AI.")
             return None, None, []
 
         logging.debug("Function: get_action returns: " + str([self.actor.name, skill, target, path]) + " MP:" + repr(self.actor.mp))

@@ -250,6 +250,92 @@
     - battle1a
     - battle1b
   player_start: 25,12
+  units:
+    -
+      ident: Fungal blowgunner
+      loc: 25,13
+      team_id: 2
+    -
+      ident: Fungal blowgunner
+      loc: 25,14
+      team_id: 2
+    -
+      ident: Fungal blowgunner
+      loc: 25,12
+      team_id: 2
+    -
+      ident: Fungal blowgunner
+      loc: 25,11
+      team_id: 2
+
+#  triggers:
+#    - conditions:
+#       - condition_type: is_turn
+#         condition_value: 1
+#      effects:
+#        - effect_type: add_units
+#          effect_value:
+#            - 0
+#            - 1
+#            - 2
+#            - 3
   victory_condition:
     conditions:
       - condition_type: on_goal_tile
+
+
+6:
+  intro: battle3
+  map: lava
+  music:
+    - boss
+
+  player_start: 25,10
+
+  units:
+    - ident: Belshazzar
+      loc: 25,5
+      team_id: 2
+    - ident: Freezefrog
+      loc: 26,5
+      team_id: 2
+
+
+  triggers:
+    - conditions:
+       - condition_type: is_turn
+         condition_value: 1
+      effects:
+        - effect_type: add_units
+          effect_value:
+            - 0
+            - 1
+
+  victory_condition:
+    conditions:
+      - condition_type: unit_defeated
+        condition_value: Belshazzar
+
+  tips:
+    - Belshazzar's minions can be pushed or pulled into lava for an instant kill, but Belshazzar himself will not be felled so easily (neither will you!).
+    - Belshazzar's MP are used and regenerated just like yours... if you allow him to fully charge, he will unleash a devastating spell.
+    - Forcing Belshazzar to drain life from his minions instead of attacking or summoning is one way to turn the fight against him.
+
+
+wizard_duel:
+  player_start: 20,15
+  map: tunnel
+  units:
+    -
+      ident: Pyromancer
+      loc: 20,10
+      team_id: 2
+
+  triggers:
+    - conditions:
+       - condition_type: is_turn
+         condition_value: 1
+      effects:
+        - effect_type: add_units
+          effect_value:
+            - 0

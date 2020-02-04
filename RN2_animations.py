@@ -29,24 +29,25 @@ class Animation():
         return
 
     def display_damage(self, x, y, amount, color):
-        digits = len(amount)
-        if digits > 2:
-            amount = amount[:2]
-
         self.UI.screen._autoupdate = True
         self.UI.text(x, y, amount, fgcolor=color)
         sleep(150)
-        try:
-            self.cleanup([(x, y), (x+1, y)])
-        except IndexError:
-            import ipdb
-            ipdb.set_trace()
-            raise
+        cleanup = []
+        for i in range(len(amount)):
+            cleanup.append((x+i, y))
+        self.cleanup(cleanup)
+
         self.UI.text(x, max(0, y-1), amount, fgcolor=color)
         sleep(350)
 
-        self.cleanup([(x, max(0, y-1)), (x+1, max(0, y-1))])
+        for i in range(len(amount)):
+            cleanup.append((x+i, max(0, y-1)))
+        self.cleanup(cleanup)
         self.UI.screen._autoupdate = False
+
+    def flash_damaged(self, x, y):
+        self.flash_tiles([(x, y)], [(255, -100, -100), (-255, -255, -255)], reps=1, delay=50)
+        self.game.play_sound("arrow")
 
     def flash_tiles(self, tiles, flash_list, reps=1, delay=150, fast_update=True, cleanup=True):
         if fast_update is True:
@@ -90,7 +91,6 @@ class Animation():
             self.UI.screen.update()
             sleep(speed)
 
-
     def projectile(self, start, end, character_list, color_list, delay=5, clear=True):
             if type(end) is list:
                 end = end[0]
@@ -107,9 +107,9 @@ class Animation():
                 if abs(x_dist) >= abs(y_dist) and x_dist < 0:
                     x_count += 1
                 if abs(x_dist) < abs(y_dist) and y_dist >= 0:
-                    y_count -=1
+                    y_count -= 1
                 if abs(x_dist) < abs(y_dist) and y_dist < 0:
-                    y_count +=1
+                    y_count += 1
                 x_dist = start[0]+x_count - end[0]
                 y_dist = start[1]+y_count - end[1]
                 c_tile = (start[0]+x_count, start[1]+y_count)
@@ -119,7 +119,7 @@ class Animation():
                 char_index += 1
                 color_index %= len(color_list)
                 char_index %= len(character_list)
-                self.UI.text(c_tile[0], c_tile[1], character, fgcolor = color, bgcolor = self.bmap[c_tile[0]][c_tile[1]].terrain.bgcolor)
+                self.UI.text(c_tile[0], c_tile[1], character, fgcolor=color, bgcolor=self.bmap[c_tile[0]][c_tile[1]].terrain.bgcolor)
                 sleep(delay)
                 if clear is True:
                     self.cleanup((c_tile[0], c_tile[1]))
@@ -190,7 +190,7 @@ class Animation():
             self.tint_screen((-25, -25, -25))
             self.projectile((self.tiles[0][0], 0), (self.tiles[0][0], self.tiles[0][1]), ["O"], ["red", "maroon"])
             self.game.play_sound("bigboom")
-            self.flash_tiles(self.tiles, [(50,-50,-50), (150,-50,-50)], 3)
+            self.flash_tiles(self.tiles, [(50, -50, -50), (150, -50, -50)], 3)
             self.tint_screen((0, 0, 0))
             return
 
@@ -205,13 +205,14 @@ class Animation():
             return
 
         elif self.anim_id == "punch":
-            self.game.play_sound("bighit")
+            #self.game.play_sound("bighit")
             self.hit(self.tiles, ["*", "o", "O"], ["red"])
             return
 
         elif self.anim_id == "basic ranged":
             self.projectile(self.attacker, self.tiles, [u"¤"], ["white"], delay=50)
-            self.game.play_sound("arrow")
+            self.hit([self.tiles[-1]], ['X'], ['white'])
+            #self.game.play_sound("arrow")
             return
 
         elif self.anim_id == "tbolt":
